@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Live chat — instant with Aito</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f6f5f1; --card:#fff; --card-line:#e7e4db; --ink:#1c1c1c; --ink-2:#5e5b53; --faint:#9b978c;
+    --gold:#e0b34d; --turq:#16c2b9; --turq-ink:#04221f; --green:#2f9e6b; --green-ink:#1f6f4a;
+    --purple:#9B69FF; --plight:#7c6cff; --rust:#c2410c; --rust-bg:#fbe9df;
+    --indigo-2:#10134a; --indigo-deep:#070920;
+    --bubble:#eef0fb; --cust:#fbf0d6; --cust-line:#ecd9a3; --gate:#e7f4ec; --gate-line:#bfe3cf;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:'Figtree',sans-serif;background:linear-gradient(180deg,#fff,var(--paper));color:var(--ink);-webkit-font-smoothing:antialiased;font-size:14px;padding:24px 18px 56px}
+  .wrap{max-width:1000px;margin:0 auto}
+  .top{display:flex;align-items:center;gap:13px;margin-bottom:4px}
+  .ic{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--gold),#c9942f);display:flex;align-items:center;justify-content:center}
+  .ic svg{width:22px;height:22px}
+  h1{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0}
+  .bp{font-size:11px;color:var(--turq);font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+  .sub{color:var(--ink-2);font-size:14px;margin:8px 0 16px;line-height:1.5;max-width:84ch}
+  .sub b{color:var(--ink)} code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:#ece9e0;padding:1px 5px;border-radius:4px}
+  .runbar{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .run{font-family:'Figtree';font-weight:800;font-size:14px;background:var(--turq);color:var(--turq-ink);border:none;border-radius:9px;padding:11px 20px;cursor:pointer}
+  .run:hover{filter:brightness(1.07)}.run:disabled{opacity:.5;cursor:not-allowed}
+  .runbar .note{font-size:12px;color:var(--faint)}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:740px){.cols{grid-template-columns:1fr}}
+  .col{border:1px solid var(--card-line);border-radius:14px;background:var(--card);overflow:hidden;display:flex;flex-direction:column}
+  .col.llm{border-top:3px solid var(--purple)} .col.aito{border-top:3px solid var(--turq)}
+  .ch{padding:13px 15px;border-bottom:1px solid var(--card-line);display:flex;align-items:center;gap:9px}
+  .ch .nm{font-weight:700;font-size:14.5px} .ch .tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:5px}
+  .llm .tag{background:rgba(124,108,255,.13);color:var(--plight)} .aito .tag{background:rgba(22,194,185,.14);color:var(--green-ink)}
+  .waited{margin-left:auto;text-align:right}
+  .waited .wv{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
+  .llm .wv{color:var(--rust)} .aito .wv{color:var(--turq)}
+  .waited .wl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+
+  .thread{padding:14px 14px 18px;display:flex;flex-direction:column;gap:9px;min-height:430px}
+  .b{max-width:84%;padding:9px 12px;border-radius:13px;font-size:13px;line-height:1.4;animation:in .25s ease}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .noanim .b{animation:none}
+  .b.cust{align-self:flex-end;background:var(--cust);border:1px solid var(--cust-line);border-bottom-right-radius:4px}
+  .b.bot{align-self:flex-start;background:var(--bubble);border-bottom-left-radius:4px}
+  .b.gate{align-self:flex-start;background:var(--gate);border:1px solid var(--gate-line);color:var(--green-ink);font-size:12.5px}
+  .b.gate .gl{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:5px;margin-bottom:3px;opacity:.85}
+  .b .who{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:3px}
+  .typing{align-self:flex-start;background:var(--bubble);border-radius:13px;border-bottom-left-radius:4px;padding:11px 14px;display:none;align-items:center;gap:5px}
+  .typing.on{display:inline-flex}
+  .typing i{width:6px;height:6px;border-radius:50%;background:#b9b6ad;animation:bl 1s infinite}
+  .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+  .typing .tt{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);margin-left:6px}
+  @keyframes bl{0%,60%,100%{opacity:.3}30%{opacity:1}}
+
+  .verdict{margin-top:16px;background:linear-gradient(180deg,var(--indigo-2),var(--indigo-deep));color:#dfe2ff;border-radius:13px;padding:18px 20px;opacity:0;transition:.35s}
+  .verdict.show{opacity:1}
+  .verdict .big{font-size:17.5px;font-weight:800;line-height:1.4}.verdict .big .hl{color:var(--turq)}.verdict .big .dim{color:#8f97d6}
+  .foot{margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3C12 3 5 9 5 15a7 7 0 0 0 14 0c0-6-7-12-7-12Z" stroke="#3a2c08" stroke-width="1.8"/><path d="M12 21v-9m0 2-3-2m3 4 3-2" stroke="#3a2c08" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+    <div><h1>Live support chat</h1><div class="bp">RESPONSE SPEED IS THE PRODUCT · POWERED BY AITO</div></div>
+  </div>
+  <div class="sub">In a <b>live chat</b> the customer is waiting in real time — every second of "agent is typing…" is felt. The predictive layer makes <b>understanding</b> instant (intent, customer, the record — parallel <code>_predict</code>s). Anything that changes state or touches money still goes through a <b>mechanical verify-customer + confirm-action</b> gate, shown in the chat and <b>separate from the AI inference</b>. Same answers, same safeguards — one of them just doesn't make the customer wait.</div>
+
+  <div class="runbar"><button class="run" id="run">▶ Start chat</button><span class="note">Same conversation, two engines. Watch the "waited" timers.</span></div>
+
+  <div class="cols">
+    <div class="col llm">
+      <div class="ch"><span class="tag">agent</span><span class="nm">LLM agent</span>
+        <div class="waited"><div class="wv" id="llm_w">0.0s</div><div class="wl">customer waited</div></div></div>
+      <div class="thread" id="llm"></div>
+    </div>
+    <div class="col aito">
+      <div class="ch"><span class="tag">+ predictive layer</span><span class="nm">Aito</span>
+        <div class="waited"><div class="wv" id="aito_w">0.0s</div><div class="wl">customer waited</div></div></div>
+      <div class="thread" id="aito"></div>
+    </div>
+  </div>
+
+  <div class="verdict" id="verdict"><div class="big" id="vbig"></div></div>
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+const M = { aitoMsPerTurn:200, llmMsSingle:3600, llmMsMultiStep:14000, replay:9 };
+
+// Conversation: safe/informational turns first; the money action LAST, and only
+// after a visible verify + confirm gate. Both engines give the same answer and
+// run the same gate — only the wait differs.
+const TURNS = [
+  {cust:"Hi — is there a network outage? Nothing works here in Helsinki.",
+   bot:"Yes, we're tracking a network issue affecting Helsinki right now — crews are on it, estimated ~2h. I'll text you the moment it clears.", multi:false},
+  {cust:"Annoying. Also my phone screen is cracked — what are my options?",
+   bot:"Here's our cracked-screen repair flow. Your nearest service point is Kamppi (open till 20:00) — want me to hold a slot for you?", multi:false},
+  {cust:"Yes please. And there's a €45 roaming charge I'd like refunded.",
+   bot:"I can see a €45 roaming add-on charge on your last bill.", multi:true,
+   gate:[
+     {t:"verify", who:"verification · not the AI", txt:"🔒 Quick security check before any change — can you confirm the last 4 digits of your account number?"},
+     {t:"cust", txt:"4471"},
+     {t:"verify", who:"verification · not the AI", txt:"✓ Identity confirmed (Acme · anna@acmecorp.com)."},
+     {t:"confirm", who:"confirm action · not the AI", txt:"You're requesting a refund of €45 (roaming add-on). Shall I submit it for processing?"},
+     {t:"cust", txt:"Yes, go ahead."},
+     {t:"bot", txt:"✓ Refund request submitted for review — you'll get a confirmation email shortly."},
+   ]},
+];
+
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let playing=false;
+
+function bubble(col, cls, txt, who){
+  const el=document.createElement('div'); el.className='b '+cls;
+  el.innerHTML=(who?`<div class="${cls==='gate'?'gl':'who'}">${who}</div>`:'')+txt;
+  $(col).appendChild(el); $(col).scrollTop=$(col).scrollHeight; return el;
+}
+function typing(col, label){
+  stopTyping(col);
+  const t=document.createElement('div'); t.className='typing on'; t.id=col+'_typing';
+  t.innerHTML='<i></i><i></i><i></i><span class="tt">'+(label||'')+'</span>';
+  $(col).appendChild(t); $(col).scrollTop=$(col).scrollHeight; return t;
+}
+function stopTyping(col){ const t=$(col+'_typing'); if(t) t.remove(); }
+
+async function runGate(col, gate, waitedRef){ // gate is instant + deterministic in both engines
+  for(const g of gate){
+    await sleep(420);
+    if(g.t==='cust') bubble(col,'cust',g.txt);
+    else if(g.t==='bot') bubble(col,'bot',g.txt);
+    else bubble(col,'gate',g.txt, g.who);
+  }
+}
+
+async function engine(col, wId, perTurn){
+  let waited=0;
+  for(const turn of TURNS){
+    bubble(col,'cust',turn.cust);
+    await sleep(260);
+    const realMs = turn.multi ? (perTurn.multi||perTurn.single) : perTurn.single;
+    const visMs = realMs/M.replay;
+    typing(col, perTurn.label+' · '+(realMs/1000).toFixed(1)+'s');
+    await sleep(visMs);
+    stopTyping(col);
+    waited+=realMs; $(wId).textContent=(waited/1000).toFixed(1)+'s';
+    bubble(col,'bot',turn.bot, col==='llm'?'support':'support · predicted');
+    if(turn.gate) await runGate(col, turn.gate, waited); // same gate, both engines
+    await sleep(200);
+  }
+  return waited;
+}
+
+async function play(){
+  playing=true; $('run').disabled=true;
+  $('llm').innerHTML=''; $('aito').innerHTML=''; $('llm_w').textContent='0.0s'; $('aito_w').textContent='0.0s';
+  $('verdict').classList.remove('show');
+  const [lw, aw]=await Promise.all([
+    engine('llm','llm_w',{single:M.llmMsSingle, multi:M.llmMsMultiStep, label:'LLM thinking'}),
+    engine('aito','aito_w',{single:M.aitoMsPerTurn, multi:M.aitoMsPerTurn, label:'predict'}),
+  ]);
+  $('vbig').innerHTML=`Across the chat, the customer waited <span class="hl">${(aw/1000).toFixed(1)}s</span> with Aito vs <span class="dim">${(lw/1000).toFixed(0)}s</span> with the agent — and the refund still went through the same <span class="hl">verify + confirm</span> gate. Instant understanding, unchanged safeguards.`;
+  $('verdict').classList.add('show'); $('verdict').style.transition='none'; $('verdict').style.opacity='1';
+  $('foot').innerHTML=`Latencies are the measured per-call figures from the resolution scorecard (gpt-5-mini, Azure): ~${(M.llmMsSingle/1000).toFixed(1)}s/turn, and ~${(M.llmMsMultiStep/1000).toFixed(0)}s for the multi-step refund (customer + invoice lookup). Aito ~${(M.aitoMsPerTurn/1000).toFixed(1)}s/turn (parallel _predict). Replayed ~${M.replay}× to fit on screen. The verify/confirm gate is deterministic and identical for both engines — the AI only speeds up understanding, it never auto-fires a money action.`;
+  playing=false; $('run').disabled=false;
+}
+$('run').onclick=()=>{ if(!playing) play(); };
+if(location.search.includes('auto')){ document.documentElement.classList.add('noanim'); setTimeout(play, 80); }
+</script>
+</body>
+</html>

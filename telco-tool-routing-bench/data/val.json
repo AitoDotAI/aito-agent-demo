@@ -1,0 +1,362 @@
+[
+  {
+    "text": "Sorry to bother you, new SIM won't activate at all. ASAP please.",
+    "correct_tool": "activate_sim",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1747"
+  },
+  {
+    "text": "Right, so got my new SIM days ago and still can't make calls, what's wrong? Appreciate it.",
+    "correct_tool": "activate_sim",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1219"
+  },
+  {
+    "text": "Listen, moved everything to the new SIM but it never came online. Appreciate it.",
+    "correct_tool": "activate_sim",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1463"
+  },
+  {
+    "text": "Swapped my SIM and it shows no network. ASAP please.",
+    "correct_tool": "activate_sim",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1507"
+  },
+  {
+    "text": "Quick one: a random £45.50 fee showed up on my statement. Thanks in advance.",
+    "correct_tool": "check_invoice",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1612"
+  },
+  {
+    "text": "Sorry to bother you, i want my money back for the £45.50 you took wrongly. Thanks in advance.",
+    "correct_tool": "check_invoice",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1539"
+  },
+  {
+    "text": "You overcharged me, I want a refund of £8.40. Can you help?",
+    "correct_tool": "check_invoice",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1094"
+  },
+  {
+    "text": "Right, so i want my money back for the £45.50 you took wrongly.",
+    "correct_tool": "check_invoice",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1342"
+  },
+  {
+    "text": "Morning, data is crawling whenever I travel abroad. Appreciate it.",
+    "correct_tool": "check_roaming",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1823"
+  },
+  {
+    "text": "Hello — i'm off to Germany next week and worried my phone won't work, can you check? Thanks in advance.",
+    "correct_tool": "check_roaming",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1226"
+  },
+  {
+    "text": "OK, connection dies the moment I land overseas. ASAP please.",
+    "correct_tool": "check_roaming",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1848"
+  },
+  {
+    "text": "Sorry to bother you, connection dies the moment I land overseas. Thanks in advance.",
+    "correct_tool": "check_roaming",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1297"
+  },
+  {
+    "text": "Quick one: can I get the iPhone 17 Pro today or is it sold out? Thanks.",
+    "correct_tool": "check_stock",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1080"
+  },
+  {
+    "text": "Listen, is the 5G hub available to ship this week? Appreciate it.",
+    "correct_tool": "check_stock",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1400"
+  },
+  {
+    "text": "Right, so thinking about the Galaxy S26 — any point coming in or is there a wait? Thanks in advance.",
+    "correct_tool": "check_stock",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1652"
+  },
+  {
+    "text": "Morning, before I decide on the Redmi Note 14, are they even available? Thanks.",
+    "correct_tool": "check_stock",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1882"
+  },
+  {
+    "text": "OK, put me down for the iPhone 17, ready to order.",
+    "correct_tool": "create_order",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1448"
+  },
+  {
+    "text": "We need another handset for my partner, the Galaxy S26 ideally. Thanks in advance.",
+    "correct_tool": "create_order",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1217"
+  },
+  {
+    "text": "Quick one: my phone's on its last legs, time for a new Galaxy S26 — set me up. Thanks.",
+    "correct_tool": "create_order",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1011"
+  },
+  {
+    "text": "Hey, i'd like to order the Redmi Note 14. ASAP please.",
+    "correct_tool": "create_order",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1375"
+  },
+  {
+    "text": "Listen, you've taken £12 twice, refunded once, charged a fee for your own mistake — I'm lost. Appreciate it.",
+    "correct_tool": null,
+    "difficulty": "ambiguous",
+    "escalation_target": "Billing",
+    "is_escalation": true,
+    "id": "TK-1362"
+  },
+  {
+    "text": "Hi, my bill shows three different totals on three different letters and nobody can explain it. Can you help?",
+    "correct_tool": null,
+    "difficulty": "ambiguous",
+    "escalation_target": "Billing",
+    "is_escalation": true,
+    "id": "TK-1841"
+  },
+  {
+    "text": "Sorry to bother you, data works then vanishes for hours at random, no pattern, on every device in the house.",
+    "correct_tool": null,
+    "difficulty": "ambiguous",
+    "escalation_target": "Network Ops",
+    "is_escalation": true,
+    "id": "TK-1315"
+  },
+  {
+    "text": "Quick one: data works then vanishes for hours at random, no pattern, on every device in the house. Cheers.",
+    "correct_tool": null,
+    "difficulty": "ambiguous",
+    "escalation_target": "Network Ops",
+    "is_escalation": true,
+    "id": "TK-1775"
+  },
+  {
+    "text": "Sorry to bother you, done with you after years — cancel everything, though honestly you could try to change my mind. Cheers.",
+    "correct_tool": null,
+    "difficulty": "ambiguous",
+    "escalation_target": "Retention",
+    "is_escalation": true,
+    "id": "TK-1694"
+  },
+  {
+    "text": "Sorry to bother you, i've had enough of the service and the prices, talk me out of walking or I'm gone. Thanks in advance.",
+    "correct_tool": null,
+    "difficulty": "ambiguous",
+    "escalation_target": "Retention",
+    "is_escalation": true,
+    "id": "TK-1695"
+  },
+  {
+    "text": "OK, big upgrade for the team plus accessories and insurance, this needs a human to price up. Thanks in advance.",
+    "correct_tool": null,
+    "difficulty": "ambiguous",
+    "escalation_target": "Sales",
+    "is_escalation": true,
+    "id": "TK-1839"
+  },
+  {
+    "text": "Quick one: want to switch the whole family over with trade-ins and a custom bundle, I need someone to build it. Thanks.",
+    "correct_tool": null,
+    "difficulty": "ambiguous",
+    "escalation_target": "Sales",
+    "is_escalation": true,
+    "id": "TK-1148"
+  },
+  {
+    "text": "Right, so calls connect but no audio, texts arrive late, data drops — all on a phone that's days old. Appreciate it.",
+    "correct_tool": null,
+    "difficulty": "ambiguous",
+    "escalation_target": "Tech Support",
+    "is_escalation": true,
+    "id": "TK-1858"
+  },
+  {
+    "text": "OK, i've reset, reseated the SIM, reinstalled everything and it's still completely broken. Can you help?",
+    "correct_tool": null,
+    "difficulty": "ambiguous",
+    "escalation_target": "Tech Support",
+    "is_escalation": true,
+    "id": "TK-1286"
+  },
+  {
+    "text": "Morning, cancellation was accepted and a £45.50 refund agreed — it still hasn't landed. Thanks in advance.",
+    "correct_tool": "issue_refund",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1642"
+  },
+  {
+    "text": "Quick one: refund was confirmed for case 5512 — please push it through.",
+    "correct_tool": "issue_refund",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1473"
+  },
+  {
+    "text": "Quick one: refund was confirmed for ORD-90413 — please push it through.",
+    "correct_tool": "issue_refund",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1077"
+  },
+  {
+    "text": "Sorry to bother you, can you add the 500-text bundle to my line? Please help.",
+    "correct_tool": "order_sms_pack",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1881"
+  },
+  {
+    "text": "Sorry to bother you, can you add the 1000-SMS bundle to my line? Appreciate it.",
+    "correct_tool": "order_sms_pack",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1233"
+  },
+  {
+    "text": "Hey, i keep running out of texts every single month, can you sort that? Please help.",
+    "correct_tool": "order_sms_pack",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1810"
+  },
+  {
+    "text": "Morning, leaving Vodafone but I have to keep my number, how does that work?",
+    "correct_tool": "port_number",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1645"
+  },
+  {
+    "text": "Hi, leaving my previous provider but I have to keep my number, how does that work?",
+    "correct_tool": "port_number",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1212"
+  },
+  {
+    "text": "Quick one: switching over to you — the number has to come with me though.",
+    "correct_tool": "port_number",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1246"
+  },
+  {
+    "text": "Quick one: nothing's connecting — no calls, no data — since yesterday. Cheers.",
+    "correct_tool": "run_line_diagnostic",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1245"
+  },
+  {
+    "text": "Quick one: calls keep dropping and pages won't load, something's off with my connection. Can you help?",
+    "correct_tool": "run_line_diagnostic",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1167"
+  },
+  {
+    "text": "Hi, calls keep dropping and pages won't load, something's off with my connection. Can you help?",
+    "correct_tool": "run_line_diagnostic",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1377"
+  },
+  {
+    "text": "Listen, i'm always over my data, I think I need a different deal. Thanks.",
+    "correct_tool": "update_plan",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1345"
+  },
+  {
+    "text": "OK, i'm always over my data, I think I need a different deal. Please help.",
+    "correct_tool": "update_plan",
+    "difficulty": "medium",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1241"
+  },
+  {
+    "text": "OK, change my tariff to the 50GB tariff please. Appreciate it.",
+    "correct_tool": "update_plan",
+    "difficulty": "clear",
+    "escalation_target": null,
+    "is_escalation": false,
+    "id": "TK-1561"
+  }
+]

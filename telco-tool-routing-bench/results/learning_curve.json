@@ -1,0 +1,30 @@
+[
+  {
+    "top1_acc": 0.5166666666666667,
+    "ece": 0.3290359667486719,
+    "autofire_coverage": 0.08,
+    "autofire_precision": 0.6666666666666666,
+    "n_train": 25
+  },
+  {
+    "top1_acc": 0.6833333333333333,
+    "ece": 0.19398329287658939,
+    "autofire_coverage": 0.22666666666666666,
+    "autofire_precision": 0.8823529411764706,
+    "n_train": 60
+  },
+  {
+    "top1_acc": 0.7333333333333333,
+    "ece": 0.17322697586834984,
+    "autofire_coverage": 0.24,
+    "autofire_precision": 0.8888888888888888,
+    "n_train": 105
+  },
+  {
+    "top1_acc": 0.8833333333333333,
+    "ece": 0.1113365520454996,
+    "autofire_coverage": 0.38666666666666666,
+    "autofire_precision": 0.8620689655172413,
+    "n_train": 180
+  }
+]

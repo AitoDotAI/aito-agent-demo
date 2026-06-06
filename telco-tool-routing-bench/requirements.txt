@@ -1,0 +1,9 @@
+# Pinned-ish deps for the telco tool-routing benchmark. Standalone from the
+# parent demo's pyproject — this is a self-contained experiment.
+httpx>=0.27,<1
+openai>=1.40,<2            # Azure OpenAI client for the LLM baselines (gpt-5-mini)
+python-dotenv>=1.0,<2
+numpy>=1.26,<3
+scikit-learn>=1.4,<2       # cosine similarity for Baseline B retrieval
+sentence-transformers>=2.6,<4   # local all-MiniLM-L6-v2 tool embeddings
+matplotlib>=3.8,<4        # calibration.png + sweep.png

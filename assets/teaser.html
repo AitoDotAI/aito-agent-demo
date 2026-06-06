@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Teaser source — Predictive Agent (Aito)</title>
+  <style>
+    /* Designed at 1200×630 — `./do screenshot-teaser` captures this viewport. */
+    :root {
+      --bg-deep: #0c0f41;
+      --bg-2: #11154f;
+      --border: #2a3258;
+      --text: #ffffff;
+      --muted: #9ba0c5;
+      --turq: #16c2b9;
+      --gold: #e0b34d;
+      --purple: #9b7dff;
+    }
+    html, body {
+      margin: 0; padding: 0; width: 1200px; height: 630px;
+      background: var(--bg-deep); color: var(--text);
+      font-family: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+    }
+    .frame {
+      width: 1200px; height: 630px; padding: 60px 72px; box-sizing: border-box;
+      display: flex; flex-direction: column; justify-content: space-between;
+      background:
+        radial-gradient(circle at 86% 12%, rgba(22,194,185,0.20) 0%, transparent 45%),
+        radial-gradient(circle at 10% 95%, rgba(124,92,252,0.16) 0%, transparent 45%),
+        linear-gradient(160deg, var(--bg-2), var(--bg-deep));
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
+    .brand .ic { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--gold), #c9942f); display:flex; align-items:center; justify-content:center; }
+    .brand .dots { color: var(--turq); letter-spacing: -2px; }
+    .eyebrow { font-family: "JetBrains Mono", monospace; font-size: 14px; letter-spacing: .2em; text-transform: uppercase; color: var(--turq); font-weight: 700; margin-bottom: 18px; }
+    h1 { font-size: 52px; line-height: 1.08; letter-spacing: -.025em; font-weight: 900; margin: 0 0 14px; max-width: 18ch; }
+    h1 .hl { color: var(--turq); }
+    .sub { font-size: 20px; color: var(--muted); max-width: 52ch; line-height: 1.45; }
+    .sub b { color: #fff; font-weight: 600; }
+    .cards { display: flex; gap: 14px; margin-top: 6px; }
+    .card { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 13px; padding: 14px 16px; flex: 1; }
+    .card .op { font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 700; color: var(--turq); }
+    .card .v { font-size: 26px; font-weight: 900; letter-spacing: -.02em; margin-top: 6px; }
+    .card .l { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .foot { display: flex; align-items: center; justify-content: space-between; }
+    .axes { font-family: "JetBrains Mono", monospace; font-size: 16px; color: var(--muted); }
+    .axes b { color: var(--turq); font-weight: 700; }
+    .host { font-family: "JetBrains Mono", monospace; font-size: 16px; color: #fff; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <div class="brand"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3C12 3 5 9 5 15a7 7 0 0 0 14 0c0-6-7-12-7-12Z" stroke="#3a2c08" stroke-width="1.8"/><path d="M12 21v-9m0 2-3-2m3 4 3-2" stroke="#3a2c08" stroke-width="1.8" stroke-linecap="round"/></svg></span>aito<span class="dots">..</span> &nbsp;Predictive Agent</div>
+
+    <div>
+      <div class="eyebrow">Aito in your agent&apos;s toolbox</div>
+      <h1>LLMs reason. RAG remembers. <span class="hl">Aito knows.</span></h1>
+      <div class="sub">A live agent that calls Aito ops as tools — grounded numbers it <b>can&apos;t invent</b>, and the action that wins. Better, faster, cheaper — and higher-yield.</div>
+    </div>
+
+    <div class="cards">
+      <div class="card"><div class="op">_predict</div><div class="v">88%</div><div class="l">win odds + why</div></div>
+      <div class="card"><div class="op">_estimate</div><div class="v">116d</div><div class="l">effort, from history</div></div>
+      <div class="card"><div class="op">_recommend</div><div class="v">59% · 3×</div><div class="l">meetings vs baseline</div></div>
+      <div class="card"><div class="op">$p · gate</div><div class="v">auto / ask</div><div class="l">calibrated, audited</div></div>
+    </div>
+
+    <div class="foot">
+      <div class="axes">better · faster · cheaper · <b>+higher-yield</b></div>
+      <div class="host">agent.aito.ai</div>
+    </div>
+  </div>
+</body>
+</html>

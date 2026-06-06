@@ -1,0 +1,36 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node
+node_modules/
+
+# Next.js
+.next/
+frontend/out/
+frontend/.next/
+frontend/next-env.d.ts
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Build artifacts
+*.log
+dist/
+
+# Playwright output — keep dir but ignore captures
+frontend/scripts/output/*
+!frontend/scripts/output/.gitkeep
+
+# Booktest snapshot output
+books/.out/

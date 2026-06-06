@@ -1,0 +1,538 @@
+{
+  "generated_at": "2026-06-04T19:37:08.636617+00:00",
+  "model": "gpt-5-mini",
+  "n_test": 75,
+  "configs": [
+    "baseline_full",
+    "baseline_retrieval",
+    "aito"
+  ],
+  "params": {
+    "retrieval_k": 8,
+    "gate": 0.92,
+    "assist_floor": 0.86,
+    "val_diagnostics": {
+      "k": {
+        "recall_by_k": {
+          "4": 0.8571428571428571,
+          "6": 0.9142857142857143,
+          "8": 0.9714285714285714,
+          "12": 1.0,
+          "16": 1.0,
+          "24": 1.0,
+          "32": 1.0
+        },
+        "target": 0.95,
+        "n_answerable": 35
+      },
+      "gate_floor": {
+        "gate_grid": {
+          "0.5": {
+            "n_fired": 42,
+            "acc": 0.7619
+          },
+          "0.52": {
+            "n_fired": 41,
+            "acc": 0.7561
+          },
+          "0.54": {
+            "n_fired": 41,
+            "acc": 0.7561
+          },
+          "0.56": {
+            "n_fired": 41,
+            "acc": 0.7561
+          },
+          "0.58": {
+            "n_fired": 41,
+            "acc": 0.7561
+          },
+          "0.6": {
+            "n_fired": 40,
+            "acc": 0.775
+          },
+          "0.62": {
+            "n_fired": 40,
+            "acc": 0.775
+          },
+          "0.64": {
+            "n_fired": 40,
+            "acc": 0.775
+          },
+          "0.66": {
+            "n_fired": 39,
+            "acc": 0.7949
+          },
+          "0.68": {
+            "n_fired": 39,
+            "acc": 0.7949
+          },
+          "0.7": {
+            "n_fired": 38,
+            "acc": 0.8158
+          },
+          "0.72": {
+            "n_fired": 38,
+            "acc": 0.8158
+          },
+          "0.74": {
+            "n_fired": 38,
+            "acc": 0.8158
+          },
+          "0.76": {
+            "n_fired": 38,
+            "acc": 0.8158
+          },
+          "0.78": {
+            "n_fired": 38,
+            "acc": 0.8158
+          },
+          "0.8": {
+            "n_fired": 36,
+            "acc": 0.8333
+          },
+          "0.82": {
+            "n_fired": 35,
+            "acc": 0.8571
+          },
+          "0.84": {
+            "n_fired": 35,
+            "acc": 0.8571
+          },
+          "0.86": {
+            "n_fired": 34,
+            "acc": 0.8824
+          },
+          "0.88": {
+            "n_fired": 30,
+            "acc": 0.9
+          },
+          "0.9": {
+            "n_fired": 26,
+            "acc": 0.8846
+          },
+          "0.92": {
+            "n_fired": 22,
+            "acc": 0.9091
+          },
+          "0.94": {
+            "n_fired": 20,
+            "acc": 0.9
+          },
+          "0.96": {
+            "n_fired": 14,
+            "acc": 0.8571
+          },
+          "0.98": {
+            "n_fired": 6,
+            "acc": 0.8333
+          }
+        },
+        "chosen_gate": 0.92,
+        "gate_target": 0.95,
+        "chosen_floor": 0.86,
+        "val_handled_correct": 33,
+        "val_total": 45,
+        "val_assist_calls": 12
+      }
+    }
+  },
+  "by_tool_count": {
+    "12": {
+      "baseline_full": {
+        "tool_accuracy": 0.7733,
+        "handled_correct": 58,
+        "total": 75,
+        "llm_calls": 75,
+        "tokens": 30981,
+        "input_tokens": 28350,
+        "output_tokens": 2631,
+        "cost_usd": 0.012349,
+        "latency_ms_total": 116686.7,
+        "latency_ms_p50": 1432.2,
+        "invalid_tool_selections": 0
+      },
+      "baseline_retrieval": {
+        "tool_accuracy": 0.7733,
+        "handled_correct": 58,
+        "total": 75,
+        "llm_calls": 75,
+        "tokens": 24922,
+        "input_tokens": 22228,
+        "output_tokens": 2694,
+        "cost_usd": 0.010945,
+        "latency_ms_total": 118906.8,
+        "latency_ms_p50": 1331.2,
+        "invalid_tool_selections": 0
+      },
+      "aito": {
+        "tool_accuracy": 0.8605,
+        "handled_correct": 43,
+        "total": 75,
+        "llm_calls": 14,
+        "tokens": 3433,
+        "input_tokens": 3082,
+        "output_tokens": 351,
+        "cost_usd": 0.001473,
+        "latency_ms_total": 30825.5,
+        "latency_ms_p50": 81.2,
+        "auto_fire_rate": 0.3867,
+        "escalations": 32,
+        "escalations_misrouted": 26,
+        "calibration": {
+          "ece": 0.1113,
+          "bins": [
+            {
+              "conf": 0.05,
+              "acc": null,
+              "n": 0
+            },
+            {
+              "conf": 0.1142,
+              "acc": 0.0,
+              "n": 1
+            },
+            {
+              "conf": 0.25,
+              "acc": null,
+              "n": 0
+            },
+            {
+              "conf": 0.3396,
+              "acc": 0.25,
+              "n": 4
+            },
+            {
+              "conf": 0.436,
+              "acc": 0.1667,
+              "n": 6
+            },
+            {
+              "conf": 0.5629,
+              "acc": 0.4286,
+              "n": 7
+            },
+            {
+              "conf": 0.6571,
+              "acc": 0.5,
+              "n": 4
+            },
+            {
+              "conf": 0.7684,
+              "acc": 1.0,
+              "n": 5
+            },
+            {
+              "conf": 0.8663,
+              "acc": 0.7857,
+              "n": 14
+            },
+            {
+              "conf": 0.9531,
+              "acc": 0.8824,
+              "n": 34
+            }
+          ],
+          "n": 75
+        }
+      }
+    },
+    "40": {
+      "baseline_full": {
+        "tool_accuracy": 0.7333,
+        "handled_correct": 55,
+        "total": 75,
+        "llm_calls": 75,
+        "tokens": 67261,
+        "input_tokens": 63150,
+        "output_tokens": 4111,
+        "cost_usd": 0.024009,
+        "latency_ms_total": 130785.8,
+        "latency_ms_p50": 1605.7,
+        "invalid_tool_selections": 0
+      },
+      "baseline_retrieval": {
+        "tool_accuracy": 0.6933,
+        "handled_correct": 52,
+        "total": 75,
+        "llm_calls": 75,
+        "tokens": 24364,
+        "input_tokens": 21088,
+        "output_tokens": 3276,
+        "cost_usd": 0.011824,
+        "latency_ms_total": 120184.9,
+        "latency_ms_p50": 1426.0,
+        "invalid_tool_selections": 0
+      },
+      "aito": {
+        "tool_accuracy": 0.8605,
+        "handled_correct": 43,
+        "total": 75,
+        "llm_calls": 14,
+        "tokens": 3433,
+        "input_tokens": 3082,
+        "output_tokens": 351,
+        "cost_usd": 0.001473,
+        "latency_ms_total": 30825.5,
+        "latency_ms_p50": 81.2,
+        "auto_fire_rate": 0.3867,
+        "escalations": 32,
+        "escalations_misrouted": 26,
+        "calibration": {
+          "ece": 0.1113,
+          "bins": [
+            {
+              "conf": 0.05,
+              "acc": null,
+              "n": 0
+            },
+            {
+              "conf": 0.1142,
+              "acc": 0.0,
+              "n": 1
+            },
+            {
+              "conf": 0.25,
+              "acc": null,
+              "n": 0
+            },
+            {
+              "conf": 0.3396,
+              "acc": 0.25,
+              "n": 4
+            },
+            {
+              "conf": 0.436,
+              "acc": 0.1667,
+              "n": 6
+            },
+            {
+              "conf": 0.5629,
+              "acc": 0.4286,
+              "n": 7
+            },
+            {
+              "conf": 0.6571,
+              "acc": 0.5,
+              "n": 4
+            },
+            {
+              "conf": 0.7684,
+              "acc": 1.0,
+              "n": 5
+            },
+            {
+              "conf": 0.8663,
+              "acc": 0.7857,
+              "n": 14
+            },
+            {
+              "conf": 0.9531,
+              "acc": 0.8824,
+              "n": 34
+            }
+          ],
+          "n": 75
+        }
+      }
+    },
+    "120": {
+      "baseline_full": {
+        "tool_accuracy": 0.6933,
+        "handled_correct": 52,
+        "total": 75,
+        "llm_calls": 75,
+        "tokens": 156105,
+        "input_tokens": 152250,
+        "output_tokens": 3855,
+        "cost_usd": 0.045773,
+        "latency_ms_total": 121934.3,
+        "latency_ms_p50": 1577.3,
+        "invalid_tool_selections": 0
+      },
+      "baseline_retrieval": {
+        "tool_accuracy": 0.64,
+        "handled_correct": 48,
+        "total": 75,
+        "llm_calls": 75,
+        "tokens": 24108,
+        "input_tokens": 20505,
+        "output_tokens": 3603,
+        "cost_usd": 0.012332,
+        "latency_ms_total": 124512.1,
+        "latency_ms_p50": 1526.2,
+        "invalid_tool_selections": 0
+      },
+      "aito": {
+        "tool_accuracy": 0.8605,
+        "handled_correct": 43,
+        "total": 75,
+        "llm_calls": 14,
+        "tokens": 3433,
+        "input_tokens": 3082,
+        "output_tokens": 351,
+        "cost_usd": 0.001473,
+        "latency_ms_total": 30825.5,
+        "latency_ms_p50": 81.2,
+        "auto_fire_rate": 0.3867,
+        "escalations": 32,
+        "escalations_misrouted": 26,
+        "calibration": {
+          "ece": 0.1113,
+          "bins": [
+            {
+              "conf": 0.05,
+              "acc": null,
+              "n": 0
+            },
+            {
+              "conf": 0.1142,
+              "acc": 0.0,
+              "n": 1
+            },
+            {
+              "conf": 0.25,
+              "acc": null,
+              "n": 0
+            },
+            {
+              "conf": 0.3396,
+              "acc": 0.25,
+              "n": 4
+            },
+            {
+              "conf": 0.436,
+              "acc": 0.1667,
+              "n": 6
+            },
+            {
+              "conf": 0.5629,
+              "acc": 0.4286,
+              "n": 7
+            },
+            {
+              "conf": 0.6571,
+              "acc": 0.5,
+              "n": 4
+            },
+            {
+              "conf": 0.7684,
+              "acc": 1.0,
+              "n": 5
+            },
+            {
+              "conf": 0.8663,
+              "acc": 0.7857,
+              "n": 14
+            },
+            {
+              "conf": 0.9531,
+              "acc": 0.8824,
+              "n": 34
+            }
+          ],
+          "n": 75
+        }
+      }
+    },
+    "340": {
+      "baseline_full": {
+        "tool_accuracy": 0.6933,
+        "handled_correct": 52,
+        "total": 75,
+        "llm_calls": 75,
+        "tokens": 404485,
+        "input_tokens": 400050,
+        "output_tokens": 4435,
+        "cost_usd": 0.108883,
+        "latency_ms_total": 148560.8,
+        "latency_ms_p50": 1847.0,
+        "invalid_tool_selections": 0
+      },
+      "baseline_retrieval": {
+        "tool_accuracy": 0.56,
+        "handled_correct": 42,
+        "total": 75,
+        "llm_calls": 75,
+        "tokens": 24029,
+        "input_tokens": 20102,
+        "output_tokens": 3927,
+        "cost_usd": 0.012879,
+        "latency_ms_total": 295837.7,
+        "latency_ms_p50": 4394.0,
+        "invalid_tool_selections": 0
+      },
+      "aito": {
+        "tool_accuracy": 0.8605,
+        "handled_correct": 43,
+        "total": 75,
+        "llm_calls": 14,
+        "tokens": 3433,
+        "input_tokens": 3082,
+        "output_tokens": 351,
+        "cost_usd": 0.001473,
+        "latency_ms_total": 30825.5,
+        "latency_ms_p50": 81.2,
+        "auto_fire_rate": 0.3867,
+        "escalations": 32,
+        "escalations_misrouted": 26,
+        "calibration": {
+          "ece": 0.1113,
+          "bins": [
+            {
+              "conf": 0.05,
+              "acc": null,
+              "n": 0
+            },
+            {
+              "conf": 0.1142,
+              "acc": 0.0,
+              "n": 1
+            },
+            {
+              "conf": 0.25,
+              "acc": null,
+              "n": 0
+            },
+            {
+              "conf": 0.3396,
+              "acc": 0.25,
+              "n": 4
+            },
+            {
+              "conf": 0.436,
+              "acc": 0.1667,
+              "n": 6
+            },
+            {
+              "conf": 0.5629,
+              "acc": 0.4286,
+              "n": 7
+            },
+            {
+              "conf": 0.6571,
+              "acc": 0.5,
+              "n": 4
+            },
+            {
+              "conf": 0.7684,
+              "acc": 1.0,
+              "n": 5
+            },
+            {
+              "conf": 0.8663,
+              "acc": 0.7857,
+              "n": 14
+            },
+            {
+              "conf": 0.9531,
+              "acc": 0.8824,
+              "n": 34
+            }
+          ],
+          "n": 75
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Predictive Agent — by Aito</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --side:#181818; --side-2:#202020; --side-line:#2c2c2c;
+    --side-label:#7d7d7d; --side-item:#d9d9d9; --side-active:#211d10;
+    --gold:#e0b34d; --gold-soft:#f3e3bb; --gold-line:#e3c878; --gold-ink:#6f561c;
+    --paper:#f6f5f1; --card:#ffffff; --card-line:#e7e4db;
+    --ink:#1c1c1c; --ink-2:#5e5b53; --faint:#9b978c;
+    --green:#2f9e6b; --green-bg:#e7f4ec; --green-ink:#1f6f4a;
+    --rust:#c2410c; --rust-bg:#fbe9df;
+    --indigo:#0c0f41; --indigo-2:#10134a; --indigo-deep:#070920;
+    --turq:#16c2b9; --turq-ink:#04221f; --purple:#9B69FF; --plight:#7c6cff;
+    --panel-line:#272c70; --panel-muted:#8f97d6; --panel-faint:#5a619e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:'Figtree',sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;font-size:14px}
+  .app{display:grid;grid-template-columns:226px 1fr 318px;height:100vh;overflow:hidden}
+  @media(max-width:1080px){.app{grid-template-columns:200px 1fr}.panel{display:none}}
+  @media(max-width:720px){.app{grid-template-columns:1fr}.side{display:none}}
+
+  /* ---------- sidebar ---------- */
+  .side{background:var(--side);color:var(--side-item);display:flex;flex-direction:column;overflow-y:auto}
+  .side::-webkit-scrollbar{width:6px}.side::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+  .brand{padding:18px 18px 16px;display:flex;gap:11px;align-items:flex-start;border-bottom:1px solid var(--side-line)}
+  .brand .ic{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--gold),#c9942f);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .brand .ic svg{width:20px;height:20px}
+  .brand .bt{font-weight:800;font-size:16px;line-height:1.05;letter-spacing:-.01em}
+  .brand .bp{font-size:10.5px;color:var(--turq);font-weight:600;margin-top:3px;letter-spacing:.01em}
+  .tenant{padding:13px 18px;border-bottom:1px solid var(--side-line);font-size:12px;color:#b6b2a8}
+  .tenant b{color:#fff;font-weight:600;display:block;font-size:12.5px}
+  nav{padding:10px 0 30px;flex:1}
+  .grp{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--side-label);padding:15px 18px 7px;display:flex;align-items:center;gap:7px}
+  .grp svg{width:12px;height:12px;opacity:.7}
+  .item{display:flex;align-items:center;gap:9px;padding:8px 18px;font-size:13.5px;color:var(--side-item);cursor:pointer;border-left:2px solid transparent}
+  .item:hover{background:#202020}
+  .item.on{background:var(--side-active);border-left-color:var(--gold);color:#fff;font-weight:600}
+  .item .badge{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+  .badge.g{background:var(--gold);color:#3a2c08}
+  .badge.r{background:var(--rust);color:#fff}
+  .badge.live{background:rgba(22,194,185,.16);color:var(--turq);font-weight:700;letter-spacing:.04em}
+  .help{position:sticky;bottom:0;margin:0 18px 16px;width:34px;height:34px;border-radius:50%;background:var(--gold);color:#3a2c08;display:flex;align-items:center;justify-content:center;font-weight:800}
+
+  /* ---------- center ---------- */
+  .main{overflow-y:auto;background:var(--paper)}
+  .main::-webkit-scrollbar{width:8px}.main::-webkit-scrollbar-thumb{background:#d8d5cc;border-radius:4px}
+  .topbar{position:sticky;top:0;z-index:5;background:rgba(246,245,241,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--card-line);display:flex;align-items:center;gap:12px;padding:13px 26px}
+  .crumb{font-size:13px;color:var(--ink-2)}
+  .crumb b{color:var(--ink);font-weight:700}
+  .crumb .sep{color:var(--faint);margin:0 6px}
+  .crumb .cnt{color:var(--faint);margin-left:10px;font-size:12px}
+  .tbtns{margin-left:auto;display:flex;align-items:center;gap:9px}
+  .stpill{font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 10px;border-radius:7px;display:flex;align-items:center;gap:6px;background:var(--green-bg);color:var(--green-ink);font-weight:500}
+  .stpill .d{width:7px;height:7px;border-radius:50%;background:var(--green)}
+  .tsel{font-size:12.5px;border:1px solid var(--card-line);background:#fff;border-radius:8px;padding:7px 11px;color:var(--ink);display:flex;align-items:center;gap:8px}
+  .runbtn{font-family:'Figtree';font-weight:700;font-size:13px;background:var(--gold);color:#3a2c08;border:none;border-radius:8px;padding:9px 16px;cursor:pointer}
+  .runbtn:hover{filter:brightness(1.05)}
+  .runbtn:disabled{opacity:.5;cursor:not-allowed}
+
+  .body{padding:22px 26px 40px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+  @media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:var(--card);border:1px solid var(--card-line);border-radius:12px;padding:15px 16px}
+  .kpi .kl{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:600}
+  .kpi .kv{font-size:33px;font-weight:800;letter-spacing:-.02em;margin:5px 0 3px;font-variant-numeric:tabular-nums}
+  .kpi .ks{font-size:11.5px;color:var(--ink-2)}
+  .kpi .ks .vs{color:var(--purple);font-weight:600}
+  .kpi .ks .bad{color:var(--rust);font-weight:600}
+
+  .secttl{font-size:19px;font-weight:800;letter-spacing:-.01em;margin:4px 0 4px}
+  .secsub{font-size:13px;color:var(--ink-2);line-height:1.45;max-width:78ch;margin-bottom:16px}
+  .secsub code{font-family:'JetBrains Mono',monospace;font-size:12px;background:#ece9e0;padding:1px 5px;border-radius:4px;color:#444}
+  .ctlrow{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .ctlrow label{font-size:12px;color:var(--ink-2)}
+  select.tools{font-family:'JetBrains Mono',monospace;font-size:12px;border:1px solid var(--card-line);background:#fff;border-radius:7px;padding:7px 9px}
+  .hint{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--faint);letter-spacing:.03em}
+  .ill{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);border:1px solid var(--card-line);padding:5px 9px;border-radius:999px}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:720px){.cols{grid-template-columns:1fr}}
+  .col{background:var(--card);border:1px solid var(--card-line);border-radius:13px;overflow:hidden}
+  .col.aito{border-top:3px solid var(--turq)}
+  .col.base{border-top:3px solid var(--purple)}
+  .colh{padding:13px 16px;border-bottom:1px solid var(--card-line)}
+  .colh .ct{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px}
+  .colh .tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:5px}
+  .base .tag{background:rgba(124,108,255,.13);color:var(--plight)}
+  .aito .tag{background:rgba(22,194,185,.14);color:var(--green-ink)}
+  .colh .cm{font-size:11px;color:var(--faint);margin-top:3px}
+  .rows{padding:6px 0;min-height:280px;max-height:430px;overflow-y:auto}
+  .rows::-webkit-scrollbar{width:6px}.rows::-webkit-scrollbar-thumb{background:#e2dfd5;border-radius:3px}
+  .tr{padding:10px 16px;border-bottom:1px solid #f1efe8;opacity:0;transform:translateY(5px);animation:in .28s forwards}
+  .tr:last-child{border-bottom:none}
+  @keyframes in{to{opacity:1;transform:none}}
+  .tr .txt{font-size:12.5px;color:var(--ink);line-height:1.3;margin-bottom:7px}
+  .tr .txt .id{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--faint);margin-right:7px}
+  .tr .meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .gbadge{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--gold-soft);border:1px solid var(--gold-line);color:var(--gold-ink);padding:3px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:5px}
+  .gbadge.plain{background:#f0eee7;border-color:#e2dfd5;color:#6a665c}
+  .mode{font-family:'JetBrains Mono',monospace;font-size:10.5px;padding:3px 8px;border-radius:6px;font-weight:500}
+  .mode.auto{background:rgba(22,194,185,.13);color:var(--green-ink)}
+  .mode.assist{background:rgba(124,108,255,.12);color:#5a4bd0}
+  .mode.esc{background:#fff3e7;color:#9a5512}
+  .mode.misroute{background:var(--rust-bg);color:var(--rust)}
+  .mode.ok{background:var(--green-bg);color:var(--green-ink)}
+  .mode.wrong{background:var(--rust-bg);color:var(--rust)}
+  .conf{display:flex;align-items:center;gap:7px}
+  .conf .bar{width:54px;height:6px;border-radius:3px;background:#ece9e0;overflow:hidden}
+  .conf .bar i{display:block;height:100%;border-radius:3px}
+  .conf .pct{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-2)}
+  .callmeta{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);margin-left:auto}
+
+  .verdict{margin-top:18px;background:var(--card);border:1px solid var(--card-line);border-radius:12px;padding:16px 18px;font-size:13px;line-height:1.55;color:var(--ink);opacity:0;transition:.4s}
+  .verdict.show{opacity:1}
+  .verdict b{color:var(--green-ink)}
+  .verdict .rw{color:var(--rust);font-weight:600}
+  .foot{margin-top:20px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);line-height:1.7}
+
+  /* ---------- right Aito panel ---------- */
+  .panel{background:linear-gradient(180deg,var(--indigo-2),var(--indigo-deep));color:#dfe2ff;overflow-y:auto;border-left:1px solid #04061a}
+  .panel::-webkit-scrollbar{width:7px}.panel::-webkit-scrollbar-thumb{background:#1e2360;border-radius:4px}
+  .ph{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 0}
+  .aito-w{font-weight:800;font-size:21px;letter-spacing:.01em;color:#fff;display:flex;align-items:baseline}
+  .aito-w .dots{color:var(--turq);letter-spacing:-2px;margin-left:2px}
+  .ph .pdb{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.13em;color:var(--panel-faint);text-transform:uppercase}
+  .pstats{display:flex;gap:8px;padding:16px 18px 6px}
+  .pstat{flex:1}
+  .pstat .pv{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;color:var(--turq)}
+  .pstat .pl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--panel-faint);margin-top:3px}
+  .pchip{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(124,108,255,.16);color:#b9aaff;padding:4px 9px;border-radius:6px;margin:8px 18px 0}
+  .pdesc{font-size:12px;line-height:1.5;color:var(--panel-muted);padding:11px 18px 0}
+  .pdesc b{color:#dfe2ff;font-weight:600}
+  .plabel{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--purple);padding:18px 18px 0;font-weight:700}
+  .code{margin:8px 18px 0;background:rgba(4,6,26,.6);border:1px solid var(--panel-line);border-radius:9px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:10.5px;line-height:1.55;color:#cfd4ff;overflow-x:auto;white-space:pre}
+  .code .k{color:var(--turq)}.code .s{color:#c7b6ff}.code .c{color:var(--panel-faint)}.code .m{color:var(--purple)}
+  .verify{font-size:11.5px;color:var(--panel-muted);line-height:1.5;padding:10px 18px 0}
+  .plinks{padding:10px 18px 0}
+  .plink{display:flex;align-items:center;gap:8px;font-size:12px;color:#c2c8ff;padding:6px 0;cursor:pointer}
+  .plink:hover{color:var(--turq)}
+  .plink .ar{color:var(--purple)}
+  .pnote{font-size:11px;color:var(--panel-faint);line-height:1.5;padding:12px 18px 18px}
+  .cta{position:sticky;bottom:0;margin:8px 0 0;padding:14px 18px;background:linear-gradient(180deg,transparent,var(--indigo-deep) 30%)}
+  .cta button{width:100%;background:var(--turq);color:var(--turq-ink);border:none;border-radius:9px;padding:13px;font-family:'Figtree';font-weight:800;font-size:14px;cursor:pointer;letter-spacing:.01em}
+  .cta button:hover{filter:brightness(1.08)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== sidebar ===== -->
+  <aside class="side">
+    <div class="brand">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3C12 3 5 9 5 15a7 7 0 0 0 14 0c0-6-7-12-7-12Z" stroke="#3a2c08" stroke-width="1.8"/><path d="M12 21v-9m0 2-3-2m3 4 3-2" stroke="#3a2c08" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+      <div><div class="bt">Predictive<br>Agent</div><div class="bp">Powered by Aito.ai</div></div>
+    </div>
+    <div class="tenant"><b>Sonipra Telecom</b>MVNO support · 340 backend tools</div>
+    <nav>
+      <div class="grp">Triage</div>
+      <div class="item">Ticket Queue<span class="badge g">10</span></div>
+      <div class="grp">Resolve</div>
+      <div class="item on">Tool Routing</div>
+      <div class="item">Confidence Gate</div>
+      <div class="grp">Escalate</div>
+      <div class="item">Human Handoff<span class="badge r">2</span></div>
+      <div class="grp">Analyze</div>
+      <div class="item">Tool Accuracy</div>
+      <div class="item">Cost &amp; Latency</div>
+      <div class="grp">Understand</div>
+      <div class="item">Calibration</div>
+      <div class="grp">Overview</div>
+      <div class="item">Automation Overview</div>
+      <div class="item">Cold Start</div>
+    </nav>
+    <div class="help">?</div>
+  </aside>
+
+  <!-- ===== center ===== -->
+  <main class="main">
+    <div class="topbar">
+      <div class="crumb">Resolve <span class="sep">›</span><b>Tool Routing</b><span class="cnt" id="crumbcnt">10 tickets · queue idle</span></div>
+      <div class="tbtns">
+        <div class="stpill"><span class="d"></span>Live</div>
+        <div class="stpill" id="latpill">aito 12ms</div>
+        <div class="tsel">Sonipra Telecom ▾</div>
+        <button class="runbtn" id="run">▶ Run queue</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="kpis">
+        <div class="kpi"><div class="kl">Auto-fired · no LLM</div><div class="kv" id="k_auto">0%</div><div class="ks" id="k_auto_s"><span class="vs">vs 0% baseline</span></div></div>
+        <div class="kpi"><div class="kl">Handled correctly</div><div class="kv" id="k_ok">0/10</div><div class="ks" id="k_ok_s"><span class="vs">baseline —</span></div></div>
+        <div class="kpi"><div class="kl">LLM calls</div><div class="kv" id="k_calls">0</div><div class="ks" id="k_calls_s"><span class="vs">baseline —</span></div></div>
+        <div class="kpi"><div class="kl">Escalations</div><div class="kv" id="k_esc">0</div><div class="ks" id="k_esc_s">routed to a human</div></div>
+      </div>
+
+      <div class="secttl">Same ticket queue, side by side</div>
+      <div class="secsub">Left: a baseline agent reasons over all <span id="ts_inline">340</span> backend tools with the LLM on every step. Right: <code>aito._predict</code> ranks the relevant tools per ticket; high-confidence steps fire directly with no model call, low-confidence ones escalate to a human, routed by a second prediction that can also miss.</div>
+
+      <div class="ctlrow">
+        <label>Backend tool space</label>
+        <select class="tools" id="tools"><option value="12">12 tools</option><option value="40">40 tools</option><option value="120" selected>120 tools</option></select>
+        <span class="hint">↑ raise it and watch the baseline degrade while Aito holds</span>
+        <span class="ill">illustrative · modeled</span>
+      </div>
+
+      <div class="cols">
+        <div class="col base">
+          <div class="colh"><div class="ct"><span class="tag">baseline</span>LLM Agent</div><div class="cm">full tool space in context, every step</div></div>
+          <div class="rows" id="baseRows"></div>
+        </div>
+        <div class="col aito">
+          <div class="colh"><div class="ct"><span class="tag">+ predictive layer</span>LLM + Aito</div><div class="cm">ranks tools · gates the confident steps · escalates the rest</div></div>
+          <div class="rows" id="aitoRows"></div>
+        </div>
+      </div>
+
+      <div class="verdict" id="verdict"></div>
+      <div class="foot">Demo data is fictional · latencies and token counts are modeled to illustrate the architecture, not measured · real benchmark figures drop into the same view.</div>
+    </div>
+  </main>
+
+  <!-- ===== right Aito panel ===== -->
+  <aside class="panel">
+    <div class="ph"><div class="aito-w">aito<span class="dots">..</span></div><div class="pdb">The Predictive DB · _predict</div></div>
+    <div class="pstats">
+      <div class="pstat"><div class="pv" id="p_lat">12ms</div><div class="pl">avg latency</div></div>
+      <div class="pstat"><div class="pv">tool</div><div class="pl">predict field</div></div>
+      <div class="pstat"><div class="pv">4</div><div class="pl">candidates</div></div>
+    </div>
+    <div class="pchip">_predict</div>
+    <div class="pdesc">Each ticket is scored with <b>aito._predict</b> over historical tool-call resolutions. The model ranks the few relevant tools out of the whole catalog, with a calibrated confidence. <b>High confidence fires the tool directly</b>, no LLM call. <b>Low confidence escalates</b> to a human — and the routing desk is itself a prediction.</div>
+
+    <div class="plabel">Example query</div>
+    <div class="code"><span class="m">POST</span> /api/v1/_predict
+{
+  <span class="k">"from"</span>: <span class="s">"tickets"</span>,
+  <span class="k">"where"</span>: { <span class="k">"text"</span>: <span class="s">"data slow</span>
+            <span class="s">when I travel abroad"</span> },
+  <span class="k">"predict"</span>: <span class="s">"tool"</span>,
+  <span class="k">"select"</span>: [<span class="s">"$p"</span>, <span class="s">"$why"</span>],
+  <span class="k">"limit"</span>: <span class="m">4</span>
+}
+<span class="c">// → check_roaming (p ≈ 0.46)</span>
+<span class="c">// below gate → escalate to a human</span></div>
+
+    <div class="plabel">Verify yourself</div>
+    <div class="verify">Every routed call traces back to an Aito query. No separate model file, no retrain step — predictions come straight from the index, so a row added today is in the next prediction.</div>
+
+    <div class="plabel">Learn more</div>
+    <div class="plinks">
+      <div class="plink"><span class="ar">↗</span> Predict API reference</div>
+      <div class="plink"><span class="ar">↗</span> Confidence thresholds &amp; gating</div>
+      <div class="plink"><span class="ar">{}</span> Source on GitHub</div>
+    </div>
+    <div class="pnote">Note: tool names and ticket text are illustrative. The gate threshold here is set where held-out accuracy on confident calls is high; tune per use case.</div>
+    <div class="cta"><button>Start free trial →</button></div>
+  </aside>
+</div>
+
+<script>
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+const TICKETS=[
+  {id:"TK-4471",text:"Activate the 500-SMS add-on pack on my line.",diff:"clear",tool:"order_sms_pack"},
+  {id:"TK-2093",text:"No internet at home since this morning.",diff:"clear",tool:"run_line_diagnostic"},
+  {id:"TK-8810",text:"I was billed twice for September.",diff:"medium",tool:"check_invoice"},
+  {id:"TK-1207",text:"I'd like to order the new 5G router.",diff:"clear",tool:"create_order"},
+  {id:"TK-6634",text:"Is the iPhone 17 Pro in stock right now?",diff:"clear",tool:"check_stock"},
+  {id:"TK-3398",text:"My replacement SIM still has no signal.",diff:"medium",tool:"activate_sim"},
+  {id:"TK-5521",text:"Switch me to the unlimited data plan.",diff:"clear",tool:"update_plan"},
+  {id:"TK-7042",text:"Data is crawling whenever I travel abroad.",diff:"ambiguous",tool:"check_roaming",esc:"Network Ops",misroute:true,llmWrong:"reset_modem"},
+  {id:"TK-9156",text:"Third time calling. I want to cancel my contract.",diff:"ambiguous",tool:"__esc__",esc:"Retention",misroute:false,llmWrong:"close_account"},
+  {id:"TK-3360",text:"Refund a charge for a service I never used.",diff:"medium",tool:"check_invoice"},
+];
+
+function simulate(toolCount){
+  const rng=mulberry32(0x5151 ^ toolCount);
+  const errBase=toolCount<=12?0.06:toolCount<=40?0.18:0.40;
+  const schemaTok=480+toolCount*44;
+  const out={rounds:[],b:{ok:0,wrong:0,calls:0,tok:0,ms:0},a:{ok:0,esc:0,escWrong:0,auto:0,calls:0,tok:0,ms:0},toolCount};
+  TICKETS.forEach(t=>{
+    // baseline
+    let bc=0,bt=0,bm=0,bnodes=[];
+    const fumble=rng()<(errBase+(t.diff==='ambiguous'?0.12:0));
+    if(fumble){bc++;bt+=schemaTok+160;bm+=620+rng()*460;bnodes.push({wrongTry:t.llmWrong||'check_account'});}
+    bc++;bt+=schemaTok+160;bm+=680+rng()*560;
+    let bOutcome,bTool;
+    if(t.diff==='ambiguous'){const w=rng()<0.78;bTool=w?t.llmWrong:(t.tool==='__esc__'?'escalate_to_team':t.tool);bOutcome=w?'wrong':'ok';}
+    else{const w=rng()<errBase*0.8;bTool=w?(t.llmWrong||'wrong_tool'):t.tool;bOutcome=w?'wrong':'ok';}
+    if(bOutcome==='ok')out.b.ok++;else out.b.wrong++;
+    out.b.calls+=bc;out.b.tok+=bt;out.b.ms+=bm;
+
+    // aito
+    let ac=0,at=0,am=8+rng()*8;
+    let conf=t.diff==='clear'?(0.91+rng()*0.07):t.diff==='medium'?(0.69+rng()*0.15):(0.36+rng()*0.18);
+    let mode,routed=null,aOk=false;
+    if(conf>=0.90){mode='auto';out.a.auto++;aOk=true;out.a.ok++;}
+    else if(conf>=0.60){mode='assist';ac++;at+=820+200;am+=580+rng()*240;aOk=true;out.a.ok++;}
+    else{mode=t.misroute?'misroute':'esc';out.a.esc++;am+=10+rng()*6;routed=t.misroute?'Billing':t.esc;if(t.misroute)out.a.escWrong++;}
+    out.a.calls+=ac;out.a.tok+=at;out.a.ms+=am;
+
+    out.rounds.push({t,
+      base:{tool:bTool,outcome:bOutcome,calls:bc,tok:bt,fumble,fumbleTool:fumble?(t.llmWrong||'check_account'):null},
+      aito:{tool:t.tool==='__esc__'?null:t.tool,conf,mode,routed,calls:ac}
+    });
+  });
+  return out;
+}
+
+const $=id=>document.getElementById(id);
+let playing=false;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function baseRow(r){
+  const b=r.base;
+  let meta='';
+  if(b.fumble) meta+=`<span class="gbadge plain">✗ ${b.fumbleTool}()</span>`;
+  if(b.outcome==='ok') meta+=`<span class="gbadge plain">${b.tool}()</span><span class="mode ok">✓ resolved</span>`;
+  else meta+=`<span class="gbadge plain">${b.tool}()</span><span class="mode wrong">✗ confident but wrong</span>`;
+  meta+=`<span class="callmeta">${b.calls} call(s) · ${(b.tok/1000).toFixed(1)}k tok</span>`;
+  return `<div class="tr"><div class="txt"><span class="id">${r.t.id}</span>${r.t.text}</div><div class="meta">${meta}</div></div>`;
+}
+function aitoRow(r){
+  const a=r.aito;
+  const cpct=Math.round(a.conf*100);
+  const cfill=a.conf>=0.6?'var(--green)':'var(--rust)';
+  let badge = a.tool? `<span class="gbadge">🤖 ${a.tool}()</span>` : `<span class="gbadge plain">no confident tool</span>`;
+  let mode='';
+  if(a.mode==='auto') mode=`<span class="mode auto">⚡ auto-fired · no LLM</span>`;
+  else if(a.mode==='assist') mode=`<span class="mode assist">LLM chose from 4 · 1 call</span>`;
+  else if(a.mode==='esc') mode=`<span class="mode esc">→ ${a.routed} · correct desk</span>`;
+  else mode=`<span class="mode misroute">→ ${a.routed} · mis-route</span>`;
+  const conf=`<span class="conf"><span class="bar"><i style="width:${cpct}%;background:${cfill}"></i></span><span class="pct">${a.conf.toFixed(2)}</span></span>`;
+  return `<div class="tr"><div class="txt"><span class="id">${r.t.id}</span>${r.t.text}</div><div class="meta">${badge}${conf}${mode}</div></div>`;
+}
+
+async function play(){
+  playing=true;$('run').disabled=true;$('tools').disabled=true;$('verdict').classList.remove('show');
+  const tc=parseInt($('tools').value,10);
+  $('ts_inline').textContent=tc;
+  const sim=simulate(tc);
+  $('baseRows').innerHTML='';$('aitoRows').innerHTML='';
+  let auto=0,ok=0,calls=0,esc=0,escWrong=0,bcalls=0,bok=0;
+  $('k_auto').textContent='0%';$('k_ok').textContent='0/10';$('k_calls').textContent='0';$('k_esc').textContent='0';
+
+  for(let i=0;i<sim.rounds.length;i++){
+    const r=sim.rounds[i];
+    $('crumbcnt').textContent=`resolving ${r.t.id} · ${i+1}/10`;
+    $('baseRows').insertAdjacentHTML('beforeend',baseRow(r));
+    await sleep(240);
+    $('aitoRows').insertAdjacentHTML('beforeend',aitoRow(r));
+    $('baseRows').scrollTop=$('baseRows').scrollHeight;$('aitoRows').scrollTop=$('aitoRows').scrollHeight;
+
+    if(r.aito.mode==='auto'){auto++;ok++;}
+    else if(r.aito.mode==='assist'){ok++;calls++;}
+    else{esc++; if(r.aito.mode==='misroute')escWrong++; else ok++;}
+    bcalls+=r.base.calls; if(r.base.outcome==='ok')bok++;
+    $('k_auto').textContent=Math.round(auto/10*100)+'%';
+    $('k_ok').textContent=ok+'/10';
+    $('k_calls').textContent=calls;
+    $('k_esc').textContent=esc;
+    $('latpill').textContent='aito '+(r.aito.mode==='auto'?'9ms':r.aito.mode==='assist'?'0.7s':'11ms');
+    await sleep(360);
+  }
+  // finalize KPI subtitles
+  $('k_auto_s').innerHTML=`<span class="vs">vs 0% baseline</span> — every step hit the model`;
+  $('k_ok_s').innerHTML=`<span class="vs">baseline ${bok}/10</span> — it guessed instead of escalating`;
+  $('k_calls_s').innerHTML=`<span class="vs">baseline ${bcalls}</span> — ${Math.round((1-calls/Math.max(bcalls,1))*100)}% fewer`;
+  $('k_esc_s').innerHTML=escWrong>0?`<span class="bad">${escWrong} mis-routed</span> · ${esc-escWrong} correct desk`:`all routed correctly`;
+  $('crumbcnt').textContent=`10 tickets · ${Math.round(auto/10*100)}% auto-fired`;
+
+  const tokCut=Math.round((1-sim.a.tok/Math.max(sim.b.tok,1))*100);
+  const msCut=Math.round((1-sim.a.ms/Math.max(sim.b.ms,1))*100);
+  $('verdict').innerHTML=`At <b>${tc} tools</b>, the predictive layer skipped the model on the ${auto} confident steps and ran the queue in <b>${calls} LLM calls</b> against the baseline's <b>${bcalls}</b> — about <b>${tokCut}% fewer tokens</b> and <b>${msCut}% less latency</b>. It handled <b>${ok}/10</b> correctly versus the baseline's <b>${bok}/10</b>, because on the genuinely ambiguous tickets it escalated instead of guessing. It is not magic: it <span class="rw">mis-routed ${escWrong}</span> of its ${esc} escalations. The win is not perfection — it is knowing which steps it has no business deciding alone.`;
+  $('verdict').classList.add('show');
+  playing=false;$('run').disabled=false;$('tools').disabled=false;
+}
+$('run').onclick=()=>{if(!playing)play();};
+</script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aito — executive brief for LLM/agent teams</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f3f1ec;--card:#fff;--line:#e4e0d6;--ink:#15140f;--ink2:#544f45;--faint:#928d80;
+    --gold:#e0b34d;--gold-soft:#f6efd9;--gold-ink:#6f561c;
+    --turq:#16c2b9;--turq-ink:#04221f;--turq-soft:#e3f6f4;
+    --purple:#7c6cff;--purple-soft:#efecff;--purple-ink:#3b2f9e;
+    --indigo:#0c0f41;--indigo-2:#11154f;--indigo-deep:#070920;--imuted:#9aa2dd;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);font-family:'Figtree',ui-sans-serif,system-ui,sans-serif;color:var(--ink);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .sheet{max-width:860px;margin:24px auto;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 10px 40px rgba(20,18,10,.07)}
+  .mono{font-family:'JetBrains Mono',monospace}
+  code{font-family:'JetBrains Mono',monospace;font-size:.85em;background:#ece9e0;padding:1px 5px;border-radius:4px;color:#3a352a}
+  b{color:var(--ink)}
+
+  /* header */
+  .head{background:linear-gradient(160deg,var(--indigo-2),var(--indigo-deep));color:#eef0ff;padding:26px 30px 24px;position:relative;overflow:hidden}
+  .head::after{content:"";position:absolute;right:-90px;top:-70px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(22,194,185,.2),transparent 65%)}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;margin-bottom:14px}
+  .brand .ic{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--gold),#c9942f);display:flex;align-items:center;justify-content:center}
+  .brand .ic svg{width:16px;height:16px}.brand .dots{color:var(--turq);letter-spacing:-2px}
+  .brand .tag{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--imuted);font-weight:400}
+  .head h1{font-size:27px;line-height:1.12;font-weight:900;letter-spacing:-.02em;margin:0 0 10px;max-width:30ch}
+  .head h1 .hl{color:var(--turq)}.head h1 .dim{color:#838bca}
+  .head p{font-size:13.5px;color:#cdd2f4;max-width:78ch;margin:0;line-height:1.55}
+  .head p b{color:#fff}
+
+  .body{padding:24px 30px 28px}
+  .row{display:grid;gap:16px}
+  .r3{grid-template-columns:1fr 1fr 1fr}
+  .r4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:680px){.r3,.r4{grid-template-columns:1fr}}
+  .lbl{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:700;margin:26px 0 11px}
+  .lbl:first-child{margin-top:0}
+
+  /* triad */
+  .fac{border:1px solid var(--line);border-radius:11px;padding:13px 14px}
+  .fac.hot{border:2px solid var(--turq);background:var(--turq-soft)}
+  .fac .fl{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:700}
+  .fac .ft{font-size:18px;font-weight:900;letter-spacing:-.01em;margin:2px 0 6px}
+  .fac.hot .ft{color:var(--turq-ink)}
+  .fac .fd{font-size:12px;color:var(--ink2);line-height:1.45}
+
+  /* fits band */
+  .fits{background:#f8f5ee;border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--ink2);line-height:1.55}
+  .fits b{color:var(--ink)}
+
+  /* proof */
+  .pc{border:1px solid var(--line);border-radius:11px;padding:13px 14px;display:flex;flex-direction:column;gap:8px}
+  .pc .pt{font-weight:800;font-size:13.5px;line-height:1.2}
+  .pc .vs,.pc .ai{font-size:11.5px;line-height:1.45;padding:7px 9px;border-radius:7px}
+  .pc .vs{background:#faf3ef;border:1px solid #f0ddd2;color:var(--ink2)}
+  .pc .ai{background:var(--turq-soft);border:1px solid #c6ece8;color:var(--turq-ink)}
+  .pc .tg{display:block;font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;font-weight:700;opacity:.8}
+  .pc b{color:var(--ink)}.pc .ai b{color:var(--turq-ink)}
+
+  /* use case lanes */
+  .lane{border:1px solid var(--line);border-radius:11px;overflow:hidden}
+  .lane .lh{padding:10px 13px;font-weight:800;font-size:13.5px;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--line)}
+  .lane .lh .dot{width:8px;height:8px;border-radius:50%}
+  .lane.a{border-top:3px solid var(--turq)}.lane.a .dot{background:var(--turq)}
+  .lane.s{border-top:3px solid var(--gold)}.lane.s .dot{background:var(--gold)}
+  .lane.m{border-top:3px solid var(--purple)}.lane.m .dot{background:var(--purple)}
+  .uc{padding:8px 13px;font-size:12px;border-bottom:1px solid #f2f0e9;line-height:1.4}
+  .uc:last-child{border-bottom:none}
+  .uc b{color:var(--ink)}
+  .uc .op{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--faint)}
+
+  /* governance pills */
+  .gov{border:1px solid var(--line);border-radius:10px;padding:12px 13px}
+  .gov .gt{font-weight:700;font-size:13px;margin-bottom:3px}
+  .gov .gt .em{color:var(--turq-ink)}
+  .gov .gp{font-size:11.5px;color:var(--ink2);line-height:1.45}
+
+  .cta{margin-top:22px;background:var(--indigo);color:#eef0ff;border-radius:11px;padding:16px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .cta .ct{font-weight:800;font-size:15px;color:#fff}
+  .cta .cd{font-size:12.5px;color:#c7cdf2;flex:1;min-width:200px}
+  .cta .cb{background:var(--turq);color:var(--turq-ink);font-weight:800;font-size:13px;padding:10px 18px;border-radius:8px}
+  .foot{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--faint);text-align:center;padding:14px 0 4px}
+
+  @media print{body{background:#fff}.sheet{box-shadow:none;border:none;margin:0;max-width:100%}}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="head">
+    <div class="brand"><span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3C12 3 5 9 5 15a7 7 0 0 0 14 0c0-6-7-12-7-12Z" stroke="#3a2c08" stroke-width="1.8"/><path d="M12 21v-9m0 2-3-2m3 4 3-2" stroke="#3a2c08" stroke-width="1.8" stroke-linecap="round"/></svg></span>aito<span class="dots">..</span><span class="tag">Executive brief · for teams building LLM agents on their own data</span></div>
+    <h1><span class="dim">Your agents reason brilliantly — and forget your business.</span> <span class="hl">Give them intuition.</span></h1>
+    <p>You can&apos;t feasibly train a foundation model on your ERP, and RAG only bolts memory on beside a frozen, internet-trained mind. <b>Aito gives your agents a calibrated intuition for your own data</b> — the same act as a neural network (pattern → instant answer), but live, memory-native, and yours. No training. No MLOps. Every answer auditable.</p>
+  </div>
+
+  <div class="body">
+
+    <div class="lbl">The faculty your stack is missing</div>
+    <div class="row r3">
+      <div class="fac"><div class="fl">The LLM</div><div class="ft">Reasoning</div><div class="fd">General, deliberate thinking — but a frozen intuition about the whole internet, with nothing learned about your customers, codes, or history.</div></div>
+      <div class="fac"><div class="fl">RAG / vector store</div><div class="ft">Memory</div><div class="fd">Recall of what was stored — copied into the prompt to be re-read and re-reasoned every call. Useful, but separate from the intuition.</div></div>
+      <div class="fac hot"><div class="fl">Aito</div><div class="ft">Intuition</div><div class="fd">Pattern → instant, calibrated answer, <b>from your data directly</b>. Live (a row added today is in the next prediction). Tells you how sure it is.</div></div>
+    </div>
+
+    <div class="lbl">It fits your platform — it doesn&apos;t compete with it</div>
+    <div class="fits">Aito has no agents, no orchestrator, no UI to defend. It&apos;s a single query — <code>_predict</code>, <code>_match</code>, <code>_relate</code>, <code>_estimate</code>, <code>_recommend</code> — your agents call like a tool or MCP endpoint. <b>Your platform stays the brain; Aito is the instant, calibrated memory underneath it.</b> Keep your model, keep your orchestration; just stop asking the LLM to do the structured, numeric, high-volume recall it&apos;s bad at.</div>
+
+    <div class="lbl">Benchmarked against the standard solution (live Aito + live gpt-5-mini)</div>
+    <div class="row r3">
+      <div class="pc"><div class="pt">Shortlisting is non-trivial</div>
+        <div class="vs"><span class="tg">embedding-retrieval shortlist</span>right option drops out of top-k as the catalog grows: <b>58→40 / 75</b></div>
+        <div class="ai"><span class="tg">Aito calibrated shortlist</span>holds, and <b>~16× fewer tokens</b> for the same pick</div></div>
+      <div class="pc"><div class="pt">Agentic workflows are slow</div>
+        <div class="vs"><span class="tg">LLM agent</span>6-step resolution ≈ <b>22 s</b> (sequential calls)</div>
+        <div class="ai"><span class="tg">Aito predict-first</span><b>~0.15 s</b> — ~9–10× on a single call</div></div>
+      <div class="pc"><div class="pt">Right context-memory is hard</div>
+        <div class="vs"><span class="tg">vector search</span>grabs the <b>wrong customer</b> 86% of the time</div>
+        <div class="ai"><span class="tg">Aito conditions on structure</span>recovers what text can&apos;t identify</div></div>
+    </div>
+
+    <div class="lbl">Where it plugs into ERP — analyze · assist · automate</div>
+    <div class="row r3">
+      <div class="lane a"><div class="lh"><span class="dot"></span>Analyze</div>
+        <div class="uc"><b>Find the drivers</b> of late payment, churn, project risk <span class="op">_relate</span></div>
+        <div class="uc"><b>Estimate</b> demand, lead time, effort, price <span class="op">_estimate</span></div>
+        <div class="uc"><b>Flag &amp; explain</b> anomalies with the evidence <span class="op">_predict + $why</span></div></div>
+      <div class="lane s"><div class="lh"><span class="dot"></span>Assist</div>
+        <div class="uc"><b>Shortlist</b> from 1,800 SKUs / 255 GL codes <span class="op">_predict</span></div>
+        <div class="uc"><b>Aim the memory</b> to the relevant past case <span class="op">_match</span></div>
+        <div class="uc"><b>Recommend</b> the next best action / upsell <span class="op">_recommend</span></div></div>
+      <div class="lane m"><div class="lh"><span class="dot"></span>Automate</div>
+        <div class="uc"><b>Code</b> GL, approver, cost center, VAT <span class="op">_predict</span></div>
+        <div class="uc"><b>Match</b> invoices &amp; payments outright <span class="op">_match</span></div>
+        <div class="uc"><b>Gate &amp; route</b> — act when sure, escalate when not <span class="op">_predict + $p</span></div></div>
+    </div>
+
+    <div class="lbl">Why it clears the governance bar</div>
+    <div class="row r4">
+      <div class="gov"><div class="gt">Calibrated <span class="em">$p</span></div><div class="gp">Acts automatically only when confident; escalates the rest. The agent knows what it knows.</div></div>
+      <div class="gov"><div class="gt">Explainable <span class="em">$why</span></div><div class="gp">Every prediction traces straight to the rows behind it. Auditable and reproducible by design.</div></div>
+      <div class="gov"><div class="gt">Zero <span class="em">MLOps</span></div><div class="gp">No model files, no retrain, no drift, no ML team to staff. It learns from each new row.</div></div>
+      <div class="gov"><div class="gt">Multi-tenant <span class="em">by where-clause</span></div><div class="gp">One instance, isolated per customer — 255 tenants, zero per-tenant models, no data leakage.</div></div>
+    </div>
+
+    <div class="cta">
+      <div><div class="ct">Prove it on a slice of your data.</div></div>
+      <div class="cd">Point Aito at one table — POs, invoices, tickets — and your agents have a calibrated intuition for it in a day. No training run, no pipeline.</div>
+      <div class="cb">Start a pilot →</div>
+    </div>
+
+    <div class="foot">Every figure here is measured live (real Aito _predict + a real gpt-5-mini call) on seeded, realistic data · aito.ai</div>
+  </div>
+</div>
+</body>
+</html>

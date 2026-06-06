@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV="$HERE/../telco-tool-routing-bench/.venv"
+GCCLIB=/nix/store/7c0v0kbrrdc2cqgisi78jdqxn73n3401-gcc-14.2.1.20250322-lib/lib
+NIXLIBS=$(echo "${NIX_LDFLAGS:-}" | tr ' ' '\n' | grep '^-L' | sed 's/^-L//' | tr '\n' ':')
+ZLIB=$(dirname "$(ls /nix/store/*/lib/libz.so.1 2>/dev/null | head -1)")
+export LD_LIBRARY_PATH="$GCCLIB:$ZLIB:$NIXLIBS${LD_LIBRARY_PATH:-}"
+export PYTHONPATH="$HERE${PYTHONPATH:+:$PYTHONPATH}"
+exec "$VENV/bin/python" "$@"

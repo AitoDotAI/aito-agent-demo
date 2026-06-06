@@ -1,0 +1,33 @@
+{
+  "httpx": {
+    "50c6ee3c15ae46a8db3d9a9b7d5ceb5b824b051c": {
+      "request": {
+        "hash": "50c6ee3c15ae46a8db3d9a9b7d5ceb5b824b051c",
+        "method": "GET",
+        "url": "https://shared.aito.ai/db/aito-agent-demo/api/v1/schema"
+      },
+      "response": {
+        "content": "eyJzY2hlbWEiOnsidGlja2V0cyI6eyJjb2x1bW5zIjp7ImVzY2FsYXRpb25fdGFyZ2V0Ijp7Im51bGxhYmxlIjp0cnVlLCJ0eXBlIjoiU3RyaW5nIn0sInRleHQiOnsiYW5hbHl6ZXIiOiJlbmdsaXNoIiwibnVsbGFibGUiOmZhbHNlLCJ0eXBlIjoiVGV4dCJ9LCJ0aWNrZXRfaWQiOnsibnVsbGFibGUiOmZhbHNlLCJ0eXBlIjoiU3RyaW5nIn0sInRvb2wiOnsibnVsbGFibGUiOnRydWUsInR5cGUiOiJTdHJpbmcifX0sInR5cGUiOiJ0YWJsZSJ9LCJhc3NpZ25tZW50cyI6eyJjb2x1bW5zIjp7ImFzc2lnbmVlIjp7Im51bGxhYmxlIjpmYWxzZSwidHlwZSI6IlN0cmluZyJ9LCJjdXN0b21lciI6eyJudWxsYWJsZSI6ZmFsc2UsInR5cGUiOiJTdHJpbmcifSwicHJpb3JpdHkiOnsibnVsbGFibGUiOmZhbHNlLCJ0eXBlIjoiU3RyaW5nIn0sInByb2plY3QiOnsibnVsbGFibGUiOmZhbHNlLCJ0eXBlIjoiU3RyaW5nIn0sInNlbmRlcl9kb21haW4iOnsibnVsbGFibGUiOmZhbHNlLCJ0eXBlIjoiU3RyaW5nIn0sInNvdXJjZSI6eyJudWxsYWJsZSI6ZmFsc2UsInR5cGUiOiJTdHJpbmcifSwidGV4dCI6eyJhbmFseXplciI6ImVuZ2xpc2giLCJudWxsYWJsZSI6ZmFsc2UsInR5cGUiOiJUZXh0In0sInRpY2tldF9pZCI6eyJudWxsYWJsZSI6ZmFsc2UsInR5cGUiOiJTdHJpbmcifX0sInR5cGUiOiJ0YWJsZSJ9LCJyZXNvbHV0aW9ucyI6eyJjb2x1bW5zIjp7ImN1c3RvbWVyIjp7Im51bGxhYmxlIjpmYWxzZSwidHlwZSI6IlN0cmluZyJ9LCJpbnRlbnQiOnsibnVsbGFibGUiOmZhbHNlLCJ0eXBlIjoiU3RyaW5nIn0sImtiX2FydGljbGUiOnsibnVsbGFibGUiOnRydWUsInR5cGUiOiJTdHJpbmcifSwibG9jYXRpb24iOnsibnVsbGFibGUiOnRydWUsInR5cGUiOiJTdHJpbmcifSwic2VuZGVyX2RvbWFpbiI6eyJudWxsYWJsZSI6ZmFsc2UsInR5cGUiOiJTdHJpbmcifSwidGFyZ2V0X3NlcnZpY2UiOnsibnVsbGFibGUiOnRydWUsInR5cGUiOiJTdHJpbmcifSwidGV4dCI6eyJhbmFseXplciI6ImVuZ2xpc2giLCJudWxsYWJsZSI6ZmFsc2UsInR5cGUiOiJUZXh0In0sInRpY2tldF9pZCI6eyJudWxsYWJsZSI6ZmFsc2UsInR5cGUiOiJTdHJpbmcifX0sInR5cGUiOiJ0YWJsZSJ9fX0=",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token",
+          "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH, CONNECT",
+          "access-control-allow-origin": "*",
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Fri, 05 Jun 2026 05:51:11 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-aitoai-response-time": "1.13",
+          "x-azure-ref": "20260605T055111Z-166cd8647968kfrkhC1STOxts800000001ng000000004k07",
+          "x-cache": "CONFIG_NOCACHE",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "1; mode=block"
+        },
+        "statusCode": 200
+      }
+    }
+  }
+}

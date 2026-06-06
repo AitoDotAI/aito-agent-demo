@@ -1,0 +1,27 @@
+[project]
+name = "predictive-agent"
+version = "0.1.0"
+description = "Aito demo template — replace this name + description for your demo"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.110,<1",
+    "uvicorn[standard]>=0.29,<1",
+    "httpx>=0.27,<1",
+    "python-dotenv>=1.0,<2",
+    "openai>=1.40,<2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0,<9",
+    "pytest-httpx>=0.30,<1",
+    "booktest>=1.1,<2",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+# book/ holds booktest snapshot tests, run via the booktest CLI (./do test-book),
+# not pytest — keep pytest to the plain unit tests under tests/.
+testpaths = ["tests"]

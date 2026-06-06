@@ -1,0 +1,767 @@
+[
+  {
+    "id": "TK-1747",
+    "difficulty": "clear",
+    "correct_tool": "activate_sim",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9833333333333331,
+    "top_feature": "activate_sim",
+    "top4": [
+      "activate_sim",
+      "check_invoice",
+      "check_roaming",
+      "check_stock"
+    ],
+    "assist_pick": "activate_sim",
+    "esc_desk": "Billing"
+  },
+  {
+    "id": "TK-1219",
+    "difficulty": "medium",
+    "correct_tool": "activate_sim",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9833333333333331,
+    "top_feature": "activate_sim",
+    "top4": [
+      "activate_sim",
+      "check_invoice",
+      "check_roaming",
+      "check_stock"
+    ],
+    "assist_pick": "activate_sim",
+    "esc_desk": "Network Ops"
+  },
+  {
+    "id": "TK-1463",
+    "difficulty": "medium",
+    "correct_tool": "activate_sim",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9538012023838673,
+    "top_feature": "activate_sim",
+    "top4": [
+      "activate_sim",
+      "check_roaming",
+      "check_stock",
+      "order_sms_pack"
+    ],
+    "assist_pick": "activate_sim",
+    "esc_desk": "Sales"
+  },
+  {
+    "id": "TK-1507",
+    "difficulty": "clear",
+    "correct_tool": "activate_sim",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9009510237232549,
+    "top_feature": "activate_sim",
+    "top4": [
+      "activate_sim",
+      "run_line_diagnostic",
+      "check_invoice",
+      "check_roaming"
+    ],
+    "assist_pick": "activate_sim",
+    "esc_desk": "Network Ops"
+  },
+  {
+    "id": "TK-1612",
+    "difficulty": "clear",
+    "correct_tool": "check_invoice",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.8513582843848295,
+    "top_feature": "order_sms_pack",
+    "top4": [
+      "order_sms_pack",
+      "run_line_diagnostic",
+      "create_order",
+      "issue_refund"
+    ],
+    "assist_pick": "issue_refund",
+    "esc_desk": "Billing"
+  },
+  {
+    "id": "TK-1539",
+    "difficulty": "medium",
+    "correct_tool": "check_invoice",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.940981928339901,
+    "top_feature": "check_invoice",
+    "top4": [
+      "check_invoice",
+      "create_order",
+      "port_number",
+      "update_plan"
+    ],
+    "assist_pick": "check_invoice",
+    "esc_desk": "Billing"
+  },
+  {
+    "id": "TK-1094",
+    "difficulty": "medium",
+    "correct_tool": "check_invoice",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9764704817365655,
+    "top_feature": "check_invoice",
+    "top4": [
+      "check_invoice",
+      "update_plan",
+      "create_order",
+      "activate_sim"
+    ],
+    "assist_pick": "check_invoice",
+    "esc_desk": "Retention"
+  },
+  {
+    "id": "TK-1342",
+    "difficulty": "medium",
+    "correct_tool": "check_invoice",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.8757348887101031,
+    "top_feature": "check_invoice",
+    "top4": [
+      "check_invoice",
+      "create_order",
+      "issue_refund",
+      "port_number"
+    ],
+    "assist_pick": "issue_refund",
+    "esc_desk": "Retention"
+  },
+  {
+    "id": "TK-1823",
+    "difficulty": "clear",
+    "correct_tool": "check_roaming",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.8975479719088854,
+    "top_feature": "check_roaming",
+    "top4": [
+      "check_roaming",
+      "issue_refund",
+      "check_invoice",
+      "order_sms_pack"
+    ],
+    "assist_pick": "check_roaming",
+    "esc_desk": "Sales"
+  },
+  {
+    "id": "TK-1226",
+    "difficulty": "medium",
+    "correct_tool": "check_roaming",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9829850328728432,
+    "top_feature": "check_roaming",
+    "top4": [
+      "check_roaming",
+      "update_plan",
+      "activate_sim",
+      "check_invoice"
+    ],
+    "assist_pick": "check_roaming",
+    "esc_desk": "Retention"
+  },
+  {
+    "id": "TK-1848",
+    "difficulty": "clear",
+    "correct_tool": "check_roaming",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.4198619778957494,
+    "top_feature": "check_roaming",
+    "top4": [
+      "check_roaming",
+      "check_invoice",
+      "update_plan",
+      "order_sms_pack"
+    ],
+    "assist_pick": "check_roaming",
+    "esc_desk": "Sales"
+  },
+  {
+    "id": "TK-1297",
+    "difficulty": "clear",
+    "correct_tool": "check_roaming",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.3789307851755388,
+    "top_feature": "create_order",
+    "top4": [
+      "create_order",
+      "check_stock",
+      "check_roaming",
+      "order_sms_pack"
+    ],
+    "assist_pick": "check_roaming",
+    "esc_desk": "Billing"
+  },
+  {
+    "id": "TK-1080",
+    "difficulty": "clear",
+    "correct_tool": "check_stock",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9796075685545105,
+    "top_feature": "check_stock",
+    "top4": [
+      "check_stock",
+      "check_roaming",
+      "create_order",
+      "order_sms_pack"
+    ],
+    "assist_pick": "check_stock",
+    "esc_desk": "Network Ops"
+  },
+  {
+    "id": "TK-1400",
+    "difficulty": "clear",
+    "correct_tool": "check_stock",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.780182064317376,
+    "top_feature": "check_stock",
+    "top4": [
+      "check_stock",
+      "check_roaming",
+      "issue_refund",
+      "check_invoice"
+    ],
+    "assist_pick": "check_stock",
+    "esc_desk": "Network Ops"
+  },
+  {
+    "id": "TK-1652",
+    "difficulty": "medium",
+    "correct_tool": "check_stock",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9583861733985608,
+    "top_feature": "check_stock",
+    "top4": [
+      "check_stock",
+      "create_order",
+      "activate_sim",
+      "check_invoice"
+    ],
+    "assist_pick": "check_stock",
+    "esc_desk": "Retention"
+  },
+  {
+    "id": "TK-1882",
+    "difficulty": "medium",
+    "correct_tool": "check_stock",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.5085516960165125,
+    "top_feature": "check_stock",
+    "top4": [
+      "check_stock",
+      "create_order",
+      "check_invoice",
+      "activate_sim"
+    ],
+    "assist_pick": "check_stock",
+    "esc_desk": "Sales"
+  },
+  {
+    "id": "TK-1448",
+    "difficulty": "clear",
+    "correct_tool": "create_order",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9380891920882721,
+    "top_feature": "create_order",
+    "top4": [
+      "create_order",
+      "check_stock",
+      "check_invoice",
+      "activate_sim"
+    ],
+    "assist_pick": "create_order",
+    "esc_desk": "Network Ops"
+  },
+  {
+    "id": "TK-1217",
+    "difficulty": "medium",
+    "correct_tool": "create_order",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.878965426846533,
+    "top_feature": "create_order",
+    "top4": [
+      "create_order",
+      "check_stock",
+      "activate_sim",
+      "check_invoice"
+    ],
+    "assist_pick": "create_order",
+    "esc_desk": "Sales"
+  },
+  {
+    "id": "TK-1011",
+    "difficulty": "medium",
+    "correct_tool": "create_order",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9542903174277038,
+    "top_feature": "create_order",
+    "top4": [
+      "create_order",
+      "check_stock",
+      "activate_sim",
+      "check_invoice"
+    ],
+    "assist_pick": "create_order",
+    "esc_desk": "Network Ops"
+  },
+  {
+    "id": "TK-1375",
+    "difficulty": "clear",
+    "correct_tool": "create_order",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.968101382138227,
+    "top_feature": "create_order",
+    "top4": [
+      "create_order",
+      "order_sms_pack",
+      "check_invoice",
+      "issue_refund"
+    ],
+    "assist_pick": "create_order",
+    "esc_desk": "Sales"
+  },
+  {
+    "id": "TK-1362",
+    "difficulty": "ambiguous",
+    "correct_tool": null,
+    "is_escalation": true,
+    "escalation_target": "Billing",
+    "p": 0.8741393930401351,
+    "top_feature": "check_invoice",
+    "top4": [
+      "check_invoice",
+      "issue_refund",
+      "activate_sim",
+      "check_roaming"
+    ],
+    "assist_pick": "issue_refund",
+    "esc_desk": "Tech Support"
+  },
+  {
+    "id": "TK-1841",
+    "difficulty": "ambiguous",
+    "correct_tool": null,
+    "is_escalation": true,
+    "escalation_target": "Billing",
+    "p": 0.6937477933198378,
+    "top_feature": "check_invoice",
+    "top4": [
+      "check_invoice",
+      "activate_sim",
+      "issue_refund",
+      "order_sms_pack"
+    ],
+    "assist_pick": "check_invoice",
+    "esc_desk": "Billing"
+  },
+  {
+    "id": "TK-1315",
+    "difficulty": "ambiguous",
+    "correct_tool": null,
+    "is_escalation": true,
+    "escalation_target": "Network Ops",
+    "p": 0.7891612303059816,
+    "top_feature": "run_line_diagnostic",
+    "top4": [
+      "run_line_diagnostic",
+      "check_roaming",
+      "order_sms_pack",
+      "issue_refund"
+    ],
+    "assist_pick": "run_line_diagnostic",
+    "esc_desk": "Billing"
+  },
+  {
+    "id": "TK-1775",
+    "difficulty": "ambiguous",
+    "correct_tool": null,
+    "is_escalation": true,
+    "escalation_target": "Network Ops",
+    "p": 0.9815903295999956,
+    "top_feature": "run_line_diagnostic",
+    "top4": [
+      "run_line_diagnostic",
+      "check_roaming",
+      "activate_sim",
+      "check_invoice"
+    ],
+    "assist_pick": "run_line_diagnostic",
+    "esc_desk": "Tech Support"
+  },
+  {
+    "id": "TK-1694",
+    "difficulty": "ambiguous",
+    "correct_tool": null,
+    "is_escalation": true,
+    "escalation_target": "Retention",
+    "p": 0.3873862445042613,
+    "top_feature": "issue_refund",
+    "top4": [
+      "issue_refund",
+      "update_plan",
+      "activate_sim",
+      "run_line_diagnostic"
+    ],
+    "assist_pick": "update_plan",
+    "esc_desk": "Billing"
+  },
+  {
+    "id": "TK-1695",
+    "difficulty": "ambiguous",
+    "correct_tool": null,
+    "is_escalation": true,
+    "escalation_target": "Retention",
+    "p": 0.6408330299172856,
+    "top_feature": "check_stock",
+    "top4": [
+      "check_stock",
+      "run_line_diagnostic",
+      "check_roaming",
+      "order_sms_pack"
+    ],
+    "assist_pick": "order_sms_pack",
+    "esc_desk": "Retention"
+  },
+  {
+    "id": "TK-1839",
+    "difficulty": "ambiguous",
+    "correct_tool": null,
+    "is_escalation": true,
+    "escalation_target": "Sales",
+    "p": 0.9608215503120756,
+    "top_feature": "update_plan",
+    "top4": [
+      "update_plan",
+      "order_sms_pack",
+      "activate_sim",
+      "check_invoice"
+    ],
+    "assist_pick": "update_plan",
+    "esc_desk": "Sales"
+  },
+  {
+    "id": "TK-1148",
+    "difficulty": "ambiguous",
+    "correct_tool": null,
+    "is_escalation": true,
+    "escalation_target": "Sales",
+    "p": 0.8002197788022245,
+    "top_feature": "port_number",
+    "top4": [
+      "port_number",
+      "order_sms_pack",
+      "update_plan",
+      "activate_sim"
+    ],
+    "assist_pick": "update_plan",
+    "esc_desk": "Sales"
+  },
+  {
+    "id": "TK-1858",
+    "difficulty": "ambiguous",
+    "correct_tool": null,
+    "is_escalation": true,
+    "escalation_target": "Tech Support",
+    "p": 0.9132405214400883,
+    "top_feature": "run_line_diagnostic",
+    "top4": [
+      "run_line_diagnostic",
+      "check_roaming",
+      "order_sms_pack",
+      "update_plan"
+    ],
+    "assist_pick": "run_line_diagnostic",
+    "esc_desk": "Tech Support"
+  },
+  {
+    "id": "TK-1286",
+    "difficulty": "ambiguous",
+    "correct_tool": null,
+    "is_escalation": true,
+    "escalation_target": "Tech Support",
+    "p": 0.5851503730594226,
+    "top_feature": "activate_sim",
+    "top4": [
+      "activate_sim",
+      "run_line_diagnostic",
+      "check_invoice",
+      "check_roaming"
+    ],
+    "assist_pick": "run_line_diagnostic",
+    "esc_desk": "Tech Support"
+  },
+  {
+    "id": "TK-1642",
+    "difficulty": "medium",
+    "correct_tool": "issue_refund",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.976456707089318,
+    "top_feature": "issue_refund",
+    "top4": [
+      "issue_refund",
+      "create_order",
+      "update_plan",
+      "order_sms_pack"
+    ],
+    "assist_pick": "issue_refund",
+    "esc_desk": "Sales"
+  },
+  {
+    "id": "TK-1473",
+    "difficulty": "clear",
+    "correct_tool": "issue_refund",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9523094690069271,
+    "top_feature": "issue_refund",
+    "top4": [
+      "issue_refund",
+      "order_sms_pack",
+      "check_invoice",
+      "activate_sim"
+    ],
+    "assist_pick": "issue_refund",
+    "esc_desk": "Network Ops"
+  },
+  {
+    "id": "TK-1077",
+    "difficulty": "clear",
+    "correct_tool": "issue_refund",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9074110826176993,
+    "top_feature": "issue_refund",
+    "top4": [
+      "issue_refund",
+      "check_roaming",
+      "order_sms_pack",
+      "activate_sim"
+    ],
+    "assist_pick": "issue_refund",
+    "esc_desk": "Network Ops"
+  },
+  {
+    "id": "TK-1881",
+    "difficulty": "clear",
+    "correct_tool": "order_sms_pack",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9767331831692855,
+    "top_feature": "order_sms_pack",
+    "top4": [
+      "order_sms_pack",
+      "run_line_diagnostic",
+      "activate_sim",
+      "check_invoice"
+    ],
+    "assist_pick": "order_sms_pack",
+    "esc_desk": "Billing"
+  },
+  {
+    "id": "TK-1233",
+    "difficulty": "clear",
+    "correct_tool": "order_sms_pack",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9547015622254488,
+    "top_feature": "order_sms_pack",
+    "top4": [
+      "order_sms_pack",
+      "run_line_diagnostic",
+      "activate_sim",
+      "check_invoice"
+    ],
+    "assist_pick": "order_sms_pack",
+    "esc_desk": "Sales"
+  },
+  {
+    "id": "TK-1810",
+    "difficulty": "medium",
+    "correct_tool": "order_sms_pack",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9833333333333333,
+    "top_feature": "order_sms_pack",
+    "top4": [
+      "order_sms_pack",
+      "activate_sim",
+      "check_invoice",
+      "check_roaming"
+    ],
+    "assist_pick": "order_sms_pack",
+    "esc_desk": "Billing"
+  },
+  {
+    "id": "TK-1645",
+    "difficulty": "medium",
+    "correct_tool": "port_number",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9690092946590179,
+    "top_feature": "port_number",
+    "top4": [
+      "port_number",
+      "issue_refund",
+      "order_sms_pack",
+      "run_line_diagnostic"
+    ],
+    "assist_pick": "port_number",
+    "esc_desk": "Network Ops"
+  },
+  {
+    "id": "TK-1212",
+    "difficulty": "medium",
+    "correct_tool": "port_number",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9753300526991225,
+    "top_feature": "port_number",
+    "top4": [
+      "port_number",
+      "check_invoice",
+      "check_stock",
+      "issue_refund"
+    ],
+    "assist_pick": "port_number",
+    "esc_desk": "Network Ops"
+  },
+  {
+    "id": "TK-1246",
+    "difficulty": "medium",
+    "correct_tool": "port_number",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.8700236375013002,
+    "top_feature": "port_number",
+    "top4": [
+      "port_number",
+      "check_roaming",
+      "check_stock",
+      "issue_refund"
+    ],
+    "assist_pick": "port_number",
+    "esc_desk": "Tech Support"
+  },
+  {
+    "id": "TK-1245",
+    "difficulty": "clear",
+    "correct_tool": "run_line_diagnostic",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9833333333333333,
+    "top_feature": "run_line_diagnostic",
+    "top4": [
+      "run_line_diagnostic",
+      "activate_sim",
+      "check_invoice",
+      "check_roaming"
+    ],
+    "assist_pick": "run_line_diagnostic",
+    "esc_desk": "Tech Support"
+  },
+  {
+    "id": "TK-1167",
+    "difficulty": "medium",
+    "correct_tool": "run_line_diagnostic",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.8930643473541395,
+    "top_feature": "run_line_diagnostic",
+    "top4": [
+      "run_line_diagnostic",
+      "port_number",
+      "check_roaming",
+      "activate_sim"
+    ],
+    "assist_pick": "run_line_diagnostic",
+    "esc_desk": "Tech Support"
+  },
+  {
+    "id": "TK-1377",
+    "difficulty": "medium",
+    "correct_tool": "run_line_diagnostic",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.8830118535105331,
+    "top_feature": "run_line_diagnostic",
+    "top4": [
+      "run_line_diagnostic",
+      "port_number",
+      "update_plan",
+      "activate_sim"
+    ],
+    "assist_pick": "run_line_diagnostic",
+    "esc_desk": "Tech Support"
+  },
+  {
+    "id": "TK-1345",
+    "difficulty": "medium",
+    "correct_tool": "update_plan",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.9145278332969908,
+    "top_feature": "update_plan",
+    "top4": [
+      "update_plan",
+      "activate_sim",
+      "check_stock",
+      "port_number"
+    ],
+    "assist_pick": "update_plan",
+    "esc_desk": "Retention"
+  },
+  {
+    "id": "TK-1241",
+    "difficulty": "medium",
+    "correct_tool": "update_plan",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.8962650610740029,
+    "top_feature": "update_plan",
+    "top4": [
+      "update_plan",
+      "activate_sim",
+      "check_invoice",
+      "create_order"
+    ],
+    "assist_pick": "update_plan",
+    "esc_desk": "Billing"
+  },
+  {
+    "id": "TK-1561",
+    "difficulty": "clear",
+    "correct_tool": "update_plan",
+    "is_escalation": false,
+    "escalation_target": null,
+    "p": 0.931605562015152,
+    "top_feature": "update_plan",
+    "top4": [
+      "update_plan",
+      "check_roaming",
+      "create_order",
+      "check_invoice"
+    ],
+    "assist_pick": "update_plan",
+    "esc_desk": "Network Ops"
+  }
+]

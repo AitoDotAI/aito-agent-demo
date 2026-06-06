@@ -1,0 +1,61 @@
+{
+  "model": "gpt-5-mini",
+  "n_test": 800,
+  "n_llm_sample": 78,
+  "price_in_per_mtok": 0.25,
+  "price_out_per_mtok": 2.0,
+  "aito_full": {
+    "n": 800,
+    "intent_acc": 1.0,
+    "end_to_end_acc": 1.0,
+    "param_acc_given_intent": 1.0,
+    "latency_ms_p50": 147.9985334990488,
+    "latency_ms_mean": 152.49296846634024,
+    "per_intent": {
+      "refund": 1.0,
+      "cancel_service": 1.0,
+      "check_outage": 1.0,
+      "repair_help": 1.0,
+      "check_balance": 1.0,
+      "find_shop": 1.0
+    }
+  },
+  "aito_on_sample": {
+    "n": 78,
+    "intent_acc": 1.0,
+    "end_to_end_acc": 1.0,
+    "param_acc_given_intent": 1.0,
+    "latency_ms_p50": 147.7930799992464,
+    "latency_ms_mean": 147.35323785890404,
+    "per_intent": {
+      "cancel_service": 1.0,
+      "refund": 1.0,
+      "check_outage": 1.0,
+      "find_shop": 1.0,
+      "repair_help": 1.0,
+      "check_balance": 1.0
+    }
+  },
+  "llm_on_sample": {
+    "n": 78,
+    "intent_acc": 1.0,
+    "end_to_end_acc": 1.0,
+    "param_acc_given_intent": 1.0,
+    "latency_ms_p50": 19986.59760949886,
+    "latency_ms_mean": 23788.75148621778,
+    "per_intent": {
+      "cancel_service": 1.0,
+      "refund": 1.0,
+      "check_outage": 1.0,
+      "find_shop": 1.0,
+      "repair_help": 1.0,
+      "check_balance": 1.0
+    }
+  },
+  "llm_tokens_per_resolution": 301.70512820512823,
+  "llm_cost_per_resolution_usd": 0.00014823076923076923,
+  "llm_cost_per_1000_usd": 0.14823076923076922,
+  "aito_cost_per_1000_usd": 0.0,
+  "aito_auto_resolve_rate": 1.0,
+  "gate": 0.8
+}

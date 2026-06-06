@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aito — the predictive layer for your LLMs &amp; agents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f6f5f1;--card:#fff;--line:#e7e4db;--ink:#161616;--ink2:#56524a;--faint:#928d82;
+    --gold:#e0b34d;--gold-soft:#f6efd9;--gold-ink:#6f561c;
+    --turq:#16c2b9;--turq-ink:#04221f;--turq-soft:#e3f6f4;
+    --purple:#7c6cff;--purple-soft:#efecff;--purple-ink:#3b2f9e;
+    --indigo:#0c0f41;--indigo-2:#11154f;--indigo-deep:#070920;--imuted:#9aa2dd;--ifaint:#5a619e;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:'Figtree',ui-sans-serif,system-ui,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.5}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 26px}
+  a{color:inherit;text-decoration:none}
+  code{font-family:'JetBrains Mono',monospace;font-size:.86em;background:#ece9e0;padding:1px 6px;border-radius:5px;color:#3a352a}
+  .mono{font-family:'JetBrains Mono',monospace}
+
+  /* nav */
+  .nav{position:sticky;top:0;z-index:20;background:rgba(246,245,241,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .nav .wrap{display:flex;align-items:center;gap:14px;height:60px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px}
+  .brand .ic{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--gold),#c9942f);display:flex;align-items:center;justify-content:center}
+  .brand .ic svg{width:18px;height:18px}
+  .brand .dots{color:var(--turq);letter-spacing:-2px}
+  .nav .links{margin-left:auto;display:flex;gap:22px;font-size:14px;color:var(--ink2)}
+  .nav .links a:hover{color:var(--ink)}
+  .nav .cta{background:var(--indigo);color:#fff;padding:8px 15px;border-radius:8px;font-weight:700;font-size:13.5px}
+  @media(max-width:760px){.nav .links{display:none}}
+
+  /* hero */
+  .hero{background:linear-gradient(160deg,var(--indigo-2),var(--indigo-deep));color:#eef0ff;padding:74px 0 84px;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-120px;top:-80px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(22,194,185,.18),transparent 65%)}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--turq);font-weight:700;margin-bottom:18px}
+  .hero h1{font-size:46px;line-height:1.05;letter-spacing:-.025em;font-weight:900;margin:0 0 20px;max-width:18ch}
+  .hero h1 .hl{color:var(--turq)}
+  .lede{font-size:18px;line-height:1.55;color:#cdd2f4;max-width:62ch;margin:0 0 16px}
+  .lede b{color:#fff;font-weight:600}
+  .oneliner{font-size:16px;color:#eef0ff;max-width:62ch;margin:0 0 28px;padding-left:14px;border-left:3px solid var(--gold)}
+  .oneliner b{color:var(--gold)}
+  .hbtns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:26px}
+  .btn{padding:13px 22px;border-radius:10px;font-weight:800;font-size:15px;cursor:pointer;border:none}
+  .btn.p{background:var(--turq);color:var(--turq-ink)}
+  .btn.s{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.18)}
+  .reassure{display:flex;gap:8px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--imuted)}
+  .reassure span{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);padding:5px 10px;border-radius:7px}
+  .reassure b{color:#dfe4ff;font-weight:500}
+
+  /* sections */
+  section{padding:62px 0}
+  .kicker{font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:700;margin-bottom:10px}
+  h2{font-size:30px;letter-spacing:-.02em;font-weight:800;margin:0 0 12px}
+  .lead{font-size:16.5px;color:var(--ink2);max-width:74ch;margin:0 0 30px;line-height:1.55}
+
+  /* headaches */
+  .pains{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:820px){.pains{grid-template-columns:1fr 1fr}}
+  @media(max-width:540px){.pains{grid-template-columns:1fr}}
+  .pain{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 17px}
+  .pain .ph{font-weight:700;font-size:15px;margin-bottom:5px;display:flex;gap:8px;align-items:center}
+  .pain .ph .x{color:var(--purple);font-size:13px}
+  .pain .pd{font-size:13.5px;color:var(--ink2);line-height:1.45}
+  .pain .fix{margin-top:9px;font-size:12.5px;color:var(--turq-ink);background:var(--turq-soft);border-radius:7px;padding:6px 9px;line-height:1.4}
+  .pain .fix b{color:var(--turq-ink)}
+
+  /* trio */
+  .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:900px){.trio{grid-template-columns:1fr}}
+  .lane{background:var(--card);border:1px solid var(--line);border-radius:15px;overflow:hidden;display:flex;flex-direction:column}
+  .lane .lh{padding:18px 20px 14px;border-bottom:1px solid var(--line)}
+  .lane .lt{font-size:19px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+  .lane .lt .dot{width:10px;height:10px;border-radius:50%}
+  .lane .ls{font-size:13px;color:var(--ink2);margin-top:5px;line-height:1.4}
+  .lane.analyze{border-top:4px solid var(--turq)}.lane.analyze .dot{background:var(--turq)}
+  .lane.assist{border-top:4px solid var(--gold)}.lane.assist .dot{background:var(--gold)}
+  .lane.automate{border-top:4px solid var(--purple)}.lane.automate .dot{background:var(--purple)}
+  .uc{padding:15px 20px;border-bottom:1px solid #f2f0e9}
+  .uc:last-child{border-bottom:none}
+  .uc .ut{font-weight:700;font-size:15px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .uc .op{font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 7px;border-radius:5px;font-weight:700}
+  .analyze .op{background:var(--turq-soft);color:var(--turq-ink)}
+  .assist .op{background:var(--gold-soft);color:var(--gold-ink)}
+  .automate .op{background:var(--purple-soft);color:var(--purple-ink)}
+  .uc .ud{font-size:13px;color:var(--ink2);line-height:1.5;margin-top:5px}
+  .uc .ud em{color:var(--ink);font-style:normal;font-weight:600}
+
+  /* not a platform band */
+  .band{background:var(--indigo);color:#eef0ff;border-radius:18px;padding:34px 34px}
+  .band h2{color:#fff}
+  .band .lead{color:#c7cdf2}
+  .pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:8px}
+  @media(max-width:820px){.pillars{grid-template-columns:1fr 1fr}}
+  .pillar .pt{font-weight:700;font-size:15px;color:#fff;margin-bottom:5px}
+  .pillar .pp{font-size:13px;color:var(--imuted);line-height:1.5}
+  .pillar .pt .em{color:var(--turq)}
+
+  /* live demos */
+  .demos{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:820px){.demos{grid-template-columns:1fr}}
+  .demo{display:block;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:18px 19px;transition:.15s}
+  .demo:hover{border-color:var(--turq);transform:translateY(-2px)}
+  .demo .dt{font-weight:800;font-size:16px;margin-bottom:6px}
+  .demo .dd{font-size:13.5px;color:var(--ink2);line-height:1.5}
+  .demo .go{margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--turq-ink);font-weight:700}
+
+  footer{padding:40px 0 60px;text-align:center;color:var(--faint);font-size:13px;border-top:1px solid var(--line)}
+  .foot-cta{text-align:center;padding:8px 0 0}
+</style>
+</head>
+<body>
+
+<div class="nav"><div class="wrap">
+  <div class="brand"><span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3C12 3 5 9 5 15a7 7 0 0 0 14 0c0-6-7-12-7-12Z" stroke="#3a2c08" stroke-width="1.8"/><path d="M12 21v-9m0 2-3-2m3 4 3-2" stroke="#3a2c08" stroke-width="1.8" stroke-linecap="round"/></svg></span>aito<span class="dots">..</span></div>
+  <div class="links">
+    <a href="#headaches">The problem</a>
+    <a href="#trio">Analyze · Assist · Automate</a>
+    <a href="#platform">Why it fits</a>
+    <a href="#live">Live demos</a>
+  </div>
+  <a class="cta" href="#live">See it live →</a>
+</div></div>
+
+<div class="hero"><div class="wrap">
+  <div class="eyebrow">For teams building with LLMs &amp; agents</div>
+  <h1>Make the model you already have <span class="hl">faster, cheaper, and sure of itself.</span></h1>
+  <p class="lede">Your agents work — until the tool list gets long, the token bill climbs, the vector search grabs the <b>wrong</b> record, and the model states a made-up number with total confidence. That isn&apos;t a flaw in your platform. It&apos;s the part of the job LLMs are simply bad at: <b>structured, numeric, high-volume recall over your own data.</b></p>
+  <p class="oneliner">Aito does that part. It&apos;s <b>RAG&apos;s calibrated cousin</b> — a predictive primitive your agents call to get instant, grounded, explainable answers. Keep your platform. Keep your model. Just stop making it do the boring parts badly.</p>
+  <div class="hbtns"><a class="btn p" href="#live">See the live demo</a><a class="btn s" href="#trio">Tour the use cases</a></div>
+  <div class="reassure"><span><b>one HTTP query</b>, not a platform</span><span>no model training · <b>no MLOps</b></span><span>calibrated <b>$p</b> + <b>$why</b></span><span>learns every row, instantly</span></div>
+</div></div>
+
+<!-- headaches -->
+<section id="headaches"><div class="wrap">
+  <div class="kicker">The agent&apos;s bad days</div>
+  <h2>Six places a capable agent quietly falls down</h2>
+  <p class="lead">None of these mean you picked the wrong model or built the wrong platform. They&apos;re the predictable failure modes of asking one LLM to reason <em>and</em> remember <em>and</em> do arithmetic over a large, structured, ever-changing dataset. Each has a one-query fix.</p>
+  <div class="pains">
+    <div class="pain"><div class="ph"><span class="x">✕</span>Tool / option sprawl</div><div class="pd">Hundreds of tools or SKUs in context → selection degrades, prompts bloat.</div><div class="fix"><b>_predict</b> shortlists the handful that actually apply.</div></div>
+    <div class="pain"><div class="ph"><span class="x">✕</span>An LLM call on every step</div><div class="pd">Multi-step workflows take seconds and burn tokens, per ticket, at scale.</div><div class="fix"><b>_predict</b> caches the routine — ~10× faster, ~10× fewer tokens.</div></div>
+    <div class="pain"><div class="ph"><span class="x">✕</span>Vector search misfires</div><div class="pd">Embeddings dilute identifiers — the nearest neighbour is the wrong customer.</div><div class="fix"><b>_match / _similarity</b> conditions on structure, aimed at what matters.</div></div>
+    <div class="pain"><div class="ph"><span class="x">✕</span>Bad with numbers</div><div class="pd">Aggregation, drivers, estimates — the model guesses, often confidently wrong.</div><div class="fix"><b>_relate / _estimate</b> compute it from your data.</div></div>
+    <div class="pain"><div class="ph"><span class="x">✕</span>No sense of "how sure"</div><div class="pd">Overconfident output gives no signal for when to act vs ask a human.</div><div class="fix"><b>$p</b> is a calibrated gate — auto when sure, escalate when not.</div></div>
+    <div class="pain"><div class="ph"><span class="x">✕</span>Memory without relevance</div><div class="pd">Dump everything and blow the context, or miss the one case that matters now.</div><div class="fix"><b>_match</b> surfaces the memory that fits the current context.</div></div>
+  </div>
+</div></section>
+
+<!-- trio -->
+<section id="trio" style="background:linear-gradient(180deg,#fff,var(--paper))"><div class="wrap">
+  <div class="kicker">The tour</div>
+  <h2>Analyze · Assist · Automate</h2>
+  <p class="lead">The same predictive index, three ways to plug into an agent stack — give it the facts it&apos;s missing (<b>analyze</b>), narrow and ground its choices (<b>assist</b>), or let it act when it&apos;s sure (<b>automate</b>). Every example below is a real Aito op, drawn from the ecommerce, ERP and accounting demos.</p>
+  <div class="trio">
+    <div class="lane analyze">
+      <div class="lh"><div class="lt"><span class="dot"></span>Analyze</div><div class="ls">Give the agent the numbers and structure it can&apos;t compute.</div></div>
+      <div class="uc"><div class="ut">Find the drivers <span class="op">_relate</span></div><div class="ud"><em>Why</em> are these customers churning, invoices late, projects at risk? Statistical relationships an LLM can&apos;t aggregate.</div></div>
+      <div class="uc"><div class="ut">Estimate the number <span class="op">_estimate</span></div><div class="ud">Price, demand, effort, lead time — a grounded estimate instead of a confident guess.</div></div>
+      <div class="uc"><div class="ut">Explain the flag <span class="op">_predict + $why</span></div><div class="ud">Anomaly detection <em>with the evidence</em> behind it — the agent cites, doesn&apos;t hallucinate.</div></div>
+    </div>
+    <div class="lane assist">
+      <div class="lh"><div class="lt"><span class="dot"></span>Assist</div><div class="ls">Augment the model in the loop — narrow, ground, recommend.</div></div>
+      <div class="uc"><div class="ut">Shortlist the haystack <span class="op">_predict</span></div><div class="ud">300 tools · 1,800 SKUs · 255 GL codes → the few that apply. <em>~16× smaller prompts</em>, same answer.</div></div>
+      <div class="uc"><div class="ut">Aim the memory <span class="op">_match / _similarity</span></div><div class="ud">Surface the past case that fits <em>this</em> context — targeted recall, not a fuzzy global hit.</div></div>
+      <div class="uc"><div class="ut">Next best action <span class="op">_recommend</span></div><div class="ud">The upsell, product, or resolution that maximizes your KPI — learned from history.</div></div>
+    </div>
+    <div class="lane automate">
+      <div class="lh"><div class="lt"><span class="dot"></span>Automate</div><div class="ls">Let it act outright when the prediction is confident.</div></div>
+      <div class="uc"><div class="ut">Fill the fields <span class="op">_predict</span></div><div class="ud">GL code, approver, cost center, assignee, category — the data entry, automatic and confidence-scored.</div></div>
+      <div class="uc"><div class="ut">Match the answer <span class="op">_match</span></div><div class="ud">Answer the routine ticket, FAQ, or payment <em>outright</em> — no LLM call at all.</div></div>
+      <div class="uc"><div class="ut">Gate &amp; route <span class="op">_predict + $p</span></div><div class="ud">Auto-handle the confident, escalate the rest. Governance and audit built in.</div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- not a platform -->
+<section id="platform"><div class="wrap"><div class="band">
+  <div class="kicker" style="color:var(--turq)">Why it fits, instead of competing</div>
+  <h2>It&apos;s a primitive your agents call — not another platform to adopt.</h2>
+  <p class="lead">Aito has no agents, no orchestrator, no UI to defend. It&apos;s a query you call like a tool or MCP endpoint. Your platform stays the brain; Aito is the instant, calibrated memory underneath it.</p>
+  <div class="pillars">
+    <div class="pillar"><div class="pt">One <span class="em">query</span></div><div class="pp">_predict · _match · _relate · _estimate · _recommend. Call it from any agent, any language.</div></div>
+    <div class="pillar"><div class="pt">Zero <span class="em">MLOps</span></div><div class="pp">No model files, no retrain, no drift. A row added today is in the next prediction.</div></div>
+    <div class="pillar"><div class="pt">Calibrated &amp; <span class="em">explainable</span></div><div class="pp">Every answer has a $p and a $why that traces straight to your data. Auditable by design.</div></div>
+    <div class="pillar"><div class="pt">Multi-tenant by a <span class="em">where-clause</span></div><div class="pp">One instance, isolated per customer — 255 tenants, zero per-tenant models.</div></div>
+  </div>
+</div></div></section>
+
+<!-- live -->
+<section id="live" style="background:linear-gradient(180deg,#fff,var(--paper))"><div class="wrap">
+  <div class="kicker">See it live</div>
+  <h2>Real predictions, real latency, real cost</h2>
+  <p class="lead">Not mocks — these run a live Aito index and a live gpt-5-mini, side by side, on synthetic-but-realistic telco support data.</p>
+  <div class="demos">
+    <a class="demo" href="/"><div class="dt">Resolution console</div><div class="dd">A ticket resolved instantly by _predict (with $why) beside the same gpt-5-mini call — the response-rate gap, live.</div><div class="go">open →</div></a>
+    <a class="demo" href="/?view=augment"><div class="dt">LLM + Aito · short-list</div><div class="dd">Aito narrows 240 tools → 5; the same LLM then picks with ~16× fewer tokens. Augment, not compete.</div><div class="go">open →</div></a>
+    <a class="demo" href="https://ecommerce.aito.ai"><div class="dt">Industry demos</div><div class="dd">Ecommerce, ERP and accounting — recommend, relate, estimate, GL-coding, anomaly detection, all from one index.</div><div class="go">ecommerce · erp · accounting →</div></a>
+  </div>
+  <div class="foot-cta" style="margin-top:30px"><a class="btn p" href="#" style="display:inline-block">Start free trial →</a></div>
+</div></section>
+
+<footer><div class="wrap">Aito — the predictive database. Predictions come straight from the index: no model file, no retrain step, every answer verifiable.</div></footer>
+
+</body>
+</html>

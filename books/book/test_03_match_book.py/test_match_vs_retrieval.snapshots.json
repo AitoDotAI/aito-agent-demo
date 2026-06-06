@@ -1,0 +1,294 @@
+{
+  "httpx": {
+    "10eebcf09ba2ad9b2a12c94f60d11a7657dc5c83": {
+      "request": {
+        "hash": "10eebcf09ba2ad9b2a12c94f60d11a7657dc5c83",
+        "method": "POST",
+        "url": "https://shared.aito.ai/db/aito-agent-demo/api/v1/_similarity"
+      },
+      "response": {
+        "content": "eyJvZmZzZXQiOjAsInRvdGFsIjo0MDAwLCJoaXRzIjpbeyJ0ZXh0IjoiSGksIGl0IGRvZXNuJ3QgY2hhcmdlIHdoZW4gcGx1Z2dlZCBpbiDigJQgd2hhdCBjYW4gSSBkbz8gQVNBUC4iLCJrYl9hcnRpY2xlIjoid29udF9jaGFyZ2UiLCIkc2NvcmUiOjM0LjA2ODA4MjQyOTkwMDUxfSx7InRleHQiOiJIZWxsbyDigJQgaXQgZG9lc24ndCBjaGFyZ2Ugd2hlbiBwbHVnZ2VkIGluLiBUaGFua3MuIiwia2JfYXJ0aWNsZSI6IndvbnRfY2hhcmdlIiwiJHNjb3JlIjozNC4wNjgwODI0Mjk5MDA1MX1dfQ==",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token",
+          "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH, CONNECT",
+          "access-control-allow-origin": "*",
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Fri, 05 Jun 2026 16:35:42 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-aitoai-response-time": "4.32",
+          "x-azure-ref": "20260605T163542Z-r1bf6fb584f24zq8hC1STO9vd400000013vg000000009dhm",
+          "x-cache": "CONFIG_NOCACHE",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "1; mode=block"
+        },
+        "statusCode": 200
+      }
+    },
+    "1772176ab81d6cdebf2d0d36ee602edf12c9beda": {
+      "request": {
+        "hash": "1772176ab81d6cdebf2d0d36ee602edf12c9beda",
+        "method": "POST",
+        "url": "https://shared.aito.ai/db/aito-agent-demo/api/v1/_similarity"
+      },
+      "response": {
+        "content": "eyJvZmZzZXQiOjAsInRvdGFsIjo0MDAwLCJoaXRzIjpbeyJ0ZXh0IjoiVXJnZW50OiBiYXR0ZXJ5IGRpZXMgd2l0aGluIGFuIGhvdXIsIGNhbiB5b3UgYWR2aXNlPyBUaGFua3MuIiwia2JfYXJ0aWNsZSI6ImJhdHRlcnlfZHJhaW4iLCIkc2NvcmUiOjcxLjQwNTA4MjgzOTU4ODI5fSx7InRleHQiOiJIZWxsbyDigJQgaGVscCwgYmF0dGVyeSBkaWVzIHdpdGhpbiBhbiBob3VyLiBQbGVhc2UgYWR2aXNlLiIsImtiX2FydGljbGUiOiJiYXR0ZXJ5X2RyYWluIiwiJHNjb3JlIjo3MS40MDUwODI4Mzk1ODgyOX1dfQ==",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token",
+          "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH, CONNECT",
+          "access-control-allow-origin": "*",
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Fri, 05 Jun 2026 16:35:42 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-aitoai-response-time": "4.73",
+          "x-azure-ref": "20260605T163542Z-r1bf6fb584f24zq8hC1STO9vd400000013vg000000009dgh",
+          "x-cache": "CONFIG_NOCACHE",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "1; mode=block"
+        },
+        "statusCode": 200
+      }
+    },
+    "28651ed8ed536b6c1a73263fd91d987353837aa0": {
+      "request": {
+        "hash": "28651ed8ed536b6c1a73263fd91d987353837aa0",
+        "method": "POST",
+        "url": "https://shared.aito.ai/db/aito-agent-demo/api/v1/_match"
+      },
+      "response": {
+        "content": "eyJvZmZzZXQiOjAsInRvdGFsIjo2LCJoaXRzIjpbeyIkcCI6MC45NzIwNDk0NDkyOTI4MzMxLCJmaWVsZCI6ImtiX2FydGljbGUiLCJmZWF0dXJlIjoiY3JhY2tlZF9zY3JlZW4ifSx7IiRwIjowLjAwOTgxNTY4MzUzMDQ0NzM5LCJmaWVsZCI6ImtiX2FydGljbGUiLCJmZWF0dXJlIjoid2F0ZXJfZGFtYWdlIn1dfQ==",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token",
+          "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH, CONNECT",
+          "access-control-allow-origin": "*",
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Fri, 05 Jun 2026 16:35:42 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-aitoai-response-time": "26.63",
+          "x-azure-ref": "20260605T163542Z-r1bf6fb584f24zq8hC1STO9vd400000013vg000000009dg1",
+          "x-cache": "CONFIG_NOCACHE",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "1; mode=block"
+        },
+        "statusCode": 200
+      }
+    },
+    "3a4e82211339d722324e6e0bce242d5c32afc37c": {
+      "request": {
+        "hash": "3a4e82211339d722324e6e0bce242d5c32afc37c",
+        "method": "POST",
+        "url": "https://shared.aito.ai/db/aito-agent-demo/api/v1/_similarity"
+      },
+      "response": {
+        "content": "eyJvZmZzZXQiOjAsInRvdGFsIjo0MDAwLCJoaXRzIjpbeyJ0ZXh0IjoiUXVpY2sgb25lOiBteSBoYW5kc2V0IHNob3dzIG5vIHNpZ25hbCBhdCBhbGwg4oCUIHdoYXQgY2FuIEkgZG8/Iiwia2JfYXJ0aWNsZSI6Im5vX3NpZ25hbCIsIiRzY29yZSI6MzUuMDU3OTg1ODQzMDA4fSx7InRleHQiOiJRdWljayBvbmU6IGhlbHAsIG15IGhhbmRzZXQgc2hvd3Mgbm8gc2lnbmFsIGF0IGFsbC4gQVNBUC4iLCJrYl9hcnRpY2xlIjoibm9fc2lnbmFsIiwiJHNjb3JlIjozNS4wNTc5ODU4NDMwMDh9XX0=",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token",
+          "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH, CONNECT",
+          "access-control-allow-origin": "*",
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Fri, 05 Jun 2026 16:35:43 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-aitoai-response-time": "4.17",
+          "x-azure-ref": "20260605T163542Z-r1bf6fb584f24zq8hC1STO9vd400000013vg000000009dka",
+          "x-cache": "CONFIG_NOCACHE",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "1; mode=block"
+        },
+        "statusCode": 200
+      }
+    },
+    "501714a318aa56f55d12aa41e8ac0a01e4b8fd56": {
+      "request": {
+        "hash": "501714a318aa56f55d12aa41e8ac0a01e4b8fd56",
+        "method": "POST",
+        "url": "https://shared.aito.ai/db/aito-agent-demo/api/v1/_match"
+      },
+      "response": {
+        "content": "eyJvZmZzZXQiOjAsInRvdGFsIjo2LCJoaXRzIjpbeyIkcCI6MC45NjY5MTU5NjA2NTI5NjMsImZpZWxkIjoia2JfYXJ0aWNsZSIsImZlYXR1cmUiOiJiYXR0ZXJ5X2RyYWluIn0seyIkcCI6MC4wMTU2OTc5Njk3NDAwNTQ5NTQsImZpZWxkIjoia2JfYXJ0aWNsZSIsImZlYXR1cmUiOiJzb2Z0d2FyZV91cGRhdGUifV19",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token",
+          "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH, CONNECT",
+          "access-control-allow-origin": "*",
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Fri, 05 Jun 2026 16:35:42 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-aitoai-response-time": "24.91",
+          "x-azure-ref": "20260605T163542Z-r1bf6fb584f24zq8hC1STO9vd400000013vg000000009dga",
+          "x-cache": "CONFIG_NOCACHE",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "1; mode=block"
+        },
+        "statusCode": 200
+      }
+    },
+    "54a89515cd20911d56b63021c4ba15d2707b332c": {
+      "request": {
+        "hash": "54a89515cd20911d56b63021c4ba15d2707b332c",
+        "method": "POST",
+        "url": "https://shared.aito.ai/db/aito-agent-demo/api/v1/_match"
+      },
+      "response": {
+        "content": "eyJvZmZzZXQiOjAsInRvdGFsIjo2LCJoaXRzIjpbeyIkcCI6MC45OTk4ODYyOTQ4NDkwODc0LCJmaWVsZCI6ImtiX2FydGljbGUiLCJmZWF0dXJlIjoibm9fc2lnbmFsIn0seyIkcCI6OS4zNDE4MjkxMDkxODU0NThFLTUsImZpZWxkIjoia2JfYXJ0aWNsZSIsImZlYXR1cmUiOiJzb2Z0d2FyZV91cGRhdGUifV19",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token",
+          "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH, CONNECT",
+          "access-control-allow-origin": "*",
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Fri, 05 Jun 2026 16:35:42 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-aitoai-response-time": "25.87",
+          "x-azure-ref": "20260605T163542Z-r1bf6fb584f24zq8hC1STO9vd400000013vg000000009dk0",
+          "x-cache": "CONFIG_NOCACHE",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "1; mode=block"
+        },
+        "statusCode": 200
+      }
+    },
+    "ba17995791c3787c7cbbcbe35257d4c7780ba89c": {
+      "request": {
+        "hash": "ba17995791c3787c7cbbcbe35257d4c7780ba89c",
+        "method": "POST",
+        "url": "https://shared.aito.ai/db/aito-agent-demo/api/v1/_match"
+      },
+      "response": {
+        "content": "eyJvZmZzZXQiOjAsInRvdGFsIjo2LCJoaXRzIjpbeyIkcCI6MC41NjIzMDcyNDU5MjIxNzg3LCJmaWVsZCI6ImtiX2FydGljbGUiLCJmZWF0dXJlIjoibm9fc2lnbmFsIn0seyIkcCI6MC40MzIzMTE2MTEwNjU2OTk1LCJmaWVsZCI6ImtiX2FydGljbGUiLCJmZWF0dXJlIjoid2F0ZXJfZGFtYWdlIn1dfQ==",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token",
+          "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH, CONNECT",
+          "access-control-allow-origin": "*",
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Fri, 05 Jun 2026 16:35:42 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-aitoai-response-time": "31.35",
+          "x-azure-ref": "20260605T163542Z-r1bf6fb584f24zq8hC1STO9vd400000013vg000000009dgz",
+          "x-cache": "CONFIG_NOCACHE",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "1; mode=block"
+        },
+        "statusCode": 200
+      }
+    },
+    "d8105c6c90c089e5df5db189fe132d9688ae28e3": {
+      "request": {
+        "hash": "d8105c6c90c089e5df5db189fe132d9688ae28e3",
+        "method": "POST",
+        "url": "https://shared.aito.ai/db/aito-agent-demo/api/v1/_similarity"
+      },
+      "response": {
+        "content": "eyJvZmZzZXQiOjAsInRvdGFsIjo0MDAwLCJoaXRzIjpbeyJ0ZXh0IjoiSGV5LCB0aGUgZ2xhc3MgaXMgc2hhdHRlcmVkIOKAlCB3aGF0IGNhbiBJIGRvPyBBU0FQLiIsImtiX2FydGljbGUiOiJjcmFja2VkX3NjcmVlbiIsIiRzY29yZSI6NC4zOTUwNjM4NDI0NjM0NTg1fSx7InRleHQiOiJIZWxsbyDigJQgdGhlIGdsYXNzIGlzIHNoYXR0ZXJlZC4gUGxlYXNlIGFkdmlzZS4iLCJrYl9hcnRpY2xlIjoiY3JhY2tlZF9zY3JlZW4iLCIkc2NvcmUiOjQuMzk1MDYzODQyNDYzNDU4NX1dfQ==",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token",
+          "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH, CONNECT",
+          "access-control-allow-origin": "*",
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Fri, 05 Jun 2026 16:35:42 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-aitoai-response-time": "5.98",
+          "x-azure-ref": "20260605T163542Z-r1bf6fb584f24zq8hC1STO9vd400000013vg000000009dg6",
+          "x-cache": "CONFIG_NOCACHE",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "1; mode=block"
+        },
+        "statusCode": 200
+      }
+    },
+    "d8774c2a86294673f5155cfaeb2cd827bae045e5": {
+      "request": {
+        "hash": "d8774c2a86294673f5155cfaeb2cd827bae045e5",
+        "method": "POST",
+        "url": "https://shared.aito.ai/db/aito-agent-demo/api/v1/_match"
+      },
+      "response": {
+        "content": "eyJvZmZzZXQiOjAsInRvdGFsIjo2LCJoaXRzIjpbeyIkcCI6MC45ODU2NzcxNjcxOTA4OTcsImZpZWxkIjoia2JfYXJ0aWNsZSIsImZlYXR1cmUiOiJ3b250X2NoYXJnZSJ9LHsiJHAiOjAuMDA2NDM3MjM1NzExMTc0NTQyLCJmaWVsZCI6ImtiX2FydGljbGUiLCJmZWF0dXJlIjoic29mdHdhcmVfdXBkYXRlIn1dfQ==",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token",
+          "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH, CONNECT",
+          "access-control-allow-origin": "*",
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Fri, 05 Jun 2026 16:35:42 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-aitoai-response-time": "37.74",
+          "x-azure-ref": "20260605T163542Z-r1bf6fb584f24zq8hC1STO9vd400000013vg000000009dhb",
+          "x-cache": "CONFIG_NOCACHE",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "1; mode=block"
+        },
+        "statusCode": 200
+      }
+    },
+    "f353a5f2025ef3a2379eb7ea76fd4da82d76f21d": {
+      "request": {
+        "hash": "f353a5f2025ef3a2379eb7ea76fd4da82d76f21d",
+        "method": "POST",
+        "url": "https://shared.aito.ai/db/aito-agent-demo/api/v1/_similarity"
+      },
+      "response": {
+        "content": "eyJvZmZzZXQiOjAsInRvdGFsIjo0MDAwLCJoaXRzIjpbeyJ0ZXh0IjoiSSBkcm9wcGVkIG15IHBob25lIGluIHdhdGVyIOKAlCB3aGF0IGNhbiBJIGRvPyBQbGVhc2UgYWR2aXNlLiIsImtiX2FydGljbGUiOiJ3YXRlcl9kYW1hZ2UiLCIkc2NvcmUiOjE1LjM3Njc1MjY1NjI0OTYyfSx7InRleHQiOiJRdWljayBvbmU6IGkgZHJvcHBlZCBteSBwaG9uZSBpbiB3YXRlciDigJQgd2hhdCBjYW4gSSBkbz8gUGxlYXNlIGFkdmlzZS4iLCJrYl9hcnRpY2xlIjoid2F0ZXJfZGFtYWdlIiwiJHNjb3JlIjoxNS4zNzY3NTI2NTYyNDk2Mn1dfQ==",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token",
+          "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH, CONNECT",
+          "access-control-allow-origin": "*",
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Fri, 05 Jun 2026 16:35:42 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-aitoai-response-time": "4.21",
+          "x-azure-ref": "20260605T163542Z-r1bf6fb584f24zq8hC1STO9vd400000013vg000000009dha",
+          "x-cache": "CONFIG_NOCACHE",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "1; mode=block"
+        },
+        "statusCode": 200
+      }
+    }
+  }
+}

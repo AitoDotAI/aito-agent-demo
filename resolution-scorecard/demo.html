@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Instant Resolution — by Aito</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f6f5f1; --card:#fff; --card-line:#e7e4db; --ink:#1c1c1c; --ink-2:#5e5b53; --faint:#9b978c;
+    --gold:#e0b34d; --turq:#16c2b9; --turq-ink:#04221f; --green:#2f9e6b; --green-ink:#1f6f4a; --green-bg:#e7f4ec;
+    --purple:#9B69FF; --plight:#7c6cff; --rust:#c2410c;
+    --indigo:#0c0f41; --indigo-2:#10134a; --indigo-deep:#070920;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:'Figtree',sans-serif;background:linear-gradient(180deg,#fff,var(--paper));color:var(--ink);-webkit-font-smoothing:antialiased;font-size:14px;padding:26px 18px 60px}
+  .wrap{max-width:1020px;margin:0 auto}
+  .top{display:flex;align-items:center;gap:13px;margin-bottom:6px}
+  .ic{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--gold),#c9942f);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .ic svg{width:22px;height:22px}
+  h1{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0}
+  .sub{color:var(--ink-2);font-size:14px;margin:2px 0 18px;line-height:1.5;max-width:80ch}
+  .sub b{color:var(--ink)}
+
+  .ticket{background:var(--card);border:1px solid var(--card-line);border-radius:13px;padding:15px 17px;display:flex;align-items:center;gap:14px;margin-bottom:16px}
+  .ticket .lab{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+  .ticket .msg{font-size:15px;color:var(--ink);font-weight:500}
+  .ticket .from{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);margin-top:3px}
+  .run{margin-left:auto;font-family:'Figtree';font-weight:800;font-size:14px;background:var(--turq);color:var(--turq-ink);border:none;border-radius:9px;padding:12px 20px;cursor:pointer;white-space:nowrap}
+  .run:hover{filter:brightness(1.07)}.run:disabled{opacity:.5;cursor:not-allowed}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.cols{grid-template-columns:1fr}}
+  .col{border-radius:14px;overflow:hidden;border:1px solid var(--card-line);background:var(--card)}
+  .col.llm{border-top:3px solid var(--purple)}
+  .col.aito{border-top:3px solid var(--turq)}
+  .ch{padding:14px 16px;border-bottom:1px solid var(--card-line);display:flex;align-items:center;gap:10px}
+  .ch .nm{font-weight:700;font-size:15px}
+  .ch .tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:5px}
+  .llm .tag{background:rgba(124,108,255,.13);color:var(--plight)}
+  .aito .tag{background:rgba(22,194,185,.14);color:var(--green-ink)}
+  .meters{margin-left:auto;display:flex;gap:14px;text-align:right}
+  .meter .mv{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:16px;font-variant-numeric:tabular-nums}
+  .meter .ml{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+  .llm .mv{color:var(--plight)} .aito .mv{color:var(--turq)}
+
+  .steps{padding:8px 0;min-height:320px}
+  .step{display:flex;align-items:center;gap:11px;padding:11px 16px;border-bottom:1px solid #f1efe8;opacity:.35;transition:opacity .25s}
+  .step:last-child{border-bottom:none}
+  .step.on{opacity:1}
+  .dot{width:18px;height:18px;border-radius:50%;border:2px solid #d8d5cc;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+  .step.busy .dot{border-color:var(--plight);border-top-color:transparent;animation:spin .7s linear infinite}
+  .step.done .dot{border-color:var(--green);background:var(--green);color:#fff}
+  .step.done .dot svg{width:11px;height:11px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .step .sl{font-size:13.5px}
+  .step .sv{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint)}
+  .step.done .sv{color:var(--green-ink)}
+
+  .achip{display:flex;align-items:center;gap:11px;padding:11px 16px;border-bottom:1px solid #f1efe8;opacity:.35;transition:opacity .2s}
+  .achip:last-child{border-bottom:none}
+  .achip.on{opacity:1}
+  .achip .q{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--ink-2)}
+  .achip .q b{color:var(--ink)}
+  .achip .r{margin-left:auto;display:flex;align-items:center;gap:7px}
+  .achip .pred{font-family:'JetBrains Mono',monospace;font-size:11px;background:#e7f4ec;color:var(--green-ink);padding:3px 8px;border-radius:6px}
+  .achip .pp{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--faint)}
+
+  .verdict{margin-top:16px;background:var(--indigo-2);background:linear-gradient(180deg,var(--indigo-2),var(--indigo-deep));color:#dfe2ff;border-radius:13px;padding:18px 20px;opacity:0;transition:.4s}
+  .verdict.show{opacity:1}
+  .verdict .big{font-size:18px;font-weight:800;letter-spacing:-.01em;line-height:1.35}
+  .verdict .big .hl{color:var(--turq)}
+  .verdict .big .dim{color:#8f97d6}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+  @media(max-width:600px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:rgba(255,255,255,.05);border:1px solid #272c70;border-radius:10px;padding:12px 13px}
+  .kpi .kl{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:#8f97d6}
+  .kpi .kv{font-size:23px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:4px}
+  .kpi .kv.t{color:var(--turq)} .kpi .kv.p{color:#b9aaff}
+  .kpi .kd{font-size:11px;color:#8f97d6;margin-top:2px}
+  .foot{margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);line-height:1.7}
+  .steps-toggle{margin-left:6px}
+  select{font-family:'JetBrains Mono',monospace;font-size:12px;border:1px solid var(--card-line);border-radius:7px;padding:6px 8px;background:#fff}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3C12 3 5 9 5 15a7 7 0 0 0 14 0c0-6-7-12-7-12Z" stroke="#3a2c08" stroke-width="1.8"/><path d="M12 21v-9m0 2-3-2m3 4 3-2" stroke="#3a2c08" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+    <div>
+      <h1>Same ticket, two engines</h1>
+      <div style="font-size:11px;color:var(--turq);font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">POWERED BY AITO · _predict</div>
+    </div>
+  </div>
+  <div class="sub">A support ticket needs a multi-step resolution: <b>understand it, identify the customer, find the right record, fill the parameters, act</b>. An <b>LLM agent</b> chains those steps — each a round-trip of seconds and tokens. The <b>predictive layer</b> answers them as parallel <code>_predict</code> calls from history — sub-second, no LLM cost.</div>
+
+  <div class="ticket">
+    <div>
+      <div class="lab">Incoming ticket</div>
+      <div class="msg" id="tmsg">Hi — please refund the €45 charge on my roaming pack.</div>
+      <div class="from" id="tfrom">from: anna@acmecorp.com · channel: email</div>
+    </div>
+    <select id="scenario" title="pick a ticket">
+      <option value="0">Outage · Helsinki</option>
+      <option value="1">Repair · cracked screen</option>
+      <option value="2">Cancel · broadband</option>
+      <option value="3">Refund · roaming</option>
+    </select>
+    <button class="run" id="run">▶ Resolve ticket</button>
+  </div>
+
+  <div class="cols">
+    <div class="col llm">
+      <div class="ch"><span class="tag">agent</span><span class="nm">LLM Agent</span>
+        <div class="meters">
+          <div class="meter"><div class="mv" id="llm_t">0.0s</div><div class="ml">elapsed</div></div>
+          <div class="meter"><div class="mv" id="llm_c">$0.000</div><div class="ml">llm cost</div></div>
+        </div>
+      </div>
+      <div class="steps" id="llmSteps"></div>
+    </div>
+    <div class="col aito">
+      <div class="ch"><span class="tag">+ predictive layer</span><span class="nm">Aito</span>
+        <div class="meters">
+          <div class="meter"><div class="mv" id="aito_t">0.0s</div><div class="ml">elapsed</div></div>
+          <div class="meter"><div class="mv" id="aito_c">$0.000</div><div class="ml">llm cost</div></div>
+        </div>
+      </div>
+      <div class="steps" id="aitoSteps"></div>
+    </div>
+  </div>
+
+  <div class="verdict" id="verdict">
+    <div class="big" id="vbig"></div>
+    <div class="kpis">
+      <div class="kpi"><div class="kl">Resolution time</div><div class="kv t" id="k_speed">—</div><div class="kd" id="k_speed_d"></div></div>
+      <div class="kpi"><div class="kl">LLM cost / 1000 tickets</div><div class="kv t" id="k_cost">—</div><div class="kd" id="k_cost_d"></div></div>
+      <div class="kpi"><div class="kl">End-to-end accuracy</div><div class="kv" id="k_acc" style="color:#dfe2ff">—</div><div class="kd" id="k_acc_d"></div></div>
+      <div class="kpi"><div class="kl">Auto-resolved · no LLM</div><div class="kv t" id="k_auto">—</div><div class="kd">high-confidence, hands-off</div></div>
+    </div>
+  </div>
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+// ===== numbers from the measured scorecard (results/scorecard.json) =====
+// Replaced with the live run's figures; placeholders shown until then.
+const M = {
+  llmPerCallMs: 3600,        // clean (unthrottled) gpt-5-mini latency / call
+  aitoPerPredictMs: 90,      // measured: 148ms / resolution ≈ 2 predicts
+  llmCostPer1000: 0.15,      // measured $/1000 (single-call agent, gpt-5-mini)
+  llmCostPerCallUsd: 0.00015,// measured $ / call
+  llmTokPerStep: 300,        // measured tokens / call
+  aitoAcc: 1.00, llmAcc: 1.00, // a tie on this clean data — win is speed/cost
+  autoRate: 1.00,
+  replay: 6                  // visual replay speed-up so it fits on screen
+};
+
+// each scenario: the workflow steps (the agent does these sequentially) and the
+// parallel predicts Aito fires. value strings are illustrative resolutions.
+const SCEN = [
+  {msg:"Is there a network outage? Nothing works in Helsinki.", from:"from: alerts.monitoring.io · channel: automation",
+   steps:[["Classify intent","check_outage"],["Identify region","from sender/text"],["Extract location","Helsinki"],["Query outage status","check region"],["Compose answer","outage map"]],
+   preds:[["intent","check_outage"],["location","Helsinki"]]},
+  {msg:"My screen is cracked, the glass is shattered. Help?", from:"from: support-portal · channel: portal",
+   steps:[["Classify intent","repair_help"],["Identify symptom","cracked screen"],["Match KB article","cracked_screen"],["Fetch repair template","template"],["Personalize response","ready"]],
+   preds:[["intent","repair_help"],["kb_article","cracked_screen"]]},
+  {msg:"Please cancel my home internet, moving abroad.", from:"from: j.smith@globex.io · channel: email",
+   steps:[["Classify intent","cancel_service"],["Identify customer","Globex (from sender)"],["Look up subscriptions","find broadband"],["Select service to cancel","broadband"],["Verify customer + confirm with customer","gated"],["Submit cancellation for review","queued"]],
+   preds:[["intent","cancel_service"],["customer","globex"],["target_service","broadband"]]},
+  {msg:"Hi — please refund the €45 charge on my roaming pack.", from:"from: anna@acmecorp.com · channel: email",
+   steps:[["Classify intent","refund"],["Identify customer","Acme (from sender)"],["Look up subscriptions","3 active services"],["Match invoice by amount","€45 · roaming_addon"],["Verify customer + confirm with customer","gated"],["Submit refund for review","queued"]],
+   preds:[["intent","refund"],["customer","acme"],["target_service","roaming_addon"]]},
+];
+
+const $=id=>document.getElementById(id);
+let playing=false, sc=0;
+
+function loadScenario(i){ sc=i; $('tmsg').textContent=SCEN[i].msg; $('tfrom').textContent=SCEN[i].from; reset(); }
+function reset(){
+  $('llmSteps').innerHTML=''; $('aitoSteps').innerHTML='';
+  $('llm_t').textContent='0.0s'; $('aito_t').textContent='0.0s';
+  $('llm_c').textContent='$0.000'; $('aito_c').textContent='$0.000';
+  $('verdict').classList.remove('show');
+  const S=SCEN[sc];
+  S.steps.forEach((s,idx)=>{
+    $('llmSteps').insertAdjacentHTML('beforeend',
+      `<div class="step" id="ls${idx}"><div class="dot"></div><div class="sl">${s[0]}</div><div class="sv"></div></div>`);
+  });
+  S.preds.forEach((p,idx)=>{
+    $('aitoSteps').insertAdjacentHTML('beforeend',
+      `<div class="achip" id="as${idx}"><div class="q">_predict <b>${p[0]}</b> where {text, sender}</div><div class="r"></div></div>`);
+  });
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const tick="<svg viewBox='0 0 24 24' fill='none'><path d='M5 13l4 4L19 7' stroke='#fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>";
+
+async function play(){
+  playing=true; $('run').disabled=true; reset(); await sleep(60);
+  const S=SCEN[sc];
+  const stepMs=M.llmPerCallMs, visMs=stepMs/M.replay;
+  // Aito: all predicts fire in parallel, resolve almost instantly
+  const aitoMs=Math.round(M.aitoPerPredictMs*1.6); // parallel ~ a touch over one round-trip
+  (async()=>{
+    await sleep(visMs*0.5);
+    for(let i=0;i<S.preds.length;i++){
+      const el=$('as'+i); el.classList.add('on');
+      el.querySelector('.r').innerHTML=`<span class="pred">${S.preds[i][1]}</span><span class="pp">p≈0.9${6-i}</span>`;
+    }
+    $('aito_t').textContent=(aitoMs/1000).toFixed(2)+'s';
+    $('aito_c').textContent='$0.000';
+  })();
+  // LLM: sequential steps, timer + cost accumulate
+  let elapsed=0, cost=0;
+  for(let i=0;i<S.steps.length;i++){
+    const el=$('ls'+i); el.classList.add('on','busy');
+    await sleep(visMs);
+    elapsed+=stepMs; cost+=M.llmCostPerCallUsd;
+    el.classList.remove('busy'); el.classList.add('done');
+    el.querySelector('.dot').innerHTML=tick;
+    el.querySelector('.sv').textContent=`+${(stepMs/1000).toFixed(1)}s · +${M.llmTokPerStep}tok`;
+    $('llm_t').textContent=(elapsed/1000).toFixed(1)+'s';
+    $('llm_c').textContent='$'+cost.toFixed(4);
+  }
+  // verdict
+  const llmTotal=S.steps.length*stepMs;
+  const speed=Math.round(llmTotal/aitoMs);
+  $('vbig').innerHTML=`Aito resolved the whole workflow in <span class="hl">${(aitoMs/1000).toFixed(2)}s</span> for <span class="hl">$0</span> — <span class="dim">the agent took ${(llmTotal/1000).toFixed(1)}s across ${S.steps.length} sequential calls.</span> About <span class="hl">${speed}× faster</span>, and free.`;
+  $('k_speed').textContent=speed+'×'; $('k_speed_d').textContent=`${(aitoMs/1000).toFixed(2)}s vs ${(llmTotal/1000).toFixed(1)}s`;
+  $('k_cost').textContent='$0'; $('k_cost_d').textContent=`vs $${M.llmCostPer1000.toFixed(2)} (LLM)`;
+  $('k_acc').textContent=(M.aitoAcc*100).toFixed(0)+'%'; $('k_acc_d').textContent=`LLM ${(M.llmAcc*100).toFixed(0)}% — a tie on quality`;
+  $('k_auto').textContent=(M.autoRate*100).toFixed(0)+'%';
+  $('verdict').classList.add('show');
+  $('verdict').style.transition='none'; $('verdict').style.opacity='1'; // crisp for screenshots
+  $('foot').innerHTML=`Latencies and cost are the measured per-call figures from the resolution scorecard (gpt-5-mini, Azure). The race is replayed ~${M.replay}× so it fits on screen. In a real multi-step workflow the agent's steps run sequentially — the more steps, the larger the gap (e.g. a 6-step flow ≈ ${(6*stepMs/1000).toFixed(0)}s vs ~${(aitoMs/1000).toFixed(2)}s). Demo data is illustrative; accuracy is comparable — the win is latency and cost.`;
+  playing=false; $('run').disabled=false;
+}
+$('run').onclick=()=>{ if(!playing) play(); };
+$('scenario').onchange=e=>{ if(!playing) loadScenario(+e.target.value); };
+loadScenario(0);
+// auto-run for screenshotting (?auto): advance through the race on load
+if(location.search.includes('auto')) setTimeout(play, 80);
+</script>
+</body>
+</html>
