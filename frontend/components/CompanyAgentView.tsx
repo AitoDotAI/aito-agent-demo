@@ -1,8 +1,9 @@
 "use client";
 
-/* Company AI agent = AgentChat wired to /api/company-agent/chat. A SQL+LLM BI
-   bot can count rows; this answers WHY accounts churn, what drags NPS, the
-   expected MRR of a cohort, and what to fix — calibrated, with drivers. */
+/* Company AI agent = AgentChat wired to /api/company-agent/chat. A 360° copilot
+   over one linked customers master (sales/support/product/finance/CX). It doesn't
+   just report KPIs — it finds the lever that moves each one and drafts the play.
+   A SQL+LLM BI bot counts rows; this predicts, explains, optimises, and learns. */
 
 import { AgentChat, pct, type TraceItem } from "@/components/AgentChat";
 import type { ToolMeta } from "@/components/ToolboxView";
@@ -10,20 +11,33 @@ import type { ToolMeta } from "@/components/ToolboxView";
 const eur = (v: unknown) => "€" + Number(v).toLocaleString("en-US");
 
 const SAMPLES = [
-  "Our SMB Free-plan accounts with Red health and no onboarding — are they a churn risk, what's dragging their NPS, and what should we focus on?",
-  "What's the expected MRR for an Enterprise account on the Pro plan with 100+ seats?",
-  "Which feedback themes hurt us most in the Mid-market segment, and which accounts there are at risk?",
+  "Give me the 360 KPI snapshot for our SMB Free-plan customers, then the single biggest lever to cut their churn and the projected impact.",
+  "Which lever most improves conversion for Enterprise deals, and what's the lift? Draft the play.",
+  "Pull a 360 on an at-risk customer — deals, tickets, usage, invoices — and recommend what to do.",
 ];
 
 function summarize(t: TraceItem): string {
   const r = t.result || {};
   if (r.error) return `⚠ ${r.error}`;
   switch (t.name) {
-    case "churn_risk": return `churn ${pct(r.churn_probability)} · ${(r.drivers as unknown[] | undefined)?.length ?? 0} drivers`;
-    case "nps_drivers": return `detractor ${pct(r.detractor_probability)} · promoter ${pct(r.promoter_probability)}`;
+    case "kpi_snapshot": {
+      const k = (r.kpis ?? {}) as Record<string, { p: number }>;
+      const m = (key: string) => (k[key] ? pct(k[key].p) : "—");
+      return `conv ${m("conversion")} · churn ${m("churn")} · NPS det ${m("nps")} · CSAT ${m("csat")} · adopt ${m("adoption")}`;
+    }
+    case "optimize_kpi": {
+      const p = (r.recommended_play ?? {}) as { lever?: string; change_to?: string };
+      const h = r.headline as { metric?: string; now?: number; then?: number } | undefined;
+      const now = h ? h.now : r.current, then = h ? h.then : r.projected;
+      return `${r.kpi}: ${pct(now)} → ${pct(then)} (${r.lift_pp}pp) via ${p.lever}=${p.change_to}`;
+    }
+    case "customer_360": {
+      const d = (r.domains ?? {}) as Record<string, { count: number }>;
+      const prof = (r.profile ?? {}) as { name?: string };
+      return `${prof.name ?? "customer"} · ${Object.entries(d).map(([k, v]) => `${v.count} ${k}`).join(" · ")}`;
+    }
+    case "find_examples": return `${r.count ?? 0} ${r.domain ?? "rows"}`;
     case "estimate_mrr": return `${eur(r.mrr_eur_estimate)}/mo expected`;
-    case "find_accounts": return `${r.count ?? 0} example accounts`;
-    case "recommend_focus": return ((r.themes_to_prioritise as { theme: string }[] | undefined) ?? []).map((x) => x.theme).join(" · ");
     default: return JSON.stringify(r).slice(0, 80);
   }
 }
@@ -34,9 +48,9 @@ export function CompanyAgentView({ tools, toolOn }: { tools: ToolMeta[]; toolOn:
       endpoint="/api/company-agent/chat"
       tools={tools} toolOn={toolOn} samples={SAMPLES}
       title="Northwind Cloud · Company AI"
-      blurb={<>Ask about the company&apos;s own numbers. A BI bot can count rows; this calls Aito ops (<code>_predict</code>, <code>_estimate</code>, <code>_recommend</code>) to tell you <b>which accounts churn and why</b>, what drags NPS, and what to fix — calibrated, with drivers.</>}
+      blurb={<>A 360° copilot over one <b>linked</b> customer view — sales, support, product, finance, CX. It calls Aito to give the <b>360 KPIs</b>, find the <b>lever that moves each one</b> (<code>_predict</code> + <code>_recommend</code> + projected lift), and draft the play. See → optimise → act → learn, no retrain.</>}
       summarize={summarize}
-      actionLabel="Approve task"
+      actionLabel="Approve play"
     />
   );
 }

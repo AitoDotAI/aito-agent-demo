@@ -1,13 +1,21 @@
-"""Company AI agent — gpt-5-mini that answers questions about the company's own
-numbers by calling Aito ops as tools.
+"""Company AI agent — a 360° copilot over Northwind Cloud's own data.
 
-The point: a SQL+LLM "BI chatbot" can COUNT rows. It can't tell you which accounts
-will churn and WHY, what's dragging NPS in a segment, the expected MRR of a cohort,
-or which feedback themes to fix — calibrated, with drivers, no training. Those are
-_predict / _estimate / _recommend / _query, registered here as tools.
+A single `customers` master is linked to every domain (deals, tickets, usage,
+invoices, feedback) and a `products` catalog, so the agent sees the whole company
+and can OPTIMISE KPIs, not just report them:
 
-Tool *implementations* live in app.py (they call the shared AitoClient over the
-`accounts` + `feedback` tables); the loop is agent_core.run_turn.
+  - kpi_snapshot  : the 360 card (conversion, churn, NPS, CSAT, adoption, on-time)
+  - optimize_kpi  : drivers ($why) + the lever that moves a KPI + the projected lift
+  - customer_360  : one customer across every domain (the linked join)
+  - find_examples : ground an answer with real rows from any domain
+  - estimate_mrr  : expected revenue for a segment
+  - launch_play   : gated — drafts a play for a human to approve
+
+A SQL+LLM BI bot can COUNT rows; this predicts, explains, and recommends — and
+because Aito has no training step, a logged outcome is in the next prediction: a
+closed optimise loop with no retrain.
+
+Tool implementations live in app.py; the loop is agent_core.run_turn.
 """
 
 from __future__ import annotations
@@ -16,94 +24,74 @@ from typing import Any, Callable
 
 from src import agent_core
 
-# ── vocab (mirrors scripts/seed_company.py so tool args hit real values) ──
 _INDUSTRY = ["SaaS", "Retail", "Banking", "Manufacturing", "Healthcare", "Public", "Telecom", "Logistics"]
 _SIZE = ["SMB", "Mid-market", "Enterprise"]
 _PLAN = ["Free", "Starter", "Pro", "Enterprise"]
-_TENURE = ["<3mo", "3-12mo", "1-2y", "2y+"]
 _SEATS = ["1-5", "6-20", "21-100", "100+"]
-_ONBOARDING = ["Completed", "Partial", "None"]
-_SUPPORT = ["none", "low", "high"]
-_USAGE = ["low", "medium", "high"]
-_HEALTH = ["Green", "Yellow", "Red"]
-_NPS = ["promoter", "passive", "detractor"]
-_SURVEY = ["NPS", "CSAT", "CES"]
+_KPI = ["conversion", "churn", "nps", "csat", "adoption", "ontime"]
+_DOMAIN = ["customers", "deals", "tickets", "usage", "invoices", "feedback"]
 
 
 def _enum(desc: str, values: list[str]) -> dict:
     return {"type": "string", "description": desc, "enum": values}
 
 
+# a reusable customer-segment block (industry/size/plan) most tools accept
+_SEG = {
+    "industry": _enum("Customer industry", _INDUSTRY),
+    "size": _enum("Customer size", _SIZE),
+    "plan": _enum("Subscription plan", _PLAN),
+}
+
 TOOLS: list[dict[str, Any]] = [
     {
-        "name": "churn_risk",
+        "name": "kpi_snapshot",
         "aito": True, "op": "_predict",
-        "summary": "Probability an account (or segment) churns, with the drivers behind it.",
-        "parameters": {"type": "object", "properties": {
-            "industry": _enum("Account industry", _INDUSTRY),
-            "size": _enum("Account size", _SIZE),
-            "plan": _enum("Subscription plan", _PLAN),
-            "tenure_band": _enum("How long they've been a customer", _TENURE),
-            "onboarding": _enum("Onboarding status", _ONBOARDING),
-            "support_load": _enum("Support ticket load", _SUPPORT),
-            "usage": _enum("Product usage level", _USAGE),
-            "health": _enum("CS health flag", _HEALTH),
-            "nps_band": _enum("Latest NPS band", _NPS),
-        }, "additionalProperties": False},
+        "summary": "The 360 KPI card for a customer segment: conversion, churn, NPS, CSAT, adoption, on-time revenue.",
+        "parameters": {"type": "object", "properties": {**_SEG}, "additionalProperties": False},
     },
     {
-        "name": "nps_drivers",
-        "aito": True, "op": "_predict",
-        "summary": "For a segment, the chance feedback is a detractor and the themes/factors driving it.",
+        "name": "optimize_kpi",
+        "aito": True, "op": "_predict · _recommend",
+        "summary": "For a KPI + segment: the drivers, the single lever that moves it most, and the projected lift.",
         "parameters": {"type": "object", "properties": {
-            "industry": _enum("Account industry", _INDUSTRY),
-            "size": _enum("Account size", _SIZE),
-            "plan": _enum("Subscription plan", _PLAN),
-            "survey_type": _enum("Survey type", _SURVEY),
-        }, "additionalProperties": False},
+            "kpi": _enum("Which KPI to optimise", _KPI), **_SEG,
+        }, "required": ["kpi"], "additionalProperties": False},
+    },
+    {
+        "name": "customer_360",
+        "aito": True, "op": "_query",
+        "summary": "One customer across every domain — profile, deals, tickets, product usage, invoices, feedback.",
+        "parameters": {"type": "object", "properties": {
+            "customer_id": {"type": "string", "description": "e.g. ACC-123456 (get one from find_examples)"},
+        }, "required": ["customer_id"], "additionalProperties": False},
+    },
+    {
+        "name": "find_examples",
+        "aito": True, "op": "_query",
+        "summary": "Example rows from any domain (use domain='customers' to get customer_ids to drill into).",
+        "parameters": {"type": "object", "properties": {
+            "domain": _enum("Which table to sample", _DOMAIN), **_SEG,
+            "churned": {"type": "string", "description": "customers only: filter by churn", "enum": ["yes", "no"]},
+        }, "required": ["domain"], "additionalProperties": False},
     },
     {
         "name": "estimate_mrr",
         "aito": True, "op": "_estimate",
-        "summary": "Expected monthly recurring revenue (EUR) for a segment of accounts.",
-        "parameters": {"type": "object", "properties": {
-            "plan": _enum("Subscription plan", _PLAN),
-            "size": _enum("Account size", _SIZE),
-            "seats_band": _enum("Seat count band", _SEATS),
-            "industry": _enum("Account industry", _INDUSTRY),
-        }, "additionalProperties": False},
+        "summary": "Expected monthly recurring revenue (EUR) for a customer segment.",
+        "parameters": {"type": "object", "properties": {**_SEG, "seats_band": _enum("Seat band", _SEATS)},
+                       "additionalProperties": False},
     },
     {
-        "name": "find_accounts",
-        "aito": True, "op": "_query",
-        "summary": "Pull example accounts matching a filter (to ground the answer with real rows).",
-        "parameters": {"type": "object", "properties": {
-            "industry": _enum("Account industry", _INDUSTRY),
-            "size": _enum("Account size", _SIZE),
-            "plan": _enum("Subscription plan", _PLAN),
-            "health": _enum("CS health flag", _HEALTH),
-            "churned": {"type": "string", "description": "Filter by churn", "enum": ["yes", "no"]},
-        }, "additionalProperties": False},
-    },
-    {
-        "name": "recommend_focus",
-        "aito": True, "op": "_recommend",
-        "summary": "Which feedback themes to prioritise for a segment to move accounts toward promoter.",
-        "parameters": {"type": "object", "properties": {
-            "industry": _enum("Account industry", _INDUSTRY),
-            "size": _enum("Account size", _SIZE),
-            "plan": _enum("Subscription plan", _PLAN),
-        }, "additionalProperties": False},
-    },
-    {
-        "name": "open_cs_task",
+        "name": "launch_play",
         "aito": False, "op": "action",
-        "summary": "Open a customer-success task as a DRAFT for a human to approve — never acts on its own.",
+        "summary": "Draft a play to move a KPI (e.g. switch a segment to a CSM motion) — for a human to approve; never runs on its own.",
         "parameters": {"type": "object", "properties": {
-            "account": {"type": "string", "description": "Account name/id/segment"},
-            "title": {"type": "string"},
-            "notes": {"type": "string", "description": "What to do and why"},
-        }, "required": ["title", "notes"], "additionalProperties": False},
+            "kpi": _enum("KPI the play targets", _KPI),
+            "segment": {"type": "string", "description": "Who it applies to"},
+            "play": {"type": "string", "description": "The lever change / action"},
+            "expected_impact": {"type": "string", "description": "Projected effect, from the data"},
+        }, "required": ["play"], "additionalProperties": False},
     },
 ]
 
@@ -116,24 +104,24 @@ def tools_public() -> list[dict]:
 
 
 _SYSTEM = (
-    "You are the Company AI analyst for Northwind Cloud, a B2B SaaS company. You help staff understand the "
-    "company's OWN numbers in a short chat — churn risk, what drives NPS, expected revenue, which accounts are "
-    "at risk, what to do about it.\n\n"
-    "You have tools that read Northwind's data and return real, calibrated answers: churn probability with its "
-    "drivers, NPS/detractor drivers, an MRR estimate, example accounts, and the feedback themes to prioritise. "
-    "Whenever a claim depends on such a number, CALL THE TOOL rather than guessing — map what the user described "
-    "into the tool's fields (leave a field out if unknown). You may call several tools.\n\n"
-    "You are NOT a SQL database — you can't do arbitrary group-by counts. Lean into what you CAN do: predict, "
-    "explain the drivers, estimate, and recommend. Use find_accounts to ground an answer with example rows. If a "
-    "needed tool isn't in your toolbox, don't pretend — give a best-effort guess clearly labelled as unverified "
-    "and name the tool you'd want.\n\n"
-    "Be concise and concrete, like a sharp analyst. Quote the figures and the drivers the tools returned, and turn "
-    "them into a recommendation. When you propose an intervention, call open_cs_task — it only DRAFTS a task for a "
-    "human to approve; never claim anything was actually done."
+    "You are the Company AI copilot for Northwind Cloud, a B2B SaaS company. You have a 360° view of its own data: "
+    "a single customers master linked to deals (sales), tickets (support), usage (product), invoices (finance) and "
+    "feedback (CX). You help staff understand AND IMPROVE the KPIs: conversion, churn, NPS, CSAT, adoption, on-time "
+    "revenue.\n\n"
+    "You can't run arbitrary SQL — lean into what you CAN do, via tools that read the real data: kpi_snapshot (the "
+    "360 card for a segment), optimize_kpi (a KPI's drivers + the lever that moves it most + the projected lift), "
+    "customer_360 (one customer across every domain), find_examples (ground with real rows / get customer_ids), "
+    "estimate_mrr. Whenever a claim depends on a number, CALL THE TOOL — don't guess. Map what the user described "
+    "into the segment fields. If a needed tool isn't available, say so and label any guess as unverified.\n\n"
+    "Frame answers as an operator who optimises outcomes: quote the current KPI, the driver, the recommended lever "
+    "change and its projected lift (e.g. 'churn 84% → 74% if moved to a Dedicated CSM'). When you propose acting, "
+    "call launch_play — it only DRAFTS a play for a human to approve; never claim anything ran. And note the loop: "
+    "Aito has no training step, so once a play's outcome is logged it sharpens the next prediction — optimise, act, "
+    "learn, with no retrain.\n\n"
+    "Be concise and concrete, like a sharp RevOps analyst."
 )
 
 
 def run_turn(history: list[dict], tool_impls: dict[str, Callable[[dict], Any]],
-             enabled: list[str], max_steps: int = 5) -> dict:
-    """One assistant turn — delegates to the shared agent loop."""
+             enabled: list[str], max_steps: int = 6) -> dict:
     return agent_core.run_turn(history, _SYSTEM, TOOLS, tool_impls, enabled, max_steps)

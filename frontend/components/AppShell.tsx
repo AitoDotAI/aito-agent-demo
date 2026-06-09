@@ -66,12 +66,12 @@ const SALES_EXAMPLES: Record<string, string> = {
   propose_send_email: "queues a draft for human approval — never sends",
 };
 const CO_EXAMPLES: Record<string, string> = {
-  churn_risk: "_predict churned  →  $p + $why drivers",
-  nps_drivers: "_predict score_band  →  detractor $p + drivers",
+  kpi_snapshot: "_predict ×6  →  conv / churn / NPS / CSAT / adopt / on-time",
+  optimize_kpi: "_predict $why + _recommend lever  →  projected lift",
+  customer_360: "_query (linked)  →  one customer, every domain",
+  find_examples: "_query any domain  →  example rows + ids",
   estimate_mrr: "_estimate mrr_eur  →  expected € / month",
-  find_accounts: "_query accounts  →  example rows",
-  recommend_focus: "_recommend theme toward score_band=promoter",
-  open_cs_task: "drafts a CS task for approval — never acts",
+  launch_play: "drafts a play for approval — never runs",
 };
 
 export default function AppShell({ initialView = "home" }: { initialView?: View }) {
@@ -218,7 +218,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
         {view === "company" && <CompanyAgentView tools={coTools} toolOn={coToolOn} />}
         {view === "company-toolbox" && <ToolboxView tools={coTools} toolOn={coToolOn} onToggle={toggleCoTool} onAllAito={setAllCoAito}
           agentLabel="Company AI agent" examples={CO_EXAMPLES}
-          lead={<>The Company AI agent is a plain gpt-5-mini chat loop over Northwind&apos;s <b>accounts</b> and <b>feedback</b>. Five of these tools are <b>Aito ops</b>; the model calls them for the numbers a BI bot can&apos;t produce — churn, NPS drivers, MRR, themes to fix. Flip them off and it has to <b>guess</b>, and it&apos;ll tell you so.</>} />}
+          lead={<>The Company AI agent is a plain gpt-5-mini chat loop over Northwind&apos;s <b>linked</b> data — one customers master joined to deals, tickets, usage, invoices and feedback. Five of these tools are <b>Aito ops</b>; the model calls them for the 360 KPIs, the lever that moves each one, and the customer join a BI bot can&apos;t produce. Flip them off and it has to <b>guess</b>, and it&apos;ll tell you so.</>} />}
 
         {hasTopbar && (
           <div className="rc-topbar">
@@ -428,19 +428,19 @@ const PANEL: Record<Exclude<View, "resolve">, {
     code: "win_odds          → _predict\nestimate_effort   → _estimate\nfind_references   → _query\nrecommend_outreach→ _recommend\npropose_send_email→ action (gated)",
   },
   company: {
-    pdb: "talk to your numbers",
-    stats: [["churn", "+ why"], ["NPS", "drivers"], ["MRR", "estimate"]],
-    chip: "not a BI bot — it predicts",
-    desc: "A SQL+LLM chatbot can <code>COUNT(*)</code>. This agent calls Aito to do what it can't: <b>which accounts churn and why</b> (<code>_predict</code>+<code>$why</code>), <b>what drags NPS</b>, <b>expected MRR</b> (<code>_estimate</code>), and the <b>themes to fix</b> (<code>_recommend</code>) — calibrated, no training. Toggle the tools in the Toolbox.",
-    codeLabel: "A tool the model calls",
-    code: "churn_risk({plan:\"Free\",\n  health:\"Red\", onboarding:\"None\"})\n// ⇒ aito._predict churned\n//   → 0.92 + $why drivers",
+    pdb: "360 · optimise KPIs",
+    stats: [["360", "linked"], ["optimise", "any KPI"], ["learn", "no retrain"]],
+    chip: "see · optimise · act · learn",
+    desc: "One <b>linked</b> customers master across sales, support, product, finance and CX. A SQL+LLM bot can <code>COUNT(*)</code>; this agent calls Aito for the <b>360 KPIs</b>, the <b>lever that moves each one</b> (<code>_recommend</code> + projected lift), and drafts the play. Aito has no training step — a logged outcome sharpens the next prediction. A closed loop, no retrain.",
+    codeLabel: "Optimise a KPI",
+    code: "optimize_kpi(\"churn\",\n  {size:\"SMB\", plan:\"Free\"})\n// ⇒ _predict $why + _recommend\n//   65% → 78% via Exec-sponsor CSM",
   },
   "company-toolbox": {
-    pdb: "the analyst's tools",
-    stats: [["_predict", "churn"], ["_estimate", "mrr"], ["_recommend", "fix"]],
+    pdb: "the 360 toolbox",
+    stats: [["_predict", "KPIs"], ["_recommend", "lever"], ["_query", "360"]],
     chip: "one toggle",
-    desc: "The Company AI agent's tools over <b>accounts</b> + <b>feedback</b>. Five are Aito ops; one is a gated CS-task draft. Turn the Aito tools off and the same agent has to guess the numbers — and flags that it's guessing.",
+    desc: "The Company AI agent's tools over the <b>linked</b> Northwind data (customers · deals · tickets · usage · invoices · feedback). Five are Aito ops; one is a gated play draft. Turn the Aito tools off and the same agent has to guess the numbers — and flags that it's guessing.",
     codeLabel: "Tool → op",
-    code: "churn_risk      → _predict\nnps_drivers     → _predict + $why\nestimate_mrr    → _estimate\nfind_accounts   → _query\nrecommend_focus → _recommend\nopen_cs_task    → action (gated)",
+    code: "kpi_snapshot  → _predict ×6\noptimize_kpi  → _predict + _recommend\ncustomer_360  → _query (linked)\nfind_examples → _query\nestimate_mrr  → _estimate\nlaunch_play   → action (gated)",
   },
 };

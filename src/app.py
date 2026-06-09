@@ -584,41 +584,130 @@ _SALES_TOOL_IMPLS = {
 }
 
 
-# ── Company AI agent — Aito ops over the firm's OWN numbers ─────────
+# ── Company AI agent — a 360° copilot that optimises KPIs ──────────
 #
-# Same machine as the sales agent (src/company_agent.py + agent_core), different
-# toolbox: churn/NPS prediction, MRR estimate, account lookup, theme recommendation
-# over the `accounts` + `feedback` tables. open_cs_task only ever drafts.
+# A single `customers` master is linked (Aito link) to deals/tickets/usage/
+# invoices/feedback + a `products` catalog, so predictions on a child table can
+# use the linked customer's attributes (where {"customer.size": …}) and one
+# customer joins across every domain. Each KPI is a _predict target with an
+# actionable lever for _recommend. launch_play only ever drafts.
 
-def _acc_where(args: dict) -> dict:
-    keys = ["industry", "size", "plan", "tenure_band", "onboarding", "support_load", "usage", "health", "nps_band"]
-    return {k: args[k] for k in keys if args.get(k)}
-
-
-def _fb_where(args: dict) -> dict:
-    m = {"industry": "account_industry", "size": "account_size", "plan": "plan", "survey_type": "survey_type"}
-    return {col: args[k] for k, col in m.items() if args.get(k)}
-
-
-def _tool_churn_risk(args: dict) -> dict:
-    where = _acc_where(args)
-    if not where:
-        return {"error": "need at least one account attribute (plan, health, nps_band, tenure…)"}
-    hits = aito.predict("accounts", where, "churned", limit=2, select=["$p", "feature", "$why"]).get("hits") or []
-    yes = next((h for h in hits if h.get("feature") == "yes"), None)
-    return {"churn_probability": round(float(yes["$p"]), 2) if yes else 0.0,
-            "drivers": _win_drivers((yes or (hits[0] if hits else {})).get("$why")),
-            "based_on": "accounts with these attributes"}
+# kpi → {table, target, the "good" value, the lever to _recommend, labels}
+_KPIS = {
+    "conversion": {"label": "Conversion", "table": "deals", "target": "converted", "good": "yes",
+                   "lever": "nurture_track", "lever_label": "nurture track"},
+    "churn": {"label": "Churn", "table": "customers", "target": "churned", "good": "no", "report": "yes",
+              "lever": "csm_motion", "lever_label": "CSM motion"},
+    "nps": {"label": "NPS", "table": "feedback", "target": "score_band", "good": "promoter", "report": "detractor",
+            "lever": "theme", "lever_label": "theme to fix"},
+    "csat": {"label": "CSAT", "table": "tickets", "target": "csat_band", "good": "good", "report": "good",
+             "lever": "channel", "lever_label": "support channel"},
+    "adoption": {"label": "Adoption", "table": "usage", "target": "active", "good": "yes",
+                 "lever": "onboarding_push", "lever_label": "onboarding push"},
+    "ontime": {"label": "On-time revenue", "table": "invoices", "target": "status", "good": "paid", "report": "overdue",
+               "lever": "term", "lever_label": "billing term"},
+}
 
 
-def _tool_nps_drivers(args: dict) -> dict:
-    hits = aito.predict("feedback", _fb_where(args), "score_band", limit=3, select=["$p", "feature", "$why"]).get("hits") or []
-    det = next((h for h in hits if h.get("feature") == "detractor"), None)
-    promo = next((float(h["$p"]) for h in hits if h.get("feature") == "promoter"), 0.0)
-    return {"detractor_probability": round(float(det["$p"]), 2) if det else 0.0,
-            "promoter_probability": round(promo, 2),
-            "drivers": _win_drivers((det or (hits[0] if hits else {})).get("$why")),
-            "based_on": "feedback in this segment"}
+def _seg_where(table: str, args: dict) -> dict:
+    """Customer segment {industry,size,plan} → where, dotted through the link for
+    child tables (customer.size) and direct on the customers master."""
+    prefix = "" if table == "customers" else "customer."
+    return {f"{prefix}{k}": args[k] for k in ("industry", "size", "plan") if args.get(k)}
+
+
+def _p_of(hits: list, feature: str) -> float:
+    return next((float(h["$p"]) for h in hits if h.get("feature") == feature), 0.0)
+
+
+def _tool_kpi_snapshot(args: dict) -> dict:
+    """The 360 card: the headline rate for every KPI in this segment."""
+    out = {}
+    for kpi, cfg in _KPIS.items():
+        where = _seg_where(cfg["table"], args)
+        hits = aito.predict(cfg["table"], where, cfg["target"], limit=4, select=["$p", "feature"]).get("hits") or []
+        shown = cfg.get("report", cfg["good"])
+        out[kpi] = {"metric": cfg["label"], "value": shown, "p": round(_p_of(hits, shown), 2)}
+    return {"segment": {k: args[k] for k in ("industry", "size", "plan") if args.get(k)} or "all customers",
+            "kpis": out}
+
+
+def _tool_optimize_kpi(args: dict) -> dict:
+    kpi = args.get("kpi")
+    cfg = _KPIS.get(kpi)
+    if not cfg:
+        return {"error": f"unknown kpi '{kpi}'"}
+    table, target, good = cfg["table"], cfg["target"], cfg["good"]
+    where = _seg_where(table, args)
+    # current KPI + drivers
+    hits = aito.predict(table, where, target, limit=4, select=["$p", "feature", "$why"]).get("hits") or []
+    good_hit = next((h for h in hits if h.get("feature") == good), None)
+    current = round(float(good_hit["$p"]), 2) if good_hit else round(_p_of(hits, good), 2)
+    drivers = _win_drivers((good_hit or (hits[0] if hits else {})).get("$why"))
+    # the lever that moves it most, + projected lift
+    rec = (aito.recommend(table, where, cfg["lever"], {target: good}, limit=3).get("hits") or [])
+    best = rec[0]["feature"] if rec else None
+    ph: list = []
+    projected = current
+    if best is not None:
+        ph = aito.predict(table, {**where, cfg["lever"]: best}, target, limit=4, select=["$p", "feature"]).get("hits") or []
+        projected = round(_p_of(ph, good), 2)
+    # headline framed in the KPI's natural direction: churn/detractor/overdue are
+    # "lower is better", so report that falling rate rather than the good-rate.
+    report = cfg.get("report")
+    lower_better = bool(report) and report != good
+    now = round(_p_of(hits, report), 2) if lower_better else current
+    then = (round(_p_of(ph, report), 2) if (lower_better and best is not None) else (now if lower_better else projected))
+    return {
+        "kpi": cfg["label"], "goal": f"{target}={good}",
+        "headline": {"metric": cfg["label"], "now": now, "then": then, "lower_is_better": lower_better},
+        "current": current, "drivers": drivers,
+        "recommended_play": {"lever": cfg["lever_label"], "change_to": best,
+                             "ranked": [{"value": h["feature"], "p": round(float(h["$p"]), 2)} for h in rec]},
+        "projected": projected,
+        "lift_pp": round(abs(then - now) * 100),
+        "note": "Aito has no training step — log this play's outcome and it sharpens the next prediction.",
+    }
+
+
+_360_SELECT = {
+    "deals": ["product", "source", "nurture_track", "converted"],
+    "tickets": ["product", "category", "priority", "csat_band", "resolved"],
+    "usage": ["product", "adoption_band", "active"],
+    "invoices": ["term", "amount_band", "status"],
+    "feedback": ["survey_type", "theme", "score_band"],
+}
+
+
+def _tool_customer_360(args: dict) -> dict:
+    cid = args.get("customer_id")
+    if not cid:
+        return {"error": "customer_id required (use find_examples with domain='customers')"}
+    cust = (aito.query("customers", where={"customer_id": cid}, limit=1).get("hits") or [])
+    if not cust:
+        return {"error": f"no customer {cid}"}
+    profile = cust[0]
+    domains = {}
+    for tbl, sel in _360_SELECT.items():
+        r = aito.query(tbl, where={"customer": cid}, select=sel, limit=4)
+        domains[tbl] = {"count": r.get("total", 0), "examples": r.get("hits") or []}
+    return {"profile": {k: profile.get(k) for k in
+                        ("customer_id", "name", "industry", "size", "plan", "health", "nps_band",
+                         "csm_motion", "mrr_eur", "churned")},
+            "domains": domains}
+
+
+def _tool_find_examples(args: dict) -> dict:
+    domain = args.get("domain")
+    if domain not in _KPIS and domain not in ("customers",) and domain not in _360_SELECT:
+        return {"error": f"unknown domain '{domain}'"}
+    where = _seg_where(domain, args)
+    if domain == "customers" and args.get("churned"):
+        where["churned"] = args["churned"]
+    sel = (["customer_id", "name", "industry", "size", "plan", "health", "churned"] if domain == "customers"
+           else ["customer", *_360_SELECT.get(domain, [])])
+    rows = (aito.query(domain, where=where or None, select=sel, limit=6).get("hits") or [])
+    return {"domain": domain, "count": len(rows), "rows": rows}
 
 
 def _tool_estimate_mrr(args: dict) -> dict:
@@ -626,42 +715,26 @@ def _tool_estimate_mrr(args: dict) -> dict:
                                "seats_band": args.get("seats_band"), "industry": args.get("industry")}.items() if v}
     if not where:
         return {"error": "need plan / size / seats to estimate MRR"}
-    est = aito.estimate("accounts", where, "mrr_eur").get("estimate")
+    est = aito.estimate("customers", where, "mrr_eur").get("estimate")
     if est is None:
         return {"error": "no estimate for that segment"}
-    return {"mrr_eur_estimate": round(float(est)), "based_on": "similar accounts"}
+    return {"mrr_eur_estimate": round(float(est)), "based_on": "similar customers"}
 
 
-def _tool_find_accounts(args: dict) -> dict:
-    keys = ["industry", "size", "plan", "health", "churned"]
-    where = {k: args[k] for k in keys if args.get(k)}
-    rows = (aito.query("accounts", where=where or None,
-                       select=["account_id", "industry", "plan", "health", "nps_band", "churned", "mrr_eur"],
-                       limit=5).get("hits") or [])
-    return {"accounts": [{"account_id": r.get("account_id"), "industry": r.get("industry"), "plan": r.get("plan"),
-                          "health": r.get("health"), "nps_band": r.get("nps_band"),
-                          "churned": r.get("churned"), "mrr_eur": r.get("mrr_eur")} for r in rows],
-            "count": len(rows)}
-
-
-def _tool_recommend_focus(args: dict) -> dict:
-    hits = (aito.recommend("feedback", _fb_where(args), "theme", {"score_band": "promoter"}, limit=4).get("hits") or [])
-    return {"themes_to_prioritise": [{"theme": h["feature"], "p": round(float(h["$p"]), 2)} for h in hits]}
-
-
-def _tool_open_cs_task(args: dict) -> dict:
+def _tool_launch_play(args: dict) -> dict:
     return {"status": "draft_created_for_approval", "acted": False,
-            "account": args.get("account", "(unspecified)"), "title": args.get("title", ""),
-            "note": "CS task drafted for a human to review — nothing was actioned automatically."}
+            "kpi": args.get("kpi"), "segment": args.get("segment", "(unspecified)"),
+            "play": args.get("play", ""), "expected_impact": args.get("expected_impact", ""),
+            "note": "Play drafted for a human to approve — nothing was run automatically."}
 
 
 _COMPANY_TOOL_IMPLS = {
-    "churn_risk": _tool_churn_risk,
-    "nps_drivers": _tool_nps_drivers,
+    "kpi_snapshot": _tool_kpi_snapshot,
+    "optimize_kpi": _tool_optimize_kpi,
+    "customer_360": _tool_customer_360,
+    "find_examples": _tool_find_examples,
     "estimate_mrr": _tool_estimate_mrr,
-    "find_accounts": _tool_find_accounts,
-    "recommend_focus": _tool_recommend_focus,
-    "open_cs_task": _tool_open_cs_task,
+    "launch_play": _tool_launch_play,
 }
 
 
