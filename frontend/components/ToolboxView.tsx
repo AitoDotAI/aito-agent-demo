@@ -10,19 +10,14 @@
 
 export type ToolMeta = { name: string; op: string; aito: boolean; summary: string; params: string[] };
 
-const EXAMPLE: Record<string, string> = {
-  win_odds: "_predict outcome  →  $p(won) + $why drivers",
-  estimate_effort: "_estimate effort_days  →  person-days",
-  find_references: "_query  where outcome=won  →  3 briefs",
-  recommend_outreach: "_recommend channel/angle toward meeting=yes",
-  propose_send_email: "queues a draft for human approval — never sends",
-};
-
-export function ToolboxView({ tools, toolOn, onToggle, onAllAito }: {
+export function ToolboxView({ tools, toolOn, onToggle, onAllAito, agentLabel, lead, examples }: {
   tools: ToolMeta[];
   toolOn: Record<string, boolean>;
   onToggle: (name: string) => void;
   onAllAito: (on: boolean) => void;
+  agentLabel: string;
+  lead: React.ReactNode;
+  examples: Record<string, string>;
 }) {
   const aitoTools = tools.filter((t) => t.aito);
   const aitoAllOn = aitoTools.length > 0 && aitoTools.every((t) => toolOn[t.name] ?? true);
@@ -33,12 +28,12 @@ export function ToolboxView({ tools, toolOn, onToggle, onAllAito }: {
       <div className="wrap">
         <div className="kick">The agent&apos;s toolbox</div>
         <h2>Aito ops, registered as tools</h2>
-        <p className="lead">The sales agent is a plain gpt-5-mini chat loop — what makes it useful is what&apos;s in its toolbox. Four of these tools are <b>Aito ops</b> over Northlight&apos;s own history; the model calls them when it needs a number it can&apos;t invent. Flip them off and ask the agent the same question: it has to <b>guess</b>, and it&apos;ll tell you so.</p>
+        <p className="lead">{lead}</p>
 
         <div className={`master ${aitoAllOn ? "on" : "off"}`}>
           <div>
             <div className="mt">Aito tools <span className="badge">{aitoAllOn ? "ON" : "OFF"}</span></div>
-            <div className="ms">{aitoAllOn ? "The agent reads the firm's history for win odds, effort, references and outreach." : "The agent is on its own — grounded numbers replaced by flagged guesses."}</div>
+            <div className="ms">{aitoAllOn ? "The agent reads real data for grounded, calibrated answers." : "The agent is on its own — grounded numbers replaced by flagged guesses."}</div>
           </div>
           <button className="switch" onClick={() => onAllAito(!aitoAllOn)} role="switch" aria-checked={aitoAllOn}>
             <span className="knob" />
@@ -56,7 +51,7 @@ export function ToolboxView({ tools, toolOn, onToggle, onAllAito }: {
                   <button className={`chk ${on ? "on" : ""}`} onClick={() => onToggle(t.name)} aria-label={`toggle ${t.name}`}>{on ? "✓" : ""}</button>
                 </div>
                 <div className="sum">{t.summary}</div>
-                <div className="ex">{EXAMPLE[t.name] ?? ""}</div>
+                <div className="ex">{examples[t.name] ?? ""}</div>
                 <div className="pr">{t.params.map((p) => <span key={p}>{p}</span>)}</div>
                 {!t.aito && <div className="note">🔒 gated — drafts only, never auto-sends</div>}
               </div>
@@ -65,7 +60,7 @@ export function ToolboxView({ tools, toolOn, onToggle, onAllAito }: {
           {tools.length === 0 && <div className="empty">loading toolbox…</div>}
         </div>
 
-        <div className="foot">Toggling a tool changes which functions are handed to the model on your next message in <b>Sales agent</b>. Everything else about the agent stays identical — same prompt, same model — so the difference you see is exactly what Aito adds.</div>
+        <div className="foot">Toggling a tool changes which functions are handed to the model on your next message in <b>{agentLabel}</b>. Everything else about the agent stays identical — same prompt, same model — so the difference you see is exactly what Aito adds.</div>
       </div>
     </div>
   );

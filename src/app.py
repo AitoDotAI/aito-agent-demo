@@ -71,7 +71,7 @@ async def aito_latency_headers(request: Request, call_next):
 # light per-IP sliding-window cap as abuse insurance (nginx forwards the real
 # client IP in X-Forwarded-For). In-memory is fine — one uvicorn process, and a
 # demo doesn't need a shared store.
-_LLM_PATHS = {"/api/resolve-llm", "/api/sales-agent/chat"}
+_LLM_PATHS = {"/api/resolve-llm", "/api/sales-agent/chat", "/api/company-agent/chat"}
 _RL_MAX = 20          # requests
 _RL_WINDOW = 60.0     # seconds
 _rl_hits: dict[str, list[float]] = {}
@@ -584,44 +584,135 @@ _SALES_TOOL_IMPLS = {
 }
 
 
-@app.get("/api/sales-agent/tools")
-def sales_agent_tools():
-    """Toolbox metadata for the Toolbox view (names, backing op, Aito-or-not)."""
-    from src.sales_agent import tools_public
-    return {"tools": tools_public()}
+# ── Company AI agent — Aito ops over the firm's OWN numbers ─────────
+#
+# Same machine as the sales agent (src/company_agent.py + agent_core), different
+# toolbox: churn/NPS prediction, MRR estimate, account lookup, theme recommendation
+# over the `accounts` + `feedback` tables. open_cs_task only ever drafts.
+
+def _acc_where(args: dict) -> dict:
+    keys = ["industry", "size", "plan", "tenure_band", "onboarding", "support_load", "usage", "health", "nps_band"]
+    return {k: args[k] for k in keys if args.get(k)}
 
 
-@app.post("/api/sales-agent/chat")
-async def sales_agent_chat(request: Request):
-    """One assistant turn of the sales chat. Body:
+def _fb_where(args: dict) -> dict:
+    m = {"industry": "account_industry", "size": "account_size", "plan": "plan", "survey_type": "survey_type"}
+    return {col: args[k] for k, col in m.items() if args.get(k)}
+
+
+def _tool_churn_risk(args: dict) -> dict:
+    where = _acc_where(args)
+    if not where:
+        return {"error": "need at least one account attribute (plan, health, nps_band, tenure…)"}
+    hits = aito.predict("accounts", where, "churned", limit=2, select=["$p", "feature", "$why"]).get("hits") or []
+    yes = next((h for h in hits if h.get("feature") == "yes"), None)
+    return {"churn_probability": round(float(yes["$p"]), 2) if yes else 0.0,
+            "drivers": _win_drivers((yes or (hits[0] if hits else {})).get("$why")),
+            "based_on": "accounts with these attributes"}
+
+
+def _tool_nps_drivers(args: dict) -> dict:
+    hits = aito.predict("feedback", _fb_where(args), "score_band", limit=3, select=["$p", "feature", "$why"]).get("hits") or []
+    det = next((h for h in hits if h.get("feature") == "detractor"), None)
+    promo = next((float(h["$p"]) for h in hits if h.get("feature") == "promoter"), 0.0)
+    return {"detractor_probability": round(float(det["$p"]), 2) if det else 0.0,
+            "promoter_probability": round(promo, 2),
+            "drivers": _win_drivers((det or (hits[0] if hits else {})).get("$why")),
+            "based_on": "feedback in this segment"}
+
+
+def _tool_estimate_mrr(args: dict) -> dict:
+    where = {k: v for k, v in {"plan": args.get("plan"), "size": args.get("size"),
+                               "seats_band": args.get("seats_band"), "industry": args.get("industry")}.items() if v}
+    if not where:
+        return {"error": "need plan / size / seats to estimate MRR"}
+    est = aito.estimate("accounts", where, "mrr_eur").get("estimate")
+    if est is None:
+        return {"error": "no estimate for that segment"}
+    return {"mrr_eur_estimate": round(float(est)), "based_on": "similar accounts"}
+
+
+def _tool_find_accounts(args: dict) -> dict:
+    keys = ["industry", "size", "plan", "health", "churned"]
+    where = {k: args[k] for k in keys if args.get(k)}
+    rows = (aito.query("accounts", where=where or None,
+                       select=["account_id", "industry", "plan", "health", "nps_band", "churned", "mrr_eur"],
+                       limit=5).get("hits") or [])
+    return {"accounts": [{"account_id": r.get("account_id"), "industry": r.get("industry"), "plan": r.get("plan"),
+                          "health": r.get("health"), "nps_band": r.get("nps_band"),
+                          "churned": r.get("churned"), "mrr_eur": r.get("mrr_eur")} for r in rows],
+            "count": len(rows)}
+
+
+def _tool_recommend_focus(args: dict) -> dict:
+    hits = (aito.recommend("feedback", _fb_where(args), "theme", {"score_band": "promoter"}, limit=4).get("hits") or [])
+    return {"themes_to_prioritise": [{"theme": h["feature"], "p": round(float(h["$p"]), 2)} for h in hits]}
+
+
+def _tool_open_cs_task(args: dict) -> dict:
+    return {"status": "draft_created_for_approval", "acted": False,
+            "account": args.get("account", "(unspecified)"), "title": args.get("title", ""),
+            "note": "CS task drafted for a human to review — nothing was actioned automatically."}
+
+
+_COMPANY_TOOL_IMPLS = {
+    "churn_risk": _tool_churn_risk,
+    "nps_drivers": _tool_nps_drivers,
+    "estimate_mrr": _tool_estimate_mrr,
+    "find_accounts": _tool_find_accounts,
+    "recommend_focus": _tool_recommend_focus,
+    "open_cs_task": _tool_open_cs_task,
+}
+
+
+async def _agent_chat(request: Request, run_turn, impls: dict, all_names: list[str], aito_names: list[str]):
+    """Shared one-turn chat handler for the conversational agents. Body:
         {messages: [{role, content}...], aito_enabled?: bool, enabled_tools?: [name]}
-    With aito_enabled=false (or the Aito tools left out of enabled_tools), the
-    agent has to reason without the firm's data — the augment-vs-replace toggle."""
-    from src.sales_agent import AITO_TOOL_NAMES, TOOLS, run_turn
-
+    Leaving the Aito tools out (aito_enabled=false) is the augment-vs-replace toggle."""
     body = await request.json()
     messages = body.get("messages") or []
     if not messages:
         raise HTTPException(status_code=400, detail="messages required")
-
-    all_names = [t["name"] for t in TOOLS]
     if body.get("enabled_tools") is not None:
         enabled = [n for n in body["enabled_tools"] if n in all_names]
     else:
-        enabled = all_names if body.get("aito_enabled", True) else [n for n in all_names if n not in AITO_TOOL_NAMES]
-
+        enabled = all_names if body.get("aito_enabled", True) else [n for n in all_names if n not in aito_names]
     try:
         from src.llm_agent import get_agent
         get_agent()
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=f"LLM agent unavailable: {e}")
     try:
-        result = run_turn(messages, _SALES_TOOL_IMPLS, enabled)
+        result = run_turn(messages, impls, enabled)
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"agent turn failed: {e}")
     result["enabled_tools"] = enabled
     result["cost_usd"] = round(result["cost_usd"], 6)
     return result
+
+
+@app.get("/api/sales-agent/tools")
+def sales_agent_tools():
+    from src.sales_agent import tools_public
+    return {"tools": tools_public()}
+
+
+@app.post("/api/sales-agent/chat")
+async def sales_agent_chat(request: Request):
+    from src.sales_agent import AITO_TOOL_NAMES, TOOLS, run_turn
+    return await _agent_chat(request, run_turn, _SALES_TOOL_IMPLS, [t["name"] for t in TOOLS], AITO_TOOL_NAMES)
+
+
+@app.get("/api/company-agent/tools")
+def company_agent_tools():
+    from src.company_agent import tools_public
+    return {"tools": tools_public()}
+
+
+@app.post("/api/company-agent/chat")
+async def company_agent_chat(request: Request):
+    from src.company_agent import AITO_TOOL_NAMES, TOOLS, run_turn
+    return await _agent_chat(request, run_turn, _COMPANY_TOOL_IMPLS, [t["name"] for t in TOOLS], AITO_TOOL_NAMES)
 
 
 # ── Static files — keep this last ─────────────────────────────────

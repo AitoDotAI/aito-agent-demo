@@ -104,7 +104,7 @@ const CSS = `
 .fp footer{padding:34px 0 50px;text-align:center;color:var(--faint);font-size:13px;border-top:1px solid var(--line)}
 `;
 
-export type OverviewNav = (view: "resolve" | "augment" | "handoff" | "sales" | "agent" | "toolbox") => void;
+export type OverviewNav = (view: "resolve" | "augment" | "handoff" | "sales" | "agent" | "toolbox" | "company") => void;
 
 export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
   return (
@@ -233,6 +233,7 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
         <p className="lead">Not mocks — these run a live Aito index and a live gpt-5-mini, side by side, on synthetic-but-realistic data. Open any of them from the left.</p>
         <div className="demos">
           <button className="demo" onClick={() => onNavigate("agent")}><div className="dt">Sales agent</div><div className="dd">A live gpt-5-mini agent that calls Aito ops as <b>tools</b> — win-odds, effort, references, and the outreach that books the most meetings (with the lift). Better, faster, cheaper — and higher-yield.</div><div className="go">open →</div></button>
+          <button className="demo" onClick={() => onNavigate("company")}><div className="dt">Company AI agent</div><div className="dd">Ask about the company&apos;s own numbers. A BI bot counts rows; this one tells you <b>which accounts churn and why</b>, what drags NPS, and what to fix — calibrated, no training.</div><div className="go">open →</div></button>
           <button className="demo" onClick={() => onNavigate("resolve")}><div className="dt">Resolution console</div><div className="dd">A ticket resolved instantly by _predict (with $why) beside the same gpt-5-mini call — the response-rate gap, live.</div><div className="go">open →</div></button>
           <a className="demo" href="https://ecommerce.aito.ai"><div className="dt">Industry demos</div><div className="dd">Ecommerce, ERP and accounting — recommend, relate, estimate, GL-coding, anomaly detection, from one index.</div><div className="go">ecommerce · erp · accounting →</div></a>
         </div>

@@ -18,11 +18,12 @@ import { HandoffView, type HandoffData } from "@/components/HandoffView";
 import { OverviewView } from "@/components/OverviewView";
 import { SalesView, type SalesMeta } from "@/components/SalesView";
 import { SalesAgentView } from "@/components/SalesAgentView";
+import { CompanyAgentView } from "@/components/CompanyAgentView";
 import { ToolboxView, type ToolMeta } from "@/components/ToolboxView";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { Alternative, WhyFactor } from "@/lib/types";
 
-export type View = "home" | "resolve" | "augment" | "handoff" | "sales" | "agent" | "toolbox";
+export type View = "home" | "resolve" | "augment" | "handoff" | "sales" | "agent" | "toolbox" | "company" | "company-toolbox";
 
 type Aito = {
   intent: string; intent_p: number; intent_alts: Alternative[]; why: WhyFactor[];
@@ -54,7 +55,24 @@ const actionText = (intent: string, param: string | null) =>
   (ACTION[intent] ?? ((p: string | null) => `${intent}${p ? " · " + p : ""}`))(param);
 
 const isView = (v: string | null): v is View =>
-  v === "home" || v === "resolve" || v === "augment" || v === "handoff" || v === "sales" || v === "agent" || v === "toolbox";
+  v === "home" || v === "resolve" || v === "augment" || v === "handoff" || v === "sales" || v === "agent" ||
+  v === "toolbox" || v === "company" || v === "company-toolbox";
+
+const SALES_EXAMPLES: Record<string, string> = {
+  win_odds: "_predict outcome  →  $p(won) + $why drivers",
+  estimate_effort: "_estimate effort_days  →  person-days",
+  find_references: "_query  where outcome=won  →  3 briefs",
+  recommend_outreach: "_recommend channel/angle toward meeting=yes",
+  propose_send_email: "queues a draft for human approval — never sends",
+};
+const CO_EXAMPLES: Record<string, string> = {
+  churn_risk: "_predict churned  →  $p + $why drivers",
+  nps_drivers: "_predict score_band  →  detractor $p + drivers",
+  estimate_mrr: "_estimate mrr_eur  →  expected € / month",
+  find_accounts: "_query accounts  →  example rows",
+  recommend_focus: "_recommend theme toward score_band=promoter",
+  open_cs_task: "drafts a CS task for approval — never acts",
+};
 
 export default function AppShell({ initialView = "home" }: { initialView?: View }) {
   const [view, setView] = useState<View>(initialView);
@@ -78,6 +96,8 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
   // tools the agent may call. Default every tool on.
   const [tools, setTools] = useState<ToolMeta[]>([]);
   const [toolOn, setToolOn] = useState<Record<string, boolean>>({});
+  const [coTools, setCoTools] = useState<ToolMeta[]>([]);
+  const [coToolOn, setCoToolOn] = useState<Record<string, boolean>>({});
   const timer = useRef<number | null>(null);
 
   // handoff queue: fetched once for the sidebar badge + the view
@@ -85,16 +105,22 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
     apiFetch<HandoffData>("/api/handoff").then(setHandoff).catch(() => {}).finally(() => setHandoffLoading(false));
   }, []);
 
-  // toolbox catalog, fetched once; everything enabled to start
+  // toolbox catalogs, fetched once each; everything enabled to start
   useEffect(() => {
     apiFetch<{ tools: ToolMeta[] }>("/api/sales-agent/tools")
       .then((r) => { setTools(r.tools); setToolOn(Object.fromEntries(r.tools.map((t) => [t.name, true]))); })
+      .catch(() => {});
+    apiFetch<{ tools: ToolMeta[] }>("/api/company-agent/tools")
+      .then((r) => { setCoTools(r.tools); setCoToolOn(Object.fromEntries(r.tools.map((t) => [t.name, true]))); })
       .catch(() => {});
   }, []);
 
   const toggleTool = (name: string) => setToolOn((s) => ({ ...s, [name]: !(s[name] ?? true) }));
   const setAllAito = (on: boolean) =>
     setToolOn((s) => { const n = { ...s }; tools.forEach((t) => { if (t.aito) n[t.name] = on; }); return n; });
+  const toggleCoTool = (name: string) => setCoToolOn((s) => ({ ...s, [name]: !(s[name] ?? true) }));
+  const setAllCoAito = (on: boolean) =>
+    setCoToolOn((s) => { const n = { ...s }; coTools.forEach((t) => { if (t.aito) n[t.name] = on; }); return n; });
 
   const resolve = useCallback((t: string, s: string) => {
     setAito(null); setLlm(null); setLlmErr(null);
@@ -166,6 +192,10 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
           <NavItem v="sales">Opportunity Assistant</NavItem>
           <NavItem v="toolbox">Toolbox</NavItem>
 
+          <div className="rc-grp">Northwind Cloud · company</div>
+          <NavItem v="company">Company AI agent</NavItem>
+          <NavItem v="company-toolbox">Toolbox</NavItem>
+
           <div className="rc-grp">Sonipra Telecom · support</div>
           <NavItem v="resolve">Ticket resolution</NavItem>
           <NavItem v="augment">Tool routing · short-list</NavItem>
@@ -182,7 +212,13 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
       <main className="rc-main">
         {view === "home" && <OverviewView onNavigate={(v) => setView(v)} />}
         {view === "agent" && <SalesAgentView tools={tools} toolOn={toolOn} />}
-        {view === "toolbox" && <ToolboxView tools={tools} toolOn={toolOn} onToggle={toggleTool} onAllAito={setAllAito} />}
+        {view === "toolbox" && <ToolboxView tools={tools} toolOn={toolOn} onToggle={toggleTool} onAllAito={setAllAito}
+          agentLabel="Sales agent" examples={SALES_EXAMPLES}
+          lead={<>The sales agent is a plain gpt-5-mini chat loop — what makes it useful is what&apos;s in its toolbox. Four of these tools are <b>Aito ops</b> over Northlight&apos;s own history; the model calls them when it needs a number it can&apos;t invent. Flip them off and ask the same question: it has to <b>guess</b>, and it&apos;ll tell you so.</>} />}
+        {view === "company" && <CompanyAgentView tools={coTools} toolOn={coToolOn} />}
+        {view === "company-toolbox" && <ToolboxView tools={coTools} toolOn={coToolOn} onToggle={toggleCoTool} onAllAito={setAllCoAito}
+          agentLabel="Company AI agent" examples={CO_EXAMPLES}
+          lead={<>The Company AI agent is a plain gpt-5-mini chat loop over Northwind&apos;s <b>accounts</b> and <b>feedback</b>. Five of these tools are <b>Aito ops</b>; the model calls them for the numbers a BI bot can&apos;t produce — churn, NPS drivers, MRR, themes to fix. Flip them off and it has to <b>guess</b>, and it&apos;ll tell you so.</>} />}
 
         {hasTopbar && (
           <div className="rc-topbar">
@@ -390,5 +426,21 @@ const PANEL: Record<Exclude<View, "resolve">, {
     desc: "Each tool the agent can call. Four are <b>Aito ops</b> over Northlight's history; one is a gated action that only drafts. Flip the Aito tools off to see the agent fall back to <b>flagged guesses</b> — the augment thesis, A/B in one switch.",
     codeLabel: "Tool → op",
     code: "win_odds          → _predict\nestimate_effort   → _estimate\nfind_references   → _query\nrecommend_outreach→ _recommend\npropose_send_email→ action (gated)",
+  },
+  company: {
+    pdb: "talk to your numbers",
+    stats: [["churn", "+ why"], ["NPS", "drivers"], ["MRR", "estimate"]],
+    chip: "not a BI bot — it predicts",
+    desc: "A SQL+LLM chatbot can <code>COUNT(*)</code>. This agent calls Aito to do what it can't: <b>which accounts churn and why</b> (<code>_predict</code>+<code>$why</code>), <b>what drags NPS</b>, <b>expected MRR</b> (<code>_estimate</code>), and the <b>themes to fix</b> (<code>_recommend</code>) — calibrated, no training. Toggle the tools in the Toolbox.",
+    codeLabel: "A tool the model calls",
+    code: "churn_risk({plan:\"Free\",\n  health:\"Red\", onboarding:\"None\"})\n// ⇒ aito._predict churned\n//   → 0.92 + $why drivers",
+  },
+  "company-toolbox": {
+    pdb: "the analyst's tools",
+    stats: [["_predict", "churn"], ["_estimate", "mrr"], ["_recommend", "fix"]],
+    chip: "one toggle",
+    desc: "The Company AI agent's tools over <b>accounts</b> + <b>feedback</b>. Five are Aito ops; one is a gated CS-task draft. Turn the Aito tools off and the same agent has to guess the numbers — and flags that it's guessing.",
+    codeLabel: "Tool → op",
+    code: "churn_risk      → _predict\nnps_drivers     → _predict + $why\nestimate_mrr    → _estimate\nfind_accounts   → _query\nrecommend_focus → _recommend\nopen_cs_task    → action (gated)",
   },
 };
