@@ -10,6 +10,7 @@
 #   ./do test                     run pytest unit tests (tests/)
 #   ./do test-book                run booktest snapshot tests (book/, via booktest CLI)
 #   ./do screenshot-teaser        render assets/teaser.html → assets/teaser.png (1200×630)
+#   ./do product-sheet            compile docs/product-sheet/product-sheet.typ → PDF (needs typst)
 #   ./do screenshot-pages [...]   desktop full-page screenshots of given paths
 #   ./do inspect-mobile [...]     iPhone-sized screenshots of given paths
 #   ./do clean                    wipe build artifacts
@@ -84,6 +85,25 @@ cmd_inspect_mobile() {
   ( cd frontend && node scripts/inspect-mobile.cjs "$@" )
 }
 
+cmd_product_sheet() {
+  # Compile docs/product-sheet/product-sheet.typ → PDF. Needs typst (typst.app);
+  # on a nix box: `nix-shell -p typst --run '...'` works without installing.
+  local typ=docs/product-sheet/product-sheet.typ out=docs/product-sheet/product-sheet.pdf
+  [ -f "$typ" ] || die "missing $typ"
+  if [ ! -f docs/product-sheet/shots/home.png ]; then
+    say "shots/ missing — run ./do backend (or dev) then:"
+    say "  node frontend/scripts/screenshot-pages.cjs  # or re-capture into docs/product-sheet/shots/"
+  fi
+  if command -v typst >/dev/null 2>&1; then
+    typst compile --root . "$typ" "$out"
+  elif command -v nix-shell >/dev/null 2>&1; then
+    nix-shell -p typst --run "typst compile --root . $typ $out"
+  else
+    die "typst not found — install from typst.app or 'nix-shell -p typst'"
+  fi
+  say "wrote $out"
+}
+
 cmd_clean() {
   rm -rf frontend/.next frontend/out .pytest_cache frontend/scripts/output/*
   find . -type d -name __pycache__ -prune -exec rm -rf {} +
@@ -100,6 +120,7 @@ case "${1:-help}" in
   test)                shift; cmd_test "$@" ;;
   test-book)           shift; cmd_test_book "$@" ;;
   screenshot-teaser)   shift; cmd_screenshot_teaser "$@" ;;
+  product-sheet)       shift; cmd_product_sheet "$@" ;;
   screenshot-pages)    shift; cmd_screenshot_pages "$@" ;;
   inspect-mobile)      shift; cmd_inspect_mobile "$@" ;;
   clean)               shift; cmd_clean "$@" ;;
