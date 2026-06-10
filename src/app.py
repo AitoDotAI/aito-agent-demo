@@ -788,6 +788,29 @@ async def company_agent_chat(request: Request):
     return await _agent_chat(request, run_turn, _COMPANY_TOOL_IMPLS, [t["name"] for t in TOOLS], AITO_TOOL_NAMES)
 
 
+@app.get("/api/company-360")
+def company_360(industry: str = "", size: str = "", plan: str = ""):
+    """The 360 Dashboard — Aito called DIRECTLY (no agent), like the Opportunity
+    Assistant. For a customer segment: every KPI with its current rate, the lever
+    that moves it most and the projected lift, plus a spotlight at-risk customer
+    joined across every domain."""
+    seg = {k: v for k, v in {"industry": industry, "size": size, "plan": plan}.items() if v}
+    try:
+        kpis = []
+        for kpi in _KPIS:
+            r = _tool_optimize_kpi({"kpi": kpi, **seg})
+            if r.get("error"):
+                continue
+            kpis.append({"key": kpi, **r})  # key = the kpi id; r["kpi"] is its label
+        spotlight = None
+        rows = (_tool_find_examples({"domain": "customers", **seg, "churned": "yes"}).get("rows") or [])
+        if rows:
+            spotlight = _tool_customer_360({"customer_id": rows[0].get("customer_id")})
+    except AitoError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    return {"segment": seg or "all customers", "kpis": kpis, "customer": spotlight}
+
+
 # ── Static files — keep this last ─────────────────────────────────
 
 _frontend_dir = Path(__file__).resolve().parent.parent / "frontend" / "out"

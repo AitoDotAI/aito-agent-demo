@@ -19,11 +19,12 @@ import { OverviewView } from "@/components/OverviewView";
 import { SalesView, type SalesMeta } from "@/components/SalesView";
 import { SalesAgentView } from "@/components/SalesAgentView";
 import { CompanyAgentView } from "@/components/CompanyAgentView";
+import { CompanyDashboardView } from "@/components/CompanyDashboardView";
 import { ToolboxView, type ToolMeta } from "@/components/ToolboxView";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { Alternative, WhyFactor } from "@/lib/types";
 
-export type View = "home" | "resolve" | "augment" | "handoff" | "sales" | "agent" | "toolbox" | "company" | "company-toolbox";
+export type View = "home" | "resolve" | "augment" | "handoff" | "sales" | "agent" | "toolbox" | "company" | "company-data" | "company-toolbox";
 
 type Aito = {
   intent: string; intent_p: number; intent_alts: Alternative[]; why: WhyFactor[];
@@ -56,7 +57,7 @@ const actionText = (intent: string, param: string | null) =>
 
 const isView = (v: string | null): v is View =>
   v === "home" || v === "resolve" || v === "augment" || v === "handoff" || v === "sales" || v === "agent" ||
-  v === "toolbox" || v === "company" || v === "company-toolbox";
+  v === "toolbox" || v === "company" || v === "company-data" || v === "company-toolbox";
 
 const SALES_EXAMPLES: Record<string, string> = {
   win_odds: "_predict outcome  →  $p(won) + $why drivers",
@@ -194,6 +195,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
 
           <div className="rc-grp">Northwind Cloud · company</div>
           <NavItem v="company">Company AI agent</NavItem>
+          <NavItem v="company-data">360 Dashboard</NavItem>
           <NavItem v="company-toolbox">Toolbox</NavItem>
 
           <div className="rc-grp">Sonipra Telecom · support</div>
@@ -216,6 +218,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
           agentLabel="Sales agent" examples={SALES_EXAMPLES}
           lead={<>The sales agent is a plain gpt-5-mini chat loop — what makes it useful is what&apos;s in its toolbox. Four of these tools are <b>Aito ops</b> over Northlight&apos;s own history; the model calls them when it needs a number it can&apos;t invent. Flip them off and ask the same question: it has to <b>guess</b>, and it&apos;ll tell you so.</>} />}
         {view === "company" && <CompanyAgentView tools={coTools} toolOn={coToolOn} />}
+        {view === "company-data" && <CompanyDashboardView />}
         {view === "company-toolbox" && <ToolboxView tools={coTools} toolOn={coToolOn} onToggle={toggleCoTool} onAllAito={setAllCoAito}
           agentLabel="Company AI agent" examples={CO_EXAMPLES}
           lead={<>The Company AI agent is a plain gpt-5-mini chat loop over Northwind&apos;s <b>linked</b> data — one customers master joined to deals, tickets, usage, invoices and feedback. Five of these tools are <b>Aito ops</b>; the model calls them for the 360 KPIs, the lever that moves each one, and the customer join a BI bot can&apos;t produce. Flip them off and it has to <b>guess</b>, and it&apos;ll tell you so.</>} />}
@@ -434,6 +437,14 @@ const PANEL: Record<Exclude<View, "resolve">, {
     desc: "One <b>linked</b> customers master across sales, support, product, finance and CX. A SQL+LLM bot can <code>COUNT(*)</code>; this agent calls Aito for the <b>360 KPIs</b>, the <b>lever that moves each one</b> (<code>_recommend</code> + projected lift), and drafts the play. Aito has no training step — a logged outcome sharpens the next prediction. A closed loop, no retrain.",
     codeLabel: "Optimise a KPI",
     code: "optimize_kpi(\"churn\",\n  {size:\"SMB\", plan:\"Free\"})\n// ⇒ _predict $why + _recommend\n//   65% → 78% via Exec-sponsor CSM",
+  },
+  "company-data": {
+    pdb: "the data view",
+    stats: [["6", "KPIs"], ["1", "lever each"], ["360", "join"]],
+    chip: "Aito, no agent",
+    desc: "The same ops the Company agent calls, here <b>directly</b> as a dashboard (like the Opportunity Assistant). Pick a segment → every KPI with the <b>lever that moves it</b> (<code>_predict</code> + <code>_recommend</code>) and a spotlight customer joined across every domain (<code>_query</code> the link). No LLM in this view — just the predictive database.",
+    codeLabel: "Live query",
+    code: "GET /api/company-360?size=SMB&plan=Free\n// per KPI: _predict + _recommend\n//   churn 35% → 22% via Exec-sponsor\n// + one customer, every domain",
   },
   "company-toolbox": {
     pdb: "the 360 toolbox",
