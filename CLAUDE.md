@@ -2,6 +2,14 @@
 
 This file is read by Claude Code (and similar agents) when working in this repo. Keep it tight; put narrative in `docs/` if it grows.
 
+## Change workflow — branches & PRs
+
+Introduce changes as **focused change sets on feature branches, merged via PRs** — do **not** commit directly to `main` (this repo *or* the platform repo `aito-demo-server`).
+
+- Branch (`git checkout -b <kind>/<short-name>`), make the change, get the build/tests green (`./do build`, `./do test`/`test-book`), then open a PR to `main` (`gh pr create`).
+- Platform changes (registering/bumping a demo, nginx/landing) are PRs against `aito-demo-server` — rebase onto its latest `main` first (it moves independently), regenerate the Dockerfile/landing with **its** generators, run `./do check`, then PR.
+- One logical change per PR; keep the body a tight summary. See [Releasing a change](#releasing-a-change) for the deploy step after merge.
+
 ## What this is
 
 An Aito demo bootstrapped from `aito-demo-server/template/`. Production shape:
