@@ -52,8 +52,8 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "optimize_kpi",
-        "aito": True, "op": "_predict · _recommend",
-        "summary": "For a KPI + segment: the drivers, the single lever that moves it most, and the projected lift.",
+        "aito": True, "op": "_predict · _relate · _recommend",
+        "summary": "For a KPI + segment: the root causes (drivers), the lever values most tied to success, and the projected lift.",
         "parameters": {"type": "object", "properties": {
             "kpi": _enum("Which KPI to optimise", _KPI), **_SEG,
         }, "required": ["kpi"], "additionalProperties": False},

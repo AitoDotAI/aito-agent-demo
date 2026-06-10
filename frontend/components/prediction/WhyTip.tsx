@@ -21,8 +21,8 @@ const TONE_BG: Record<string, string> = {
   up: "#fbe4d8", down: "#e3f4ea", best: "#d6f3f0", muted: "#f1eee8",
 };
 
-export function WhyTip({ title, subtitle, rows, footer }: {
-  title: string; subtitle?: string; rows: WhyRow[]; footer?: ReactNode;
+export function WhyTip({ title, subtitle, rows, body, footer }: {
+  title: string; subtitle?: string; rows?: WhyRow[]; body?: ReactNode; footer?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
@@ -67,7 +67,8 @@ export function WhyTip({ title, subtitle, rows, footer }: {
         }}>
           <div style={{ fontWeight: 800, fontSize: 13 }}>{title}</div>
           {subtitle && <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: "#928d80", marginTop: 2, marginBottom: 9 }}>{subtitle}</div>}
-          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          {body}
+          {rows && <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
             {rows.length === 0 && <div style={{ fontSize: 12, color: "#928d80", fontStyle: "italic" }}>No strong driver beyond the segment / the lever itself.</div>}
             {rows.map((r, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, background: "#faf9f6", border: "1px solid #efeadd", borderRadius: 6, padding: "5px 8px" }}>
@@ -78,7 +79,7 @@ export function WhyTip({ title, subtitle, rows, footer }: {
                 }}>{r.weight}</span>
               </div>
             ))}
-          </div>
+          </div>}
           {footer && <div style={{ fontSize: 10.5, color: "#928d80", marginTop: 10, lineHeight: 1.5 }}>{footer}</div>}
           <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderTop: "6px solid #d6cfbe" }} />
         </div>,

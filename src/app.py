@@ -596,23 +596,29 @@ _SALES_TOOL_IMPLS = {
 # lever to _recommend, the fields to relate as causes, labels}
 _KPIS = {
     "conversion": {"label": "Conversion", "table": "deals", "target": "converted", "good": "yes", "bad": "no",
+                   "bad_label": "lost deals", "good_label": "won deals",
                    "lever": "nurture_track", "lever_label": "nurture track",
-                   "causes": ["source", "trial_length", "customer.size", "customer.plan"]},
+                   "causes": ["source", "trial_length", "customer.size", "customer.plan", "customer.health"]},
     "churn": {"label": "Churn", "table": "customers", "target": "churned", "good": "no", "report": "yes", "bad": "yes",
+              "bad_label": "churned customers", "good_label": "retained customers",
               "lever": "csm_motion", "lever_label": "CSM motion",
-              "causes": ["health", "onboarding", "nps_band", "tenure_band"]},
+              "causes": ["health", "onboarding", "nps_band", "tenure_band", "seats_band"]},
     "nps": {"label": "NPS", "table": "feedback", "target": "score_band", "good": "promoter", "report": "detractor",
-            "bad": "detractor", "lever": "theme", "lever_label": "theme to fix",
-            "causes": ["channel", "customer.plan", "customer.health"]},
+            "bad": "detractor", "bad_label": "detractors", "good_label": "promoters",
+            "lever": "theme", "lever_label": "theme to fix",
+            "causes": ["channel", "survey_type", "customer.health", "customer.onboarding", "customer.plan"]},
     "csat": {"label": "CSAT", "table": "tickets", "target": "csat_band", "good": "good", "bad": "bad",
+             "bad_label": "bad ratings", "good_label": "good ratings",
              "lever": "channel", "lever_label": "support channel",
-             "causes": ["category", "priority", "first_response"]},
+             "causes": ["category", "priority", "first_response", "customer.size", "customer.plan"]},
     "adoption": {"label": "Adoption", "table": "usage", "target": "active", "good": "yes", "bad": "no",
+                 "bad_label": "inactive seats", "good_label": "active seats",
                  "lever": "onboarding_push", "lever_label": "onboarding push",
-                 "causes": ["adoption_band", "customer.onboarding", "customer.health"]},
+                 "causes": ["adoption_band", "customer.onboarding", "customer.health", "customer.plan"]},
     "ontime": {"label": "On-time revenue", "table": "invoices", "target": "status", "good": "paid", "report": "overdue",
-               "bad": "overdue", "lever": "term", "lever_label": "billing term",
-               "causes": ["amount_band", "customer.plan", "customer.size"]},
+               "bad": "overdue", "bad_label": "overdue invoices", "good_label": "paid invoices",
+               "lever": "term", "lever_label": "billing term",
+               "causes": ["amount_band", "customer.plan", "customer.size", "customer.industry", "customer.health"]},
 }
 
 
@@ -627,24 +633,50 @@ def _p_of(hits: list, feature: str) -> float:
     return next((float(h["$p"]) for h in hits if h.get("feature") == feature), 0.0)
 
 
-def _relate_causes(table: str, where: dict, fields: list[str], k: int = 3) -> list[dict]:
-    """Root causes via _relate: the feature-values most over-represented under
-    `where` (the bad outcome). lift > 1 = a cause; return the top k by lift."""
+def _relate_factors(table: str, where: dict, fields: list[str], k: int = 3,
+                    two_sided: bool = False, dedup_field: bool = True) -> list[dict]:
+    """_relate a set of fields to the outcome pinned in `where`, returning the
+    strongest factors with the stats that explain them:
+      - share_cond  : P(value | outcome)         e.g. 35% of churned have Red health
+      - share_other : P(value | not the outcome)  e.g. 13% of retained
+      - lift        : over/under-representation   e.g. ×1.9
+    two_sided=True ranks by |lift-1| (keeps protective factors, lift<1);
+    two_sided=False keeps only over-represented (lift>1, e.g. a good lever value).
+    dedup_field keeps one value per field (diverse causes); off for a single lever."""
     if not fields:
         return []
     try:
         hits = aito.relate(table, where, fields).get("hits") or []
     except AitoError:
         return []
-    out: list[dict] = []
-    for h in sorted(hits, key=lambda x: -float(x.get("lift", 1))):
-        if float(h.get("lift", 1)) <= 1.08:  # over-represented vs baseline = a driver
-            continue
+    scored: list[dict] = []
+    for h in hits:
+        lift = float(h.get("lift", 1.0))
+        ps, fs = h.get("ps") or {}, h.get("fs") or {}
         for f, v in _why_props(h.get("related") or {}):
-            out.append({"field": f.replace("customer.", ""), "value": str(v), "lift": round(float(h["lift"]), 2)})
+            scored.append({
+                "field": f.replace("customer.", ""), "value": str(v), "lift": round(lift, 2),
+                "share_cond": round(float(ps.get("pOnCondition", 0.0)), 3),
+                "share_other": round(float(ps.get("pOnNotCondition", 0.0)), 3),
+                "n": int(round(float(fs.get("fOnCondition", 0)))),
+                "n_cond": int(round(float(fs.get("fCondition", 0)))),
+                "_score": abs(lift - 1) if two_sided else lift,
+            })
+    scored.sort(key=lambda d: -d["_score"])
+    out: list[dict] = []
+    seen: set[str] = set()
+    for d in scored:
+        if two_sided and abs(d["lift"] - 1) < 0.10:
+            continue
+        if not two_sided and d["lift"] <= 1.05:
+            continue
+        if dedup_field and d["field"] in seen:
+            continue
+        seen.add(d["field"])
+        out.append({key: d[key] for key in ("field", "value", "lift", "share_cond", "share_other", "n", "n_cond")})
         if len(out) >= k:
             break
-    return out[:k]
+    return out
 
 
 def _tool_kpi_snapshot(args: dict) -> dict:
@@ -664,24 +696,28 @@ def _tool_optimize_kpi(args: dict) -> dict:
     cfg = _KPIS.get(kpi)
     if not cfg:
         return {"error": f"unknown kpi '{kpi}'"}
-    table, target, good = cfg["table"], cfg["target"], cfg["good"]
+    table, target, good, bad = cfg["table"], cfg["target"], cfg["good"], cfg["bad"]
     where = _seg_where(table, args)
     # headline framed in the KPI's natural direction: churn/detractor/overdue are
     # "lower is better", so we report (and explain) that falling rate.
     report = cfg.get("report")
     lower_better = bool(report) and report != good
-    focus = report if lower_better else good   # the outcome whose causes we surface
     hits = aito.predict(table, where, target, limit=4, select=["$p", "feature"]).get("hits") or []
-    good_hit = next((h for h in hits if h.get("feature") == good), None)
-    current = round(float(good_hit["$p"]), 2) if good_hit else round(_p_of(hits, good), 2)
-    # CAUSES (diagnosis): _relate the BAD outcome to the candidate driver fields —
-    # which feature-values are over-represented when the KPI goes wrong. lift > 1 is
-    # a root cause. Skip any field already pinned by the segment.
+    current = round(_p_of(hits, good), 2)
+    # CAUSES (diagnosis): _relate the BAD outcome to the driver fields — two-sided
+    # so drivers (lift>1) and protective factors (lift<1) both surface; one per field.
     cause_fields = [f for f in cfg["causes"] if f not in where]
-    causes = _relate_causes(table, {**where, target: cfg["bad"]}, cause_fields)
-    # LEVERS: the top actions — values of the actionable lever ranked toward the goal.
+    causes = _relate_factors(table, {**where, target: bad}, cause_fields, k=3, two_sided=True, dedup_field=True)
+    # LEVERS (prescription): _recommend ranks the lever values toward the goal (it
+    # conditions properly, unlike relating the good outcome). Each is shown as a lift
+    # = P(good | this lever) / the segment's current good-rate.
     rec = (aito.recommend(table, where, cfg["lever"], {target: good}, limit=3).get("hits") or [])
-    best = rec[0]["feature"] if rec else None
+    lever_items = []
+    for h in rec:
+        p = round(float(h["$p"]), 2)
+        lever_items.append({"value": h["feature"], "p": p,
+                            "lift": round(p / current, 2) if current > 0 else 1.0})
+    best = lever_items[0]["value"] if lever_items else None
     ph: list = []
     projected = current
     if best is not None:
@@ -693,10 +729,10 @@ def _tool_optimize_kpi(args: dict) -> dict:
         "kpi": cfg["label"], "goal": f"{target}={good}",
         "headline": {"metric": cfg["label"], "now": now, "then": then, "lower_is_better": lower_better},
         "current": current,
-        "causes": causes, "drivers": causes,   # top-3 root causes (drivers kept as alias)
-        "levers": {"field": cfg["lever_label"], "ranked": [{"value": h["feature"], "p": round(float(h["$p"]), 2)} for h in rec]},
-        "recommended_play": {"lever": cfg["lever_label"], "change_to": best,
-                             "ranked": [{"value": h["feature"], "p": round(float(h["$p"]), 2)} for h in rec]},
+        "bad_label": cfg["bad_label"], "good_label": cfg["good_label"],
+        "causes": causes, "drivers": causes,   # top-3, condition = the bad outcome
+        "levers": {"lever": cfg["lever_label"], "items": lever_items},  # condition = the good outcome
+        "recommended_play": {"lever": cfg["lever_label"], "change_to": best},
         "projected": projected,
         "lift_pp": round(abs(then - now) * 100),
         "note": "Aito has no training step — log this play's outcome and it sharpens the next prediction.",

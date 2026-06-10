@@ -9,13 +9,67 @@ import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { WhyTip } from "@/components/prediction/WhyTip";
 
-type Driver = { field: string; value: string; lift: number };
+type Cause = { field: string; value: string; lift: number; share_cond: number; share_other: number; n: number; n_cond: number };
+type Lever = { value: string; p: number; lift: number };
 type Kpi = {
   key: string; kpi: string; headline: { metric: string; now: number; then: number; lower_is_better: boolean };
-  lift_pp: number; causes: Driver[];
-  levers: { field: string; ranked: { value: string; p: number }[] };
+  lift_pp: number; current: number; bad_label: string; good_label: string;
+  causes: Cause[];
+  levers: { lever: string; items: Lever[] };
   recommended_play: { lever: string; change_to: string };
 };
+
+// ── per-row "?" explanation (two-bar comparison, like the other demos' $why) ──
+function CmpBar({ label, p, color }: { label: string; p: number; color: string }) {
+  const w = Math.round(p * 100);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11 }}>
+      <span style={{ width: 104, color: "#928d80", flexShrink: 0 }}>{label}</span>
+      <div style={{ flex: 1, height: 8, background: "#efeadd", borderRadius: 4, overflow: "hidden" }}>
+        <span style={{ display: "block", height: "100%", width: `${w}%`, background: color, borderRadius: 4 }} />
+      </div>
+      <b style={{ width: 32, textAlign: "right", fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>{w}%</b>
+    </div>
+  );
+}
+function CmpBody({ a, b, note }: { a: { label: string; p: number; color: string }; b: { label: string; p: number; color: string }; note: React.ReactNode }) {
+  return (
+    <div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 9 }}><CmpBar {...a} /><CmpBar {...b} /></div>
+      <div style={{ fontSize: 12, color: "#56524a", lineHeight: 1.5 }}>{note}</div>
+    </div>
+  );
+}
+
+function CauseRow({ c, bad, good }: { c: Cause; bad: string; good: string }) {
+  const driver = c.lift >= 1;
+  const name = `${c.field.replace(/_/g, " ")} = ${c.value}`;
+  return (
+    <div className="fr">
+      <span className="fl">{name}</span>
+      <span className={`fx ${driver ? "risk" : "prot"}`}>×{c.lift}</span>
+      <WhyTip title={name} subtitle={`live _relate · ${driver ? "drives" : "protects against"} ${bad}`}
+        body={<CmpBody a={{ label: `among ${bad}`, p: c.share_cond, color: driver ? "#c2410c" : "#1f6f4a" }}
+          b={{ label: `among ${good}`, p: c.share_other, color: "#cfcabf" }}
+          note={<><b>×{c.lift}</b> {driver ? "over" : "under"}-represented among {bad}.</>} />}
+        footer={`${c.n} of ${c.n_cond} ${bad} · live Aito _relate`} />
+    </div>
+  );
+}
+
+function LeverRow({ l, lever, current, good, top }: { l: Lever; lever: string; current: number; good: string; top: boolean }) {
+  return (
+    <div className="fr">
+      <span className="fl">{lever} → {l.value}</span>
+      <span className={`fx ${top ? "best" : "good"}`}>×{l.lift}</span>
+      <WhyTip title={`${lever} → ${l.value}`} subtitle={`live _recommend · toward ${good}`}
+        body={<CmpBody a={{ label: `with ${l.value}`, p: l.p, color: "#16c2b9" }}
+          b={{ label: "segment now", p: current, color: "#cfcabf" }}
+          note={<>Predicted {good} <b>{Math.round(l.p * 100)}%</b> vs {Math.round(current * 100)}% baseline → <b>×{l.lift}</b>.{top ? " The top-ranked action." : ""}</>} />}
+        footer="P(good) for this lever value vs the segment baseline · live Aito _recommend" />
+    </div>
+  );
+}
 type Customer = {
   profile: Record<string, unknown>;
   domains: Record<string, { count: number; examples: Record<string, unknown>[] }>;
@@ -92,27 +146,22 @@ export function CompanyDashboardView() {
                 return (
                   <div className="kc" key={k.key}>
                     <div className="kh"><b>{m.label}</b><span>{m.sub}</span></div>
-                    <div className="kvrow">
-                      <div className="kv" style={{ color: good ? "var(--g)" : "var(--r)" }}>{pct(k.headline.now)}</div>
-                      <WhyTip
-                        title={`Why ${m.label} is ${pct(k.headline.now)}`}
-                        subtitle="live _relate · root causes"
-                        rows={k.causes.map((c) => ({ label: <><b>{c.field.replace(/_/g, " ")}</b> = {c.value}</>, weight: `×${c.lift}`, tone: c.lift >= 1 ? "up" : "down" }))}
-                        footer="Feature-values over-represented when this KPI goes wrong — lift vs the baseline, from Aito _relate."
-                      />
-                    </div>
+                    <div className="kv" style={{ color: good ? "var(--g)" : "var(--r)" }}>{pct(k.headline.now)}</div>
                     <div className="kbar"><i style={{ width: pct(k.headline.now), background: good ? "var(--g)" : "var(--r)" }} /></div>
-                    <div className="lev">
-                      <div className="ll">↳ {k.levers.field} → <b>{k.recommended_play.change_to}</b>
-                        <WhyTip
-                          title="Why this action"
-                          subtitle="live _recommend · ranked toward the goal"
-                          rows={k.levers.ranked.map((r, i) => ({ label: <>{k.levers.field} → {r.value}</>, weight: pct(r.p), tone: i === 0 ? "best" : "muted" }))}
-                          footer={<>Switching this segment to <b>{k.recommended_play.change_to}</b> projects {pct(k.headline.now)} → {pct(k.headline.then)} ({k.lift_pp}pp better).</>}
-                        />
-                      </div>
-                      <div className="lp">{pct(k.headline.now)} → <b style={{ color: "var(--t)" }}>{pct(k.headline.then)}</b> · {k.lift_pp}pp better</div>
+
+                    <div className="flist">
+                      <div className="ft">Root causes <span className="op2">_relate</span></div>
+                      {k.causes.length
+                        ? k.causes.map((c, i) => <CauseRow key={i} c={c} bad={k.bad_label} good={k.good_label} />)
+                        : <div className="fnone">no strong driver beyond the segment</div>}
                     </div>
+
+                    <div className="flist">
+                      <div className="ft">Recommended levers <span className="op2">_recommend</span></div>
+                      {k.levers.items.map((l, i) => <LeverRow key={i} l={l} lever={k.levers.lever} current={k.current} good={k.good_label} top={i === 0} />)}
+                    </div>
+
+                    <div className="proj">↳ pull the top lever → <b style={{ color: "var(--t)" }}>{pct(k.headline.then)}</b> · {k.lift_pp}pp better</div>
                   </div>
                 );
               })}
@@ -174,12 +223,20 @@ const CSS = `
 .cd .kc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 15px}
 .cd .kh{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
 .cd .kh b{font-size:14px;font-weight:700}.cd .kh span{font-size:10.5px;color:var(--faint)}
-.cd .kvrow{display:flex;align-items:center;margin:4px 0 6px}
-.cd .kv{font-size:34px;font-weight:900;letter-spacing:-.03em;line-height:1.1}
-.cd .kbar{height:7px;background:#eee9dd;border-radius:4px;overflow:hidden;margin-bottom:11px}.cd .kbar i{display:block;height:100%;border-radius:4px}
-.cd .lev{border-top:1px dashed var(--line);padding-top:9px}
-.cd .ll{font-size:12.5px;color:var(--ink2);display:flex;align-items:center}.cd .ll b{color:var(--ink)}
-.cd .lp{font-size:12px;color:var(--faint);margin-top:4px}
+.cd .kv{font-size:34px;font-weight:900;letter-spacing:-.03em;line-height:1.1;margin:4px 0 6px}
+.cd .kbar{height:7px;background:#eee9dd;border-radius:4px;overflow:hidden;margin-bottom:10px}.cd .kbar i{display:block;height:100%;border-radius:4px}
+.cd .flist{border-top:1px dashed var(--line);padding-top:8px;margin-top:9px}
+.cd .ft{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.cd .op2{font-family:'JetBrains Mono',monospace;font-size:8.5px;color:var(--t);background:#e9f6f5;padding:1px 5px;border-radius:4px;text-transform:none;letter-spacing:0}
+.cd .fr{display:flex;align-items:center;gap:7px;padding:2px 0}
+.cd .fr .fl{flex:1;min-width:0;font-size:11.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cd .fr .fx{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px}
+.cd .fr .fx.risk{color:var(--r);background:#fbe4d8}
+.cd .fr .fx.prot{color:var(--g);background:#e3f4ea}
+.cd .fr .fx.best{color:#04221f;background:#d6f3f0}
+.cd .fr .fx.good{color:var(--t);background:#e9f6f5}
+.cd .fnone{font-size:11px;color:var(--faint);font-style:italic;padding:2px 0}
+.cd .proj{border-top:1px dashed var(--line);margin-top:9px;padding-top:8px;font-size:11.5px;color:var(--ink2)}
 .cd .spot{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:16px 17px;border-left:3px solid var(--r)}
 .cd .sp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .cd .sp-name{font-size:16px;font-weight:800}.cd .sp-id{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);font-weight:400;margin-left:6px}
