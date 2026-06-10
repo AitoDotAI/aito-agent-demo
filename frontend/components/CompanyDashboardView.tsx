@@ -9,15 +9,37 @@ import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { WhyTip } from "@/components/prediction/WhyTip";
 
-type Cause = { field: string; value: string; lift: number; share_cond: number; share_other: number; n: number; n_cond: number };
+type Cause = { field: string; value: string; lift: number; mode: "rate" | "share"; p_with: number; p_without: number };
 type Lever = { value: string; p: number; lift: number };
+type KpiWhy = { base: number | null; factors: { field: string; value: string; lift: number }[] };
 type Kpi = {
   key: string; kpi: string; headline: { metric: string; now: number; then: number; lower_is_better: boolean };
-  lift_pp: number; current: number; bad_label: string; good_label: string;
+  lift_pp: number; current: number; bad_label: string; good_label: string; kpi_why: KpiWhy;
   causes: Cause[];
   levers: { lever: string; items: Lever[] };
   recommended_play: { lever: string; change_to: string };
 };
+
+// the KPI rate's own $why: base × the segment attributes' lifts = the rate
+function KpiWhyBody({ w, now }: { w: KpiWhy; now: number }) {
+  if (w.base == null) return <div style={{ fontSize: 12, color: "#56524a" }}>This rate is the base — the segment&apos;s attributes don&apos;t move this KPI.</div>;
+  return (
+    <div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 9 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#56524a" }}><span>base rate</span><b>{Math.round(w.base * 100)}%</b></div>
+        {w.factors.map((f, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#56524a", gap: 8 }}>
+            <span>{f.field.replace(/_/g, " ")} = {f.value}</span>
+            <b style={{ fontFamily: "'JetBrains Mono',monospace", color: f.lift >= 1 ? "#c2410c" : "#1f6f4a" }}>×{f.lift}</b>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "#56524a", borderTop: "1px solid #efeadd", paddingTop: 7 }}>
+        {Math.round(w.base * 100)}%{w.factors.map((f, i) => <span key={i}> × {f.lift}</span>)} = <b style={{ color: "#16140f" }}>{Math.round(now * 100)}%</b>
+      </div>
+    </div>
+  );
+}
 
 // ── per-row "?" explanation (two-bar comparison, like the other demos' $why) ──
 function CmpBar({ label, p, color }: { label: string; p: number; color: string }) {
@@ -44,15 +66,18 @@ function CmpBody({ a, b, note }: { a: { label: string; p: number; color: string 
 function CauseRow({ c, bad, good }: { c: Cause; bad: string; good: string }) {
   const driver = c.lift >= 1;
   const name = `${c.field.replace(/_/g, " ")} = ${c.value}`;
+  const aColor = driver ? "#c2410c" : "#1f6f4a";
+  const body = c.mode === "rate"
+    ? <CmpBody a={{ label: `with ${c.value}`, p: c.p_with, color: aColor }} b={{ label: "everyone else", p: c.p_without, color: "#cfcabf" }}
+        note={<>In this segment, {bad} run <b>{Math.round(c.p_with * 100)}%</b> with this vs <b>{Math.round(c.p_without * 100)}%</b> otherwise → <b>×{c.lift}</b>.</>} />
+    : <CmpBody a={{ label: `among ${bad}`, p: c.p_with, color: aColor }} b={{ label: `among ${good}`, p: c.p_without, color: "#cfcabf" }}
+        note={<><b>×{c.lift}</b> {driver ? "over" : "under"}-represented among {bad}.</>} />;
   return (
     <div className="fr">
       <span className="fl">{name}</span>
       <span className={`fx ${driver ? "risk" : "prot"}`}>×{c.lift}</span>
-      <WhyTip title={name} subtitle={`live _relate · ${driver ? "drives" : "protects against"} ${bad}`}
-        body={<CmpBody a={{ label: `among ${bad}`, p: c.share_cond, color: driver ? "#c2410c" : "#1f6f4a" }}
-          b={{ label: `among ${good}`, p: c.share_other, color: "#cfcabf" }}
-          note={<><b>×{c.lift}</b> {driver ? "over" : "under"}-represented among {bad}.</>} />}
-        footer={`${c.n} of ${c.n_cond} ${bad} · live Aito _relate`} />
+      <WhyTip title={name} subtitle={`live _relate · ${driver ? "raises" : "lowers"} ${bad}`} body={body}
+        footer={c.mode === "rate" ? "rate within the segment · Aito _relate $on" : "share of the outcome · Aito _relate"} />
     </div>
   );
 }
@@ -146,7 +171,12 @@ export function CompanyDashboardView() {
                 return (
                   <div className="kc" key={k.key}>
                     <div className="kh"><b>{m.label}</b><span>{m.sub}</span></div>
-                    <div className="kv" style={{ color: good ? "var(--g)" : "var(--r)" }}>{pct(k.headline.now)}</div>
+                    <div className="kvrow">
+                      <div className="kv" style={{ color: good ? "var(--g)" : "var(--r)" }}>{pct(k.headline.now)}</div>
+                      <WhyTip title={`Why ${m.label} is ${pct(k.headline.now)}`} subtitle="live _predict · $why"
+                        body={<KpiWhyBody w={k.kpi_why} now={k.headline.now} />}
+                        footer="The base rate scaled by each segment attribute's lift · Aito _predict $why" />
+                    </div>
                     <div className="kbar"><i style={{ width: pct(k.headline.now), background: good ? "var(--g)" : "var(--r)" }} /></div>
 
                     <div className="flist">
@@ -223,7 +253,8 @@ const CSS = `
 .cd .kc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 15px}
 .cd .kh{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
 .cd .kh b{font-size:14px;font-weight:700}.cd .kh span{font-size:10.5px;color:var(--faint)}
-.cd .kv{font-size:34px;font-weight:900;letter-spacing:-.03em;line-height:1.1;margin:4px 0 6px}
+.cd .kvrow{display:flex;align-items:center;margin:4px 0 6px}
+.cd .kv{font-size:34px;font-weight:900;letter-spacing:-.03em;line-height:1.1}
 .cd .kbar{height:7px;background:#eee9dd;border-radius:4px;overflow:hidden;margin-bottom:10px}.cd .kbar i{display:block;height:100%;border-radius:4px}
 .cd .flist{border-top:1px dashed var(--line);padding-top:8px;margin-top:9px}
 .cd .ft{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px}

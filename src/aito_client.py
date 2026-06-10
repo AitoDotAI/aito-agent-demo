@@ -143,6 +143,13 @@ class AitoClient:
         return self._request("POST", "/api/v1/_relate",
                              {"from": table, "where": where, "relate": fields}, op="_relate")
 
+    def relate_on(self, table: str, target: dict, on: dict) -> dict:
+        """Drivers of `target` SCOPED to `on` — relate the outcome (e.g. churned=yes)
+        within a population (e.g. size=SMB). Each hit's `condition` is a field-value
+        and ps.pOnCondition is the within-population outcome RATE for it."""
+        return self._request("POST", "/api/v1/_relate",
+                             {"from": table, "relate": {"$on": [target, on]}}, op="_relate")
+
     def query(self, table: str, where: dict | None = None, select: list[str] | None = None,
               order_by: str | dict | None = None, limit: int = 5) -> dict:
         """Fetch rows (used for reference examples)."""

@@ -633,50 +633,74 @@ def _p_of(hits: list, feature: str) -> float:
     return next((float(h["$p"]) for h in hits if h.get("feature") == feature), 0.0)
 
 
-def _relate_factors(table: str, where: dict, fields: list[str], k: int = 3,
-                    two_sided: bool = False, dedup_field: bool = True) -> list[dict]:
-    """_relate a set of fields to the outcome pinned in `where`, returning the
-    strongest factors with the stats that explain them:
-      - share_cond  : P(value | outcome)         e.g. 35% of churned have Red health
-      - share_other : P(value | not the outcome)  e.g. 13% of retained
-      - lift        : over/under-representation   e.g. ×1.9
-    two_sided=True ranks by |lift-1| (keeps protective factors, lift<1);
-    two_sided=False keeps only over-represented (lift>1, e.g. a good lever value).
-    dedup_field keeps one value per field (diverse causes); off for a single lever."""
-    if not fields:
-        return []
+# structural / identity fields that are never useful "causes"
+_NON_CAUSE = {"mrr_eur", "name", "primary_product", "product", "duration_weeks", "brief", "customer", "region"}
+
+
+def _is_cause_field(field: str, exclude: set[str]) -> bool:
+    return field not in exclude and field not in _NON_CAUSE and not field.endswith("_id") and not field.endswith("Id")
+
+
+def _relate_drivers(table: str, target_field: str, bad: str, seg_props: list[dict],
+                    exclude: set[str], candidates: list[str], k: int = 3) -> list[dict]:
+    """Root causes of the BAD outcome. With a segment, _relate `$on` scopes to it and
+    returns each driver's WITHIN-SEGMENT outcome RATE (e.g. Red-health customers churn
+    at 44% vs 28% otherwise → mode 'rate'). With no segment, relate globally and return
+    the SHARE of the bad outcome carrying each value (mode 'share'). Strongest factors
+    by |lift-1| (drivers >1 and protective <1), one per field."""
+    target = {target_field: bad}
+    scored: list[dict] = []
     try:
-        hits = aito.relate(table, where, fields).get("hits") or []
+        if seg_props:  # scoped: $on → condition holds the driver, ps gives RATES
+            on = seg_props[0] if len(seg_props) == 1 else {"$and": seg_props}
+            hits = aito.relate_on(table, target, on).get("hits") or []
+            mode, prop_key = "rate", "condition"
+        else:          # global: relate the bad outcome to candidate fields → SHARES
+            hits = aito.relate(table, target, [f for f in candidates if f not in exclude]).get("hits") or []
+            mode, prop_key = "share", "related"
     except AitoError:
         return []
-    scored: list[dict] = []
     for h in hits:
         lift = float(h.get("lift", 1.0))
-        ps, fs = h.get("ps") or {}, h.get("fs") or {}
-        for f, v in _why_props(h.get("related") or {}):
+        ps = h.get("ps") or {}
+        for f, v in _why_props(h.get(prop_key) or {}):
+            field = f.replace("customer.", "")
+            if not _is_cause_field(field, exclude):
+                continue
             scored.append({
-                "field": f.replace("customer.", ""), "value": str(v), "lift": round(lift, 2),
-                "share_cond": round(float(ps.get("pOnCondition", 0.0)), 3),
-                "share_other": round(float(ps.get("pOnNotCondition", 0.0)), 3),
-                "n": int(round(float(fs.get("fOnCondition", 0)))),
-                "n_cond": int(round(float(fs.get("fCondition", 0)))),
-                "_score": abs(lift - 1) if two_sided else lift,
+                "field": field, "value": str(v), "lift": round(lift, 2), "mode": mode,
+                "p_with": round(float(ps.get("pOnCondition", 0.0)), 3),
+                "p_without": round(float(ps.get("pOnNotCondition", 0.0)), 3),
+                "_score": abs(lift - 1),
             })
     scored.sort(key=lambda d: -d["_score"])
-    out: list[dict] = []
-    seen: set[str] = set()
+    out, seen = [], set()
     for d in scored:
-        if two_sided and abs(d["lift"] - 1) < 0.10:
-            continue
-        if not two_sided and d["lift"] <= 1.05:
-            continue
-        if dedup_field and d["field"] in seen:
+        if abs(d["lift"] - 1) < 0.10 or d["field"] in seen:
             continue
         seen.add(d["field"])
-        out.append({key: d[key] for key in ("field", "value", "lift", "share_cond", "share_other", "n", "n_cond")})
+        out.append({key: d[key] for key in ("field", "value", "lift", "mode", "p_with", "p_without")})
         if len(out) >= k:
             break
     return out
+
+
+def _kpi_why(why_node) -> dict:
+    """Explain the KPI RATE itself from the prediction's $why: base rate × the
+    segment attributes' lifts (e.g. base 23% × Free ×1.5 = 35%)."""
+    leaves: list = []
+    _flatten_why(why_node, leaves)
+    base = None
+    factors: list[dict] = []
+    for leaf in leaves:
+        if leaf.get("type") == "baseP" and base is None:
+            base = round(float(leaf.get("value", 0)), 3)
+        elif leaf.get("type") == "relatedPropositionLift":
+            lift = round(float(leaf.get("value", 1)), 2)
+            for f, v in _why_props(leaf.get("proposition", {})):
+                if f != "brief":
+                    factors.append({"field": f.replace("customer.", ""), "value": str(v), "lift": lift})
+    return {"base": base, "factors": factors[:4]}
 
 
 def _tool_kpi_snapshot(args: dict) -> dict:
@@ -702,12 +726,18 @@ def _tool_optimize_kpi(args: dict) -> dict:
     # "lower is better", so we report (and explain) that falling rate.
     report = cfg.get("report")
     lower_better = bool(report) and report != good
-    hits = aito.predict(table, where, target, limit=4, select=["$p", "feature"]).get("hits") or []
+    focus = report if lower_better else good   # the outcome whose rate we report/explain
+    hits = aito.predict(table, where, target, limit=4, select=["$p", "feature", "$why"]).get("hits") or []
     current = round(_p_of(hits, good), 2)
-    # CAUSES (diagnosis): _relate the BAD outcome to the driver fields — two-sided
-    # so drivers (lift>1) and protective factors (lift<1) both surface; one per field.
-    cause_fields = [f for f in cfg["causes"] if f not in where]
-    causes = _relate_factors(table, {**where, target: bad}, cause_fields, k=3, two_sided=True, dedup_field=True)
+    # KPI RATE $why: explain the rate itself from the segment attributes' lifts
+    # (base 23% × Free ×1.5 = 35%) — the "?" next to the headline number.
+    focus_hit = next((h for h in hits if h.get("feature") == focus), None)
+    kpi_why = _kpi_why((focus_hit or {}).get("$why"))
+    # CAUSES (diagnosis): _relate the BAD outcome to all fields, scoped to the segment
+    # via $on — within-segment driver RATES; two-sided (drivers >1, protective <1).
+    seg_props = [{f: v} for f, v in where.items()]
+    exclude = {target, cfg["lever"], "industry", "size", "plan"}
+    causes = _relate_drivers(table, target, bad, seg_props, exclude, cfg["causes"], k=3)
     # LEVERS (prescription): _recommend ranks the lever values toward the goal (it
     # conditions properly, unlike relating the good outcome). Each is shown as a lift
     # = P(good | this lever) / the segment's current good-rate.
@@ -730,7 +760,8 @@ def _tool_optimize_kpi(args: dict) -> dict:
         "headline": {"metric": cfg["label"], "now": now, "then": then, "lower_is_better": lower_better},
         "current": current,
         "bad_label": cfg["bad_label"], "good_label": cfg["good_label"],
-        "causes": causes, "drivers": causes,   # top-3, condition = the bad outcome
+        "kpi_why": kpi_why,   # base × segment-attribute lifts = the rate
+        "causes": causes, "drivers": causes,   # within-segment drivers ($on _relate)
         "levers": {"lever": cfg["lever_label"], "items": lever_items},  # condition = the good outcome
         "recommended_play": {"lever": cfg["lever_label"], "change_to": best},
         "projected": projected,
