@@ -398,6 +398,29 @@ body:has(.rc-app),body:has(.app){height:100vh;overflow:hidden}
    would otherwise re-show it, wrapping it onto a second grid row). */
 @media(max-width:1180px){.rc-app{grid-template-columns:210px 1fr}.rc-app .rc-panel{display:none}}
 
+/* ── Mobile: nav becomes an off-canvas drawer behind a top-bar hamburger ── */
+.rc-mobtop{display:none}
+.rc-backdrop{display:none}
+@media(max-width:760px){
+  .rc-app{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .rc-mobtop{display:flex;align-items:center;gap:11px;background:var(--side);color:#fff;
+    padding:0 14px;height:52px;border-bottom:1px solid var(--side-line);z-index:40}
+  .rc-burger{background:none;border:none;color:#fff;cursor:pointer;display:flex;padding:4px;margin-left:-4px}
+  .rc-mobbrand{font-weight:800;font-size:15px;letter-spacing:-.01em}
+  .rc-mobpage{margin-left:auto;font-size:12px;color:var(--turq);font-weight:600;font-family:'JetBrains Mono',monospace;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46%}
+  .rc-app .rc-side{position:fixed;top:0;bottom:0;left:0;width:272px;max-width:84vw;z-index:60;
+    transform:translateX(-100%);transition:transform .22s ease;box-shadow:2px 0 28px rgba(0,0,0,.45)}
+  .rc-app.nav-open .rc-side{transform:translateX(0)}
+  .rc-app.nav-open .rc-backdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:55}
+  .rc-main{min-width:0}
+  .rc-topbar{flex-wrap:wrap;gap:8px;padding:10px 14px;height:auto}
+  .rc-topbar .rc-crumb .cnt{display:none}
+  .rc-tbtns{flex-wrap:wrap;margin-left:0;width:100%;justify-content:flex-start}
+  .rc-tbtns .rc-sel{flex:1 1 auto;min-width:0}
+  .rc-tbtns .rc-run{flex:0 0 auto}
+}
+
 /* sidebar */
 .rc-side{background:var(--side);color:var(--side-item);display:flex;flex-direction:column;overflow-y:auto}
 .rc-brand{padding:18px 18px 16px;display:flex;gap:11px;align-items:flex-start;border-bottom:1px solid var(--side-line)}
@@ -448,7 +471,13 @@ body:has(.rc-app),body:has(.app){height:100vh;overflow:hidden}
 
 /* side-by-side columns */
 .rc-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:760px){.rc-cols{grid-template-columns:1fr}}
+@media(max-width:760px){
+  .rc-cols{grid-template-columns:1fr}
+  .rc-kpis{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .rc-ticket{flex-direction:column;align-items:stretch}
+  .rc-ticket .from{width:100%}
+  .rc-body{padding:16px 14px 32px}
+}
 .rc-col{background:var(--rc-card);border:1px solid var(--rc-line);border-radius:13px;overflow:hidden}
 .rc-col.aito{border-top:3px solid var(--turq)}.rc-col.llm{border-top:3px solid var(--purple)}
 .rc-colh{padding:13px 16px;border-bottom:1px solid var(--rc-line);display:flex;align-items:center;gap:8px}
