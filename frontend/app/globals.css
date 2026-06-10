@@ -393,7 +393,10 @@ body:has(.rc-app),body:has(.app){height:100vh;overflow:hidden}
   font-family:'Figtree',ui-sans-serif,system-ui,sans-serif;
   position:fixed;inset:0;display:grid;grid-template-columns:236px 1fr 330px;background:var(--paper);color:var(--rc-ink);overflow:hidden;
 }
-@media(max-width:1180px){.rc-app{grid-template-columns:210px 1fr}.rc-panel{display:none}}
+/* Hide the right panel below 1180px. Use .rc-app .rc-panel so this beats the
+   later base `.rc-panel{display:flex}` rule (same-specificity + source order
+   would otherwise re-show it, wrapping it onto a second grid row). */
+@media(max-width:1180px){.rc-app{grid-template-columns:210px 1fr}.rc-app .rc-panel{display:none}}
 
 /* sidebar */
 .rc-side{background:var(--side);color:var(--side-item);display:flex;flex-direction:column;overflow-y:auto}
