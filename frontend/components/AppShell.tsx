@@ -93,6 +93,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
   const [handoff, setHandoff] = useState<HandoffData | null>(null);
   const [handoffLoading, setHandoffLoading] = useState(true);
   const [sales, setSales] = useState<SalesMeta>({ loading: true, meeting_p: null, win_p: null });
+  const [navOpen, setNavOpen] = useState(false);  // mobile drawer
   // sales-agent toolbox (shared between the Toolbox view and the chat): which
   // tools the agent may call. Default every tool on.
   const [tools, setTools] = useState<ToolMeta[]>([]);
@@ -164,12 +165,18 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
   const llmMs = llm?.latency_ms ?? null;
   const speedup = aitoMs && llmMs ? Math.max(1, Math.round(llmMs / aitoMs)) : null;
 
+  const go = (v: View) => { setView(v); setNavOpen(false); };
   const NavItem = ({ v, children }: { v: View; children: React.ReactNode }) => (
-    <div className={`rc-item ${view === v ? "on" : ""}`} onClick={() => setView(v)}>{children}</div>
+    <div className={`rc-item ${view === v ? "on" : ""}`} onClick={() => go(v)}>{children}</div>
   );
 
   const telco = view === "resolve" || view === "augment" || view === "handoff";
   const hasTopbar = telco || view === "sales";
+  const PAGE_TITLE: Record<View, string> = {
+    home: "Overview", agent: "Sales agent", sales: "Opportunity Assistant", toolbox: "Sales toolbox",
+    company: "Company AI agent", "company-data": "360 Dashboard", "company-toolbox": "Company toolbox",
+    resolve: "Ticket resolution", augment: "Tool routing", handoff: "Human handoff",
+  };
   const crumb = view === "sales"
     ? { grp: "Northlight · sales", page: "Opportunity Assistant", note: "live · _estimate · _recommend · _query" }
     : view === "handoff" ? { grp: "Escalate", page: "Human handoff", note: "live · calibrated triage" }
@@ -177,7 +184,17 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
     : { grp: "Resolve", page: "Ticket resolution", note: "live · gpt-5-mini vs aito._predict" };
 
   return (
-    <div className="rc-app">
+    <div className={`rc-app ${navOpen ? "nav-open" : ""}`}>
+      {/* ---------- mobile top bar (hidden on desktop) ---------- */}
+      <div className="rc-mobtop">
+        <button className="rc-burger" aria-label="Menu" onClick={() => setNavOpen((v) => !v)}>
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+        </button>
+        <span className="rc-mobbrand">Predictive Agent</span>
+        <span className="rc-mobpage">{PAGE_TITLE[view]}</span>
+      </div>
+      <div className="rc-backdrop" onClick={() => setNavOpen(false)} />
+
       {/* ---------- sidebar: every demo, one menu ---------- */}
       <aside className="rc-side">
         <div className="rc-brand">
@@ -201,7 +218,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
           <div className="rc-grp">Sonipra Telecom · support</div>
           <NavItem v="resolve">Ticket resolution</NavItem>
           <NavItem v="augment">Tool routing · short-list</NavItem>
-          <div className={`rc-item ${view === "handoff" ? "on" : ""}`} onClick={() => setView("handoff")}>
+          <div className={`rc-item ${view === "handoff" ? "on" : ""}`} onClick={() => go("handoff")}>
             Human handoff{handoff && handoff.counts.handoff > 0 && <span className="bdg r">{handoff.counts.handoff}</span>}
           </div>
         </nav>
@@ -212,7 +229,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
 
       {/* ---------- main ---------- */}
       <main className="rc-main">
-        {view === "home" && <OverviewView onNavigate={(v) => setView(v)} />}
+        {view === "home" && <OverviewView onNavigate={go} />}
         {view === "agent" && <SalesAgentView tools={tools} toolOn={toolOn} />}
         {view === "toolbox" && <ToolboxView tools={tools} toolOn={toolOn} onToggle={toggleTool} onAllAito={setAllAito}
           agentLabel="Sales agent" examples={SALES_EXAMPLES}

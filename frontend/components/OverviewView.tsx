@@ -102,6 +102,15 @@ const CSS = `
 .fp .demo .dd{font-size:13.5px;color:var(--ink2);line-height:1.5}
 .fp .demo .go{margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--turq-ink);font-weight:700}
 .fp footer{padding:34px 0 50px;text-align:center;color:var(--faint);font-size:13px;border-top:1px solid var(--line)}
+@media(max-width:560px){
+  .fp .wrap{padding:0 18px}
+  .fp .hero{padding:36px 0 44px}
+  .fp .hero h1{font-size:30px}
+  .fp .lede{font-size:15px}.fp .oneliner{font-size:14px}
+  .fp section{padding:40px 0}
+  .fp h2{font-size:24px}.fp .lead{font-size:15px}
+  .fp .band{padding:24px 20px}
+}
 `;
 
 export type OverviewNav = (view: "resolve" | "augment" | "handoff" | "sales" | "agent" | "toolbox" | "company") => void;
