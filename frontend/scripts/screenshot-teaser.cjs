@@ -34,17 +34,19 @@ async function main() {
     process.exit(1);
   }
 
+  // Tall portrait poster (matches the other demos' teasers). The .html sets its
+  // own 1500px width; capture the full page at 2× → ~3000px wide.
   const ctx = await browser.newContext({
-    viewport: { width: 1200, height: 630 },
-    deviceScaleFactor: 1,
+    viewport: { width: 1500, height: 1200 },
+    deviceScaleFactor: 2,
   });
   const page = await ctx.newPage();
   await page.goto(`file://${SRC}`, { waitUntil: "networkidle" });
-  await page.screenshot({ path: OUT, type: "png", omitBackground: false });
+  await page.screenshot({ path: OUT, type: "png", fullPage: true, omitBackground: false });
   await browser.close();
 
   const stat = fs.statSync(OUT);
-  console.log(`✓ ${path.relative(REPO_ROOT, OUT)} (${stat.size} B, 1200×630)`);
+  console.log(`✓ ${path.relative(REPO_ROOT, OUT)} (${stat.size} B, portrait poster @2×)`);
 }
 
 main().catch((e) => {

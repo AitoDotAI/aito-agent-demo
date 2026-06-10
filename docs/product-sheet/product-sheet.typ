@@ -160,6 +160,30 @@ Aito has no training step, so a logged outcome sharpens the next prediction.
 ]
 #pagebreak()
 
+// ─────────────────────── The 360 Dashboard — causal analysis ───────────────────────
+= The 360 Dashboard — every KPI, diagnosed and prescribed
+
+The same ops, called *directly* (no agent) as a data view. Pick a customer segment
+and each KPI shows three things, each with a "?" that opens the live explanation —
+the per-prediction `$why` pattern used across the Aito demos:
+
+#v(0.3cm)
+#grid(
+  columns: (1fr, 1fr, 1fr), gutter: 12pt,
+  feature("Why the rate is the rate", "_predict $why: the base rate scaled by each segment attribute's lift — e.g. conversion base 40% × SMB ×1.11 × Free ×0.92.", icon: "🔢"),
+  feature("Root causes", "_relate scoped to the segment ($on): within SMB·Free, Red-health customers churn 44% vs 28% → ×1.39. Drivers (>1) and protective factors (<1).", icon: "🔬"),
+  feature("Levers + projected lift", "_recommend ranks the actionable lever; the recommendation differs by segment (SMB → Guided trial, Enterprise → CSM-led) and projects the result.", icon: "🎚️"),
+)
+
+#v(0.3cm)
+#shot("dashboard")
+#v(6pt)
+#text(size: 9pt, fill: muted)[
+  Diagnosis (`_relate`) and prescription (`_recommend`) on every KPI, each explained
+  by a live `$why` — the predictive database as a closed optimise-act-learn loop.
+]
+#pagebreak()
+
 // ─────────────────────── Agent 3: Support ───────────────────────
 = Predict-first support — the resolution console
 

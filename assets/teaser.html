@@ -1,74 +1,111 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Teaser source — Predictive Agent (Aito)</title>
-  <style>
-    /* Designed at 1200×630 — `./do screenshot-teaser` captures this viewport. */
-    :root {
-      --bg-deep: #0c0f41;
-      --bg-2: #11154f;
-      --border: #2a3258;
-      --text: #ffffff;
-      --muted: #9ba0c5;
-      --turq: #16c2b9;
-      --gold: #e0b34d;
-      --purple: #9b7dff;
-    }
-    html, body {
-      margin: 0; padding: 0; width: 1200px; height: 630px;
-      background: var(--bg-deep); color: var(--text);
-      font-family: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      overflow: hidden;
-    }
-    .frame {
-      width: 1200px; height: 630px; padding: 60px 72px; box-sizing: border-box;
-      display: flex; flex-direction: column; justify-content: space-between;
-      background:
-        radial-gradient(circle at 86% 12%, rgba(22,194,185,0.20) 0%, transparent 45%),
-        radial-gradient(circle at 10% 95%, rgba(124,92,252,0.16) 0%, transparent 45%),
-        linear-gradient(160deg, var(--bg-2), var(--bg-deep));
-    }
-    .brand { display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
-    .brand .ic { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--gold), #c9942f); display:flex; align-items:center; justify-content:center; }
-    .brand .dots { color: var(--turq); letter-spacing: -2px; }
-    .eyebrow { font-family: "JetBrains Mono", monospace; font-size: 14px; letter-spacing: .2em; text-transform: uppercase; color: var(--turq); font-weight: 700; margin-bottom: 18px; }
-    h1 { font-size: 52px; line-height: 1.08; letter-spacing: -.025em; font-weight: 900; margin: 0 0 14px; max-width: 18ch; }
-    h1 .hl { color: var(--turq); }
-    .sub { font-size: 20px; color: var(--muted); max-width: 52ch; line-height: 1.45; }
-    .sub b { color: #fff; font-weight: 600; }
-    .cards { display: flex; gap: 14px; margin-top: 6px; }
-    .card { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 13px; padding: 14px 16px; flex: 1; }
-    .card .op { font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 700; color: var(--turq); }
-    .card .v { font-size: 26px; font-weight: 900; letter-spacing: -.02em; margin-top: 6px; }
-    .card .l { font-size: 13px; color: var(--muted); margin-top: 2px; }
-    .foot { display: flex; align-items: center; justify-content: space-between; }
-    .axes { font-family: "JetBrains Mono", monospace; font-size: 16px; color: var(--muted); }
-    .axes b { color: var(--turq); font-weight: 700; }
-    .host { font-family: "JetBrains Mono", monospace; font-size: 16px; color: #fff; font-weight: 700; }
-  </style>
+<meta charset="utf-8">
+<title>Teaser source — Predictive Agent (Aito)</title>
+<style>
+  /* Tall feature poster — matches the accounting/ecommerce/erp teasers.
+     `./do screenshot-teaser` renders this (portrait, full page). */
+  :root{
+    --bg:#0c0f41; --bg2:#11154f; --card:#141a52; --line:#2a3066;
+    --text:#ffffff; --muted:#9aa2dd; --faint:#7079b8;
+    --teal:#16c2b9; --purple:#9B69FF; --cta:#F5A623; --gold:#e0b34d;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg)}
+  body{width:1500px;font-family:"Figtree",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--text)}
+  .poster{width:1500px;padding:70px 72px 56px;
+    background:radial-gradient(circle at 88% 6%,rgba(22,194,185,.16) 0%,transparent 42%),
+               radial-gradient(circle at 6% 60%,rgba(155,105,255,.13) 0%,transparent 40%),
+               linear-gradient(170deg,var(--bg2),var(--bg))}
+  .brand{display:flex;align-items:center;gap:14px;margin-bottom:40px}
+  .brand .ic{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#c9942f);display:flex;align-items:center;justify-content:center}
+  .brand .wm{font-size:30px;font-weight:800;letter-spacing:-.01em}
+  .brand .dots{color:var(--teal);letter-spacing:-3px}
+  .brand .pa{font-size:30px;font-weight:800;color:var(--text)}
+  .brand .by{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:14px;color:var(--muted)}
+  .eyebrow{font-family:"JetBrains Mono",monospace;font-size:17px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:20px}
+  h1{font-size:62px;line-height:1.08;letter-spacing:-.025em;font-weight:900;margin:0 0 22px;max-width:20ch}
+  h1 .hl{color:var(--teal)}
+  h1 .dim{color:#8089cc}
+  .sub{font-size:23px;line-height:1.5;color:#cdd2f4;max-width:62ch;margin:0 0 26px}
+  .sub b{color:#fff;font-weight:600}
+  .pills{display:flex;gap:10px;flex-wrap:wrap;font-family:"JetBrains Mono",monospace;font-size:15px;color:var(--muted);margin-bottom:46px}
+  .pills span{background:rgba(255,255,255,.05);border:1px solid var(--line);padding:8px 14px;border-radius:9px}
+  .pills b{color:#dfe4ff;font-weight:500}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .c{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+  .c .ch{padding:22px 24px 16px}
+  .c .tag{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+  .c.s .tag{color:var(--teal)} .c.co .tag{color:var(--purple)} .c.d .tag{color:var(--cta)} .c.r .tag{color:var(--gold)}
+  .c .ct{font-size:26px;font-weight:800;letter-spacing:-.01em;margin:6px 0 8px}
+  .c .cd{font-size:16px;line-height:1.5;color:var(--muted)}
+  .c .cd b{color:#dfe4ff;font-weight:600}
+  .c .shot{margin:4px 14px 14px;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#0a0d33}
+  .c .shot img{width:100%;display:block}
+  .ops{margin-top:30px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 30px;display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+  .ops .ol{font-size:19px;font-weight:800;white-space:nowrap}
+  .ops .ol .em{color:var(--teal)}
+  .ops .row{display:flex;gap:10px;flex-wrap:wrap;flex:1}
+  .op{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:700;color:var(--teal);background:rgba(22,194,185,.1);border:1px solid rgba(22,194,185,.25);padding:7px 13px;border-radius:9px}
+  .op small{color:var(--muted);font-weight:400;margin-left:7px}
+  .foot{margin-top:34px;display:flex;align-items:center;justify-content:space-between}
+  .foot .axes{font-family:"JetBrains Mono",monospace;font-size:18px;color:var(--muted)}
+  .foot .axes b{color:var(--teal);font-weight:700}
+  .foot .host{font-family:"JetBrains Mono",monospace;font-size:22px;font-weight:700;color:#fff}
+</style>
 </head>
 <body>
-  <div class="frame">
-    <div class="brand"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3C12 3 5 9 5 15a7 7 0 0 0 14 0c0-6-7-12-7-12Z" stroke="#3a2c08" stroke-width="1.8"/><path d="M12 21v-9m0 2-3-2m3 4 3-2" stroke="#3a2c08" stroke-width="1.8" stroke-linecap="round"/></svg></span>aito<span class="dots">..</span> &nbsp;Predictive Agent</div>
+<div class="poster">
+  <div class="brand">
+    <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 3C12 3 5 9 5 15a7 7 0 0 0 14 0c0-6-7-12-7-12Z" stroke="#3a2c08" stroke-width="1.8"/><path d="M12 21v-9m0 2-3-2m3 4 3-2" stroke="#3a2c08" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+    <span class="wm">aito<span class="dots">..</span></span><span class="pa">Predictive Agent</span>
+    <span class="by">The Predictive Database for Agents</span>
+  </div>
 
-    <div>
-      <div class="eyebrow">Aito in your agent&apos;s toolbox</div>
-      <h1>LLMs reason. RAG remembers. <span class="hl">Aito knows.</span></h1>
-      <div class="sub">A live agent that calls Aito ops as tools — grounded numbers it <b>can&apos;t invent</b>, and the action that wins. Better, faster, cheaper — and higher-yield.</div>
+  <div class="eyebrow">The faculty your agent is missing</div>
+  <h1><span class="dim">LLMs reason. RAG remembers.</span> <span class="hl">Aito knows.</span></h1>
+  <div class="sub">A live agent that calls Aito ops as <b>tools</b> — grounded numbers it can&apos;t invent, and the action that wins. Three working surfaces over one predictive database, with <b>no model training</b>.</div>
+  <div class="pills"><span>same act as the <b>neural net</b></span><span>but <b>live</b> · no training · no MLOps</span><span>over <b>your</b> data</span><span>calibrated <b>$p</b> + <b>$why</b></span></div>
+
+  <div class="grid">
+    <div class="c s">
+      <div class="ch"><div class="tag">Sales agent · assist + automate</div><div class="ct">Aito in the toolbox</div>
+        <div class="cd">gpt-5-mini calls Aito ops as functions — <b>win-odds, effort, references, the outreach that books the most meetings</b> (with the lift). Drafts the email; never auto-sends.</div></div>
+      <div class="shot"><img src="poster/sales.png" alt="sales agent"></div>
     </div>
-
-    <div class="cards">
-      <div class="card"><div class="op">_predict</div><div class="v">88%</div><div class="l">win odds + why</div></div>
-      <div class="card"><div class="op">_estimate</div><div class="v">116d</div><div class="l">effort, from history</div></div>
-      <div class="card"><div class="op">_recommend</div><div class="v">59% · 3×</div><div class="l">meetings vs baseline</div></div>
-      <div class="card"><div class="op">$p · gate</div><div class="v">auto / ask</div><div class="l">calibrated, audited</div></div>
+    <div class="c co">
+      <div class="ch"><div class="tag">Company AI · 360</div><div class="ct">Ask your numbers</div>
+        <div class="cd">One <b>linked</b> customer view across sales, support, product, finance, CX. <b>Churn, NPS, conversion</b> — which accounts, why, and what to do — calibrated, no training.</div></div>
+      <div class="shot"><img src="poster/company.png" alt="company agent"></div>
     </div>
-
-    <div class="foot">
-      <div class="axes">better · faster · cheaper · <b>+higher-yield</b></div>
-      <div class="host">agent.aito.ai</div>
+    <div class="c d">
+      <div class="ch"><div class="tag">360 Dashboard · analyze + optimize</div><div class="ct">Causes, levers, $why</div>
+        <div class="cd">Every KPI with its <b>root causes</b> (<code>_relate</code>), the <b>lever that moves it</b> (<code>_recommend</code>), and a <b>$why</b> on every prediction. Optimize, act, learn — no retrain.</div></div>
+      <div class="shot"><img src="poster/dashboard.png" alt="360 dashboard"></div>
+    </div>
+    <div class="c r">
+      <div class="ch"><div class="tag">Support · predict-first</div><div class="ct">Same ticket, two engines</div>
+        <div class="cd">The LLM reasons every ticket out in seconds; <code>aito._predict</code> reads it from history in <b>~0.15s, $0</b>, with a calibrated gate that auto-handles the sure ones and escalates the rest.</div></div>
+      <div class="shot"><img src="poster/console.png" alt="resolution console"></div>
     </div>
   </div>
+
+  <div class="ops">
+    <div class="ol">One query, <span class="em">five ops</span></div>
+    <div class="row">
+      <span class="op">_predict<small>class + $p + $why</small></span>
+      <span class="op">_relate<small>drivers / lift</small></span>
+      <span class="op">_estimate<small>a number</small></span>
+      <span class="op">_recommend<small>best next action</small></span>
+      <span class="op">_match<small>relevant memory</small></span>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="axes">better · faster · cheaper · <b>+higher-yield</b></div>
+    <div class="host">agent.aito.ai</div>
+  </div>
+</div>
 </body>
 </html>
