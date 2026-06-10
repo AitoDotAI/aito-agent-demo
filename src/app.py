@@ -592,20 +592,27 @@ _SALES_TOOL_IMPLS = {
 # customer joins across every domain. Each KPI is a _predict target with an
 # actionable lever for _recommend. launch_play only ever drafts.
 
-# kpi → {table, target, the "good" value, the lever to _recommend, labels}
+# kpi → {table, target, "good" value, "bad" value (for root-cause _relate), the
+# lever to _recommend, the fields to relate as causes, labels}
 _KPIS = {
-    "conversion": {"label": "Conversion", "table": "deals", "target": "converted", "good": "yes",
-                   "lever": "nurture_track", "lever_label": "nurture track"},
-    "churn": {"label": "Churn", "table": "customers", "target": "churned", "good": "no", "report": "yes",
-              "lever": "csm_motion", "lever_label": "CSM motion"},
+    "conversion": {"label": "Conversion", "table": "deals", "target": "converted", "good": "yes", "bad": "no",
+                   "lever": "nurture_track", "lever_label": "nurture track",
+                   "causes": ["source", "trial_length", "customer.size", "customer.plan"]},
+    "churn": {"label": "Churn", "table": "customers", "target": "churned", "good": "no", "report": "yes", "bad": "yes",
+              "lever": "csm_motion", "lever_label": "CSM motion",
+              "causes": ["health", "onboarding", "nps_band", "tenure_band"]},
     "nps": {"label": "NPS", "table": "feedback", "target": "score_band", "good": "promoter", "report": "detractor",
-            "lever": "theme", "lever_label": "theme to fix"},
-    "csat": {"label": "CSAT", "table": "tickets", "target": "csat_band", "good": "good", "report": "good",
-             "lever": "channel", "lever_label": "support channel"},
-    "adoption": {"label": "Adoption", "table": "usage", "target": "active", "good": "yes",
-                 "lever": "onboarding_push", "lever_label": "onboarding push"},
+            "bad": "detractor", "lever": "theme", "lever_label": "theme to fix",
+            "causes": ["channel", "customer.plan", "customer.health"]},
+    "csat": {"label": "CSAT", "table": "tickets", "target": "csat_band", "good": "good", "bad": "bad",
+             "lever": "channel", "lever_label": "support channel",
+             "causes": ["category", "priority", "first_response"]},
+    "adoption": {"label": "Adoption", "table": "usage", "target": "active", "good": "yes", "bad": "no",
+                 "lever": "onboarding_push", "lever_label": "onboarding push",
+                 "causes": ["adoption_band", "customer.onboarding", "customer.health"]},
     "ontime": {"label": "On-time revenue", "table": "invoices", "target": "status", "good": "paid", "report": "overdue",
-               "lever": "term", "lever_label": "billing term"},
+               "bad": "overdue", "lever": "term", "lever_label": "billing term",
+               "causes": ["amount_band", "customer.plan", "customer.size"]},
 }
 
 
@@ -618,6 +625,26 @@ def _seg_where(table: str, args: dict) -> dict:
 
 def _p_of(hits: list, feature: str) -> float:
     return next((float(h["$p"]) for h in hits if h.get("feature") == feature), 0.0)
+
+
+def _relate_causes(table: str, where: dict, fields: list[str], k: int = 3) -> list[dict]:
+    """Root causes via _relate: the feature-values most over-represented under
+    `where` (the bad outcome). lift > 1 = a cause; return the top k by lift."""
+    if not fields:
+        return []
+    try:
+        hits = aito.relate(table, where, fields).get("hits") or []
+    except AitoError:
+        return []
+    out: list[dict] = []
+    for h in sorted(hits, key=lambda x: -float(x.get("lift", 1))):
+        if float(h.get("lift", 1)) <= 1.08:  # over-represented vs baseline = a driver
+            continue
+        for f, v in _why_props(h.get("related") or {}):
+            out.append({"field": f.replace("customer.", ""), "value": str(v), "lift": round(float(h["lift"]), 2)})
+        if len(out) >= k:
+            break
+    return out[:k]
 
 
 def _tool_kpi_snapshot(args: dict) -> dict:
@@ -639,12 +666,20 @@ def _tool_optimize_kpi(args: dict) -> dict:
         return {"error": f"unknown kpi '{kpi}'"}
     table, target, good = cfg["table"], cfg["target"], cfg["good"]
     where = _seg_where(table, args)
-    # current KPI + drivers
-    hits = aito.predict(table, where, target, limit=4, select=["$p", "feature", "$why"]).get("hits") or []
+    # headline framed in the KPI's natural direction: churn/detractor/overdue are
+    # "lower is better", so we report (and explain) that falling rate.
+    report = cfg.get("report")
+    lower_better = bool(report) and report != good
+    focus = report if lower_better else good   # the outcome whose causes we surface
+    hits = aito.predict(table, where, target, limit=4, select=["$p", "feature"]).get("hits") or []
     good_hit = next((h for h in hits if h.get("feature") == good), None)
     current = round(float(good_hit["$p"]), 2) if good_hit else round(_p_of(hits, good), 2)
-    drivers = _win_drivers((good_hit or (hits[0] if hits else {})).get("$why"))
-    # the lever that moves it most, + projected lift
+    # CAUSES (diagnosis): _relate the BAD outcome to the candidate driver fields —
+    # which feature-values are over-represented when the KPI goes wrong. lift > 1 is
+    # a root cause. Skip any field already pinned by the segment.
+    cause_fields = [f for f in cfg["causes"] if f not in where]
+    causes = _relate_causes(table, {**where, target: cfg["bad"]}, cause_fields)
+    # LEVERS: the top actions — values of the actionable lever ranked toward the goal.
     rec = (aito.recommend(table, where, cfg["lever"], {target: good}, limit=3).get("hits") or [])
     best = rec[0]["feature"] if rec else None
     ph: list = []
@@ -652,16 +687,14 @@ def _tool_optimize_kpi(args: dict) -> dict:
     if best is not None:
         ph = aito.predict(table, {**where, cfg["lever"]: best}, target, limit=4, select=["$p", "feature"]).get("hits") or []
         projected = round(_p_of(ph, good), 2)
-    # headline framed in the KPI's natural direction: churn/detractor/overdue are
-    # "lower is better", so report that falling rate rather than the good-rate.
-    report = cfg.get("report")
-    lower_better = bool(report) and report != good
     now = round(_p_of(hits, report), 2) if lower_better else current
     then = (round(_p_of(ph, report), 2) if (lower_better and best is not None) else (now if lower_better else projected))
     return {
         "kpi": cfg["label"], "goal": f"{target}={good}",
         "headline": {"metric": cfg["label"], "now": now, "then": then, "lower_is_better": lower_better},
-        "current": current, "drivers": drivers,
+        "current": current,
+        "causes": causes, "drivers": causes,   # top-3 root causes (drivers kept as alias)
+        "levers": {"field": cfg["lever_label"], "ranked": [{"value": h["feature"], "p": round(float(h["$p"]), 2)} for h in rec]},
         "recommended_play": {"lever": cfg["lever_label"], "change_to": best,
                              "ranked": [{"value": h["feature"], "p": round(float(h["$p"]), 2)} for h in rec]},
         "projected": projected,

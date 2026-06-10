@@ -11,7 +11,8 @@ import { apiFetch } from "@/lib/api";
 type Driver = { field: string; value: string; lift: number };
 type Kpi = {
   key: string; kpi: string; headline: { metric: string; now: number; then: number; lower_is_better: boolean };
-  lift_pp: number; drivers: Driver[];
+  lift_pp: number; causes: Driver[];
+  levers: { field: string; ranked: { value: string; p: number }[] };
   recommended_play: { lever: string; change_to: string };
 };
 type Customer = {
@@ -92,10 +93,22 @@ export function CompanyDashboardView() {
                     <div className="kh"><b>{m.label}</b><span>{m.sub}</span></div>
                     <div className="kv" style={{ color: good ? "var(--g)" : "var(--r)" }}>{pct(k.headline.now)}</div>
                     <div className="kbar"><i style={{ width: pct(k.headline.now), background: good ? "var(--g)" : "var(--r)" }} /></div>
-                    <div className="lev">
-                      <div className="ll">↳ {k.recommended_play.lever} → <b>{k.recommended_play.change_to}</b></div>
-                      <div className="lp">{pct(k.headline.now)} → <b style={{ color: "var(--t)" }}>{pct(k.headline.then)}</b> · {k.lift_pp}pp better</div>
+
+                    <div className="blk">
+                      <div className="bt">Top root causes <span className="op2">_relate</span></div>
+                      {k.causes.length ? k.causes.map((c, i) => (
+                        <div className="ci" key={i}><span className="cf">{c.field.replace(/_/g, " ")} = {c.value}</span><span className="cl">×{c.lift}</span></div>
+                      )) : <div className="cnone">driven by the segment / the lever itself</div>}
                     </div>
+
+                    <div className="blk">
+                      <div className="bt">Top levers <span className="op2">_recommend</span></div>
+                      {k.levers.ranked.slice(0, 3).map((r, i) => (
+                        <div className="ci" key={i}><span className="cf">{k.levers.field} → {r.value}</span><span className={`cp ${i === 0 ? "best" : ""}`}>{pct(r.p)}</span></div>
+                      ))}
+                    </div>
+
+                    <div className="proj">Pull the top lever → <b style={{ color: "var(--t)" }}>{pct(k.headline.then)}</b> · {k.lift_pp}pp better</div>
                   </div>
                 );
               })}
@@ -159,9 +172,16 @@ const CSS = `
 .cd .kh b{font-size:14px;font-weight:700}.cd .kh span{font-size:10.5px;color:var(--faint)}
 .cd .kv{font-size:34px;font-weight:900;letter-spacing:-.03em;line-height:1.1;margin:4px 0 6px}
 .cd .kbar{height:7px;background:#eee9dd;border-radius:4px;overflow:hidden;margin-bottom:11px}.cd .kbar i{display:block;height:100%;border-radius:4px}
-.cd .lev{border-top:1px dashed var(--line);padding-top:9px}
-.cd .ll{font-size:12px;color:var(--ink2)}.cd .ll b{color:var(--ink)}
-.cd .lp{font-size:12px;color:var(--faint);margin-top:3px}
+.cd .blk{border-top:1px dashed var(--line);padding-top:8px;margin-top:9px}
+.cd .bt{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.cd .op2{font-family:'JetBrains Mono',monospace;font-size:8.5px;color:var(--t);background:#e9f6f5;padding:1px 5px;border-radius:4px;text-transform:none;letter-spacing:0}
+.cd .ci{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink2);padding:2px 0}
+.cd .ci .cf{flex:1;min-width:0}
+.cd .ci .cl{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--r)}
+.cd .ci .cp{font-family:'JetBrains Mono',monospace;color:var(--faint)}
+.cd .ci .cp.best{color:var(--t);font-weight:700}
+.cd .cnone{font-size:11px;color:var(--faint);font-style:italic;padding:2px 0}
+.cd .proj{border-top:1px dashed var(--line);margin-top:9px;padding-top:8px;font-size:11.5px;color:var(--ink2)}
 .cd .spot{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:16px 17px;border-left:3px solid var(--r)}
 .cd .sp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .cd .sp-name{font-size:16px;font-weight:800}.cd .sp-id{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);font-weight:400;margin-left:6px}

@@ -137,6 +137,12 @@ class AitoClient:
                              {"from": table, "where": where, "recommend": field, "goal": goal, "limit": limit},
                              op="_recommend")
 
+    def relate(self, table: str, where: dict, fields: list[str]) -> dict:
+        """Statistical relationships ('drivers'): how each value of `fields` is
+        over/under-represented under `where`. lift > 1 = a root cause of `where`."""
+        return self._request("POST", "/api/v1/_relate",
+                             {"from": table, "where": where, "relate": fields}, op="_relate")
+
     def query(self, table: str, where: dict | None = None, select: list[str] | None = None,
               order_by: str | dict | None = None, limit: int = 5) -> dict:
         """Fetch rows (used for reference examples)."""
