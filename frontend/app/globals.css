@@ -416,6 +416,9 @@ body:has(.rc-app),body:has(.app){height:100vh;overflow:hidden}
   .rc-main{min-width:0}
   .rc-topbar{flex-wrap:wrap;gap:8px;padding:10px 14px;height:auto}
   .rc-topbar .rc-crumb .cnt{display:none}
+  .rc-tbtns{flex-wrap:wrap;margin-left:0;width:100%;justify-content:flex-start}
+  .rc-tbtns .rc-sel{flex:1 1 auto;min-width:0}
+  .rc-tbtns .rc-run{flex:0 0 auto}
 }
 
 /* sidebar */

@@ -241,7 +241,7 @@ const CSS = `
 .cd .chip{font-family:'JetBrains Mono',monospace;font-size:11.5px;padding:6px 11px;border-radius:7px;border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer}
 .cd .chip.on{background:var(--gold-soft);border-color:#e3c878;color:var(--gold-ink)}
 .cd .cfg{display:grid;grid-template-columns:repeat(3,1fr) auto;gap:10px;align-items:end;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
-@media(max-width:720px){.cd .cfg{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){.cd .cfg{grid-template-columns:1fr 1fr}.cd .cfg .run{grid-column:1/-1;white-space:normal}}
 .cd .cfg label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--faint);text-transform:capitalize}
 .cd .cfg select{font-size:12.5px;padding:7px 8px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink)}
 .cd .run{font-weight:800;font-size:13px;background:var(--t);color:#04221f;border:none;border-radius:8px;padding:9px 16px;cursor:pointer;white-space:nowrap}
