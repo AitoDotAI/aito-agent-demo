@@ -364,7 +364,8 @@ def route(text: str):
 
     where = {"text": text}
     try:
-        sl = aito.predict("tickets", where, "tool", limit=5, select=["$p", "feature"])
+        # tool-routing history lives in `tool_calls` (the company demo owns `tickets`)
+        sl = aito.predict("tool_calls", where, "tool", limit=5, select=["$p", "feature"])
     except AitoError as e:
         raise HTTPException(status_code=502, detail=str(e))
     hits = sl.get("hits") or []
