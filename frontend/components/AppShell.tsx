@@ -93,7 +93,14 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
   const [handoff, setHandoff] = useState<HandoffData | null>(null);
   const [handoffLoading, setHandoffLoading] = useState(true);
   const [sales, setSales] = useState<SalesMeta>({ loading: true, meeting_p: null, win_p: null });
-  const [navOpen, setNavOpen] = useState(false);  // mobile drawer
+  const [navOpen, setNavOpen] = useState(false);  // mobile nav drawer
+  // Right Aito panel: collapsible on desktop (persisted), and on mobile/tablet
+  // — where it's hidden inline — reachable as a slide-in drawer via the Aito FAB.
+  // Two independent flags so the breakpoints don't fight on resize.
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelMobOpen, setPanelMobOpen] = useState(false);
+  useEffect(() => { try { if (localStorage.getItem("rcPanelCollapsed") === "1") setPanelOpen(false); } catch { /* noop */ } }, []);
+  const togglePanel = () => setPanelOpen((o) => { const n = !o; try { localStorage.setItem("rcPanelCollapsed", n ? "0" : "1"); } catch { /* noop */ } return n; });
   // sales-agent toolbox (shared between the Toolbox view and the chat): which
   // tools the agent may call. Default every tool on.
   const [tools, setTools] = useState<ToolMeta[]>([]);
@@ -184,7 +191,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
     : { grp: "Resolve", page: "Ticket resolution", note: "live · gpt-5-mini vs aito._predict" };
 
   return (
-    <div className={`rc-app ${navOpen ? "nav-open" : ""}`}>
+    <div className={`rc-app ${navOpen ? "nav-open" : ""} ${panelOpen ? "" : "panel-collapsed"} ${panelMobOpen ? "panel-mob-open" : ""}`}>
       {/* ---------- mobile top bar (hidden on desktop) ---------- */}
       <div className="rc-mobtop">
         <button className="rc-burger" aria-label="Menu" onClick={() => setNavOpen((v) => !v)}>
@@ -351,6 +358,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
       {/* ---------- right Aito panel (adapts per view) ---------- */}
       {view === "resolve" ? (
         <aside className="rc-panel">
+          <button className="rc-panel-close" onClick={() => setPanelMobOpen(false)} aria-label="Close Aito panel">✕</button>
           <div className="rc-ph"><div className="rc-aw">aito<span className="dots">..</span></div><div className="rc-pdb">The Predictive DB · _predict</div></div>
           <div className="rc-pstats">
             <div className="rc-pstat"><div className="pv">{aitoMs != null ? `${aitoMs.toFixed(0)}ms` : "—"}</div><div className="pl">aito latency</div></div>
@@ -367,6 +375,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
         </aside>
       ) : (
         <aside className="rc-panel">
+          <button className="rc-panel-close" onClick={() => setPanelMobOpen(false)} aria-label="Close Aito panel">✕</button>
           <div className="rc-ph"><div className="rc-aw">aito<span className="dots">..</span></div><div className="rc-pdb">{PANEL[view].pdb}</div></div>
           <div className="rc-pstats">
             {PANEL[view].stats.map((st, i) => <div className="rc-pstat" key={i}><div className="pv">{st[0]}</div><div className="pl">{st[1]}</div></div>)}
@@ -378,6 +387,17 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
           <PanelLinks />
         </aside>
       )}
+
+      {/* desktop: collapse / expand the Aito panel (edge tab) */}
+      <button className="rc-panel-toggle" onClick={togglePanel}
+        aria-label={panelOpen ? "Hide Aito panel" : "Show Aito panel"}
+        title={panelOpen ? "Hide Aito panel" : "Show Aito panel"}>{panelOpen ? "›" : "‹"}</button>
+
+      {/* mobile/tablet: floating Aito logo opens the panel as a drawer */}
+      <button className="rc-panel-fab" onClick={() => setPanelMobOpen(true)} aria-label="Show Aito context">
+        <span className="rc-aw">aito<span className="dots">..</span></span>
+      </button>
+      <div className="rc-panel-backdrop" onClick={() => setPanelMobOpen(false)} />
     </div>
   );
 }

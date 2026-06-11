@@ -520,3 +520,35 @@ body:has(.rc-app),body:has(.app){height:100vh;overflow:hidden}
 .rc-plinks{padding:10px 18px 0}.rc-plink{display:flex;align-items:center;gap:8px;font-size:12px;color:#c2c8ff;padding:6px 0;cursor:pointer}.rc-plink:hover{color:var(--turq)}.rc-plink .ar{color:var(--purple)}
 .rc-cta{margin-top:auto;padding:14px 18px;position:sticky;bottom:0;background:linear-gradient(180deg,transparent,var(--indigo-deep) 30%)}
 .rc-cta button{width:100%;background:var(--turq);color:var(--turq-ink);border:none;border-radius:9px;padding:13px;font-family:'Figtree';font-weight:800;font-size:14px;cursor:pointer}
+
+/* ── Aito panel: desktop collapse tab + mobile FAB/drawer (hidden by default) ── */
+.rc-panel-toggle,.rc-panel-fab,.rc-panel-backdrop,.rc-panel-close{display:none}
+.rc-panel-toggle{position:fixed;top:50%;right:0;transform:translateY(-50%);width:22px;height:66px;
+  background:linear-gradient(180deg,var(--indigo-2),var(--indigo-deep));border:1px solid var(--panel-line);border-right:none;
+  border-radius:8px 0 0 8px;color:var(--turq);font-size:15px;font-weight:700;cursor:pointer;z-index:30;
+  align-items:center;justify-content:center;box-shadow:-2px 0 12px rgba(0,0,0,.3);transition:right .2s ease}
+.rc-panel-toggle:hover{background:var(--indigo-2)}
+
+/* desktop only: third column collapses to nothing */
+@media(min-width:1181px){
+  .rc-panel-toggle{display:flex}
+  .rc-app:not(.panel-collapsed) .rc-panel-toggle{right:330px}
+  .rc-app.panel-collapsed{grid-template-columns:236px 1fr 0}
+  .rc-app.panel-collapsed .rc-panel{display:none}
+}
+
+/* mobile/tablet: panel is a right-side drawer reached via the Aito FAB */
+@media(max-width:1180px){
+  .rc-app .rc-panel{display:flex;position:fixed;top:0;right:0;bottom:0;width:330px;max-width:90vw;z-index:60;
+    transform:translateX(105%);transition:transform .24s ease;box-shadow:-3px 0 30px rgba(0,0,0,.55)}
+  .rc-app.panel-mob-open .rc-panel{transform:translateX(0)}
+  .rc-panel-fab{display:flex;align-items:center;justify-content:center;position:fixed;right:16px;bottom:16px;
+    width:58px;height:58px;border-radius:50%;background:linear-gradient(180deg,var(--indigo-2),var(--indigo-deep));
+    border:1px solid var(--panel-line);cursor:pointer;z-index:45;box-shadow:0 6px 20px rgba(0,0,0,.45)}
+  .rc-panel-fab .rc-aw{font-size:15px}
+  .rc-app.panel-mob-open .rc-panel-fab{display:none}
+  .rc-app.panel-mob-open .rc-panel-backdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:55}
+  .rc-panel-close{display:flex;align-items:center;justify-content:center;position:absolute;top:12px;right:12px;
+    width:30px;height:30px;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:14px;border-radius:50%;cursor:pointer;z-index:2}
+  .rc-panel-close:hover{background:rgba(255,255,255,.2)}
+}
