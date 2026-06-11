@@ -1,127 +1,195 @@
-# Aito demo template (`aito-agent-demo`)
+# Predictive Agent — Aito as the intuition in an LLM agent's toolbox
 
-A starter skeleton that follows every convention `aito-demo-server` enforces. Copy this folder to a new repo, adjust the name + content, push to GitHub, and add one entry to `aito-demo-server/demos.config.yaml`. From scratch to a hosted `<name>.aito.ai` demo in well under an hour.
+> A working reference implementation showing [Aito.ai](https://aito.ai) as
+> the **predictive layer an LLM agent calls as a tool**. One live
+> `gpt-5-mini` agent reasons; when it needs a number it can't invent —
+> win odds, effort, the outreach that books the most meetings, the lever
+> that moves a KPI — it calls an Aito op over the company's own history
+> and gets a calibrated answer with a `$why`. No model training. No
+> retraining. Add a row, the next prediction reflects it.
 
-## What's in the box
+[![Powered by Aito.ai](https://img.shields.io/badge/Powered%20by-Aito.ai-orange)](https://aito.ai)
+[![Live demo](https://img.shields.io/badge/Live-agent.aito.ai-16c2b9)](https://agent.aito.ai)
+[![Catalog](https://img.shields.io/badge/More%20demos-demos.aito.ai-5D50FF)](https://demos.aito.ai)
 
-**Code (backend):**
-- **`pyproject.toml`** — Python 3.12 + uv. FastAPI / uvicorn / httpx / python-dotenv. Dev: pytest + pytest-httpx + booktest.
-- **`src/app.py`** — minimal FastAPI app. Has:
-  - `GET /health` — cheap liveness probe (returns `{"ok": true}`)
-  - `GET /api/health` — Aito-connectivity readiness probe (returns `aito_url`, `aito_connected`)
-  - `GET /api/schema` — pass-through to Aito's `/schema` (linked from AitoPanel)
-  - `GET /api/example` — hello-world that lists Aito tables
-  - Middleware that surfaces `X-Aito-Ms` / `X-Aito-Calls` / `X-Aito-Ops` headers (the topbar LatencyBadge reads these)
-  - `StaticFiles(html=True)` mount at `/` serving `frontend/out/` (production = one process)
-- **`src/aito_client.py`** — slim sync Aito client. `predict()`, `match()`, `search()`, `get_schema()`, `check_connectivity()`. Records `last_call` for latency middleware.
-- **`src/config.py`** — loads `AITO_API_URL` + `AITO_API_KEY` from env. Fails loudly if missing.
+Live at **[agent.aito.ai](https://agent.aito.ai)**. Companion to the other
+Aito reference demos ([accounting](https://accounting.aito.ai),
+[erp](https://erp.aito.ai), [ecommerce](https://ecommerce.aito.ai)) — those
+embed predictions in a product UI; this one puts the **five Aito ops** in
+an LLM agent's hands and shows what changes when you flip them off.
 
-**Code (frontend):**
-- **`frontend/`** — Next.js 16 + React 19. Configured for static export in production; dev uses next-dev + backend proxy.
-- **`frontend/components/shell/`** — `TopBar`, `Nav`, `AitoPanel` (the canonical context/side pane — collapsible right panel showing live query + response time + stats), `ErrorState`, `Analytics`, `LatencyBadge`.
-- **`frontend/components/prediction/`** — `PredictionBadge`, `ConfidenceBar`, `WhyTooltip`, `PredictedField`, `WhyCards`, `LiftHint`. The reusable "show a prediction with confidence + explanation" UI.
-- **`frontend/lib/api.ts`** — `apiFetch` wrapper (emits latency events for LatencyBadge, throws `ApiError` on non-200), `confClass`, `fmtAmount`.
-- **`frontend/lib/aito.ts`** — *optional* browser-side Aito client for direct-from-browser pattern (rare; usually browser → FastAPI → Aito).
-- **`frontend/lib/types.ts`** — `Alternative`, `WhyFactor`, `AitoPanelConfig`, etc.
-- **`frontend/lib/analytics.ts`** — Amplitude + GA4 init from `NEXT_PUBLIC_AMPLITUDE_KEY` / `NEXT_PUBLIC_GA4_MEASUREMENT_ID`.
-- **`frontend/public/`** — `aito-logo.svg`, `aito-favicon.svg`, `aito-panel-bg.png` (background image used by AitoPanel).
+![Predictive Agent — Sales agent](docs/product-sheet/shots/sales-agent.png)
 
-**Operational:**
-- **`do`** — wrapper for all common workflows. `./do help` for the list.
-- **`.env.example`** — the env contract.
-- **`shell.nix`** — Nix dev shell (Python 3.12 + uv + Node 20 + Playwright + dev tools). `nix-shell` to enter; auto-runs `uv sync` and loads `.env`.
+## The one idea
 
-**Tests:**
-- **`tests/test_health.py`** — plain pytest (no Aito).
-- **`book/test_01_aito_schema_book.py`** — booktest snapshot example (Aito-dependent; replays from `books/` on subsequent runs).
-- **`booktest.ini`** — booktest config.
+LLMs gave an agent **reasoning**. RAG gave it **memory**. Neither gives it
+**intuition** — the calibrated, learned-from-your-data "I've seen this
+before, here's what usually happens." A neural net has that intuition but
+is frozen at training time and about the whole world, not your business.
 
-**Screenshots / regression:**
-- **`frontend/scripts/screenshot-teaser.cjs`** — renders `assets/teaser.html` → `assets/teaser.png` (1200×630, the size the landing page wants).
-- **`frontend/scripts/screenshot-pages.cjs`** — desktop full-page screenshots of given paths (regression baseline).
-- **`frontend/scripts/inspect-mobile.cjs`** — iPhone-sized screenshots for layout review.
+**Aito is that intuition as a query.** The same act as a neural net —
+turn rows into an instant, calibrated answer — but live, over *your*
+tables, with nothing to train. Five operators cover it:
 
-**Docs:**
-- **`README.md`** (this file) — bootstrap workflow.
-- **`CLAUDE.md`** — agent instructions: platform conventions, common pitfalls, where to start.
-- **`CHEATSHEET.md`** — Aito query cookbook (predict / match / search / multi-tenant / common where clauses).
-- **`CHECKLIST.md`** — pre-launch checklist covering code, branding, analytics, product sheet, deploy.
+| Op | Returns | In this demo |
+|----|---------|--------------|
+| `_predict` | a class + calibrated `$p` + `$why` | win odds, ticket intent, KPI rates, tool short-list |
+| `_estimate` | a number | engagement effort (person-days), expected MRR |
+| `_recommend` | the action that maximises an outcome | the outreach / lever that books meetings, cuts churn |
+| `_relate` | drivers / lift (with `$on` to scope a segment) | the root causes behind a KPI, within a segment |
+| `_match` | the relevant memory | reference engagements, similar tickets |
 
-**Assets:**
-- **`assets/teaser.html`** — source for the teaser image (edit visually, regenerate the PNG).
-- **`assets/teaser.png`** — the actual file consumed by the platform's landing page (regenerate via `./do screenshot-teaser`).
-- **`assets/README.md`** — what the platform expects.
+Every surface in the app is a real call to one of these against a live
+Aito instance — latency and cost in the UI are measured, not mocked.
 
-## Bootstrap workflow
+## Try it instantly (no signup)
+
+The demo's Aito instance is public **read-only**. Predict the win odds of
+a consulting opportunity straight from history:
 
 ```bash
-# 1. Copy and rename
-cp -r /home/arau/episto/src/aito-demo-server/template /home/arau/episto/src/aito-<NAME>-demo
-cd /home/arau/episto/src/aito-<NAME>-demo
-
-# 2. Find & replace the placeholder name
-#    (search for HELLO, hello-demo, predictive-agent, etc.)
-grep -rl "HELLO\|hello-demo\|predictive-agent" . --exclude-dir=node_modules --exclude-dir=.venv
-
-# 3. Generate lockfiles so the platform's `--frozen` install works
-uv lock
-cd frontend && npm install && cd ..
-
-# 4. Replace assets/teaser.png with your own (1200×630 ish, dark navy bg, purple accent)
-
-# 5. git init, commit, push to github.com/AitoDotAI/aito-<NAME>-demo
-git init && git add -A && git commit -m "Initial commit from aito-agent-demo template"
-gh repo create AitoDotAI/aito-<NAME>-demo --private --source=. --push
-
-# 6. In aito-demo-server, add the yaml entry
-cd /home/arau/episto/src/aito-demo-server
-./do add-demo <NAME>           # appends a scaffold to demos.config.yaml
-# edit the new entry: set source.repo, ref: main (or a SHA), and teaser copy
-
-# 7. Validate + smoke build locally
-./do check
-./do build                      # ~5-10 min cold
-./do up                         # http://localhost:8080 — your demo at Host: <NAME>.aito.ai
-
-# 8. Deploy via aito-azure
-cd /home/arau/episto/src/aito-azure
-./do deploy-demos               # pushes to ACR + updates the unified Web App
+curl -X POST https://shared.aito.ai/db/aito-agent-demo/api/v1/_predict \
+  -H "x-api-key: 08b98adef5a80260a41273d5efb9e050fc24cef3dece1eb725c675b4bb1dd5a8" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "from": "engagements",
+    "where": {
+      "client_industry": "SaaS",
+      "service_line": "Data Platform",
+      "deal_size_band": "L",
+      "lead_source": "Referral",
+      "relationship": "Existing client"
+    },
+    "predict": "outcome",
+    "select": ["$p", "feature", "$why"]
+  }'
 ```
 
-## What you'd typically replace
-
-- **`src/app.py`** — add your own `@app.get("/api/...")` routes. The `/health` and `/api/health` routes can stay verbatim; the StaticFiles mount must remain the LAST thing in the file (it shadows everything else at `/`).
-- **`src/config.py`** — extend if your demo needs more env vars. Keep the fail-loud pattern.
-- **`frontend/app/page.tsx`** — your UI.
-- **`pyproject.toml`** — add any additional Python deps you need.
-- **`frontend/package.json`** — add any additional JS deps you need.
-- **`assets/teaser.html`** — design your teaser, then `./do screenshot-teaser` to regenerate the PNG.
-- **`README.md`** — replace this file with one for your specific demo.
-- **`CLAUDE.md`** — trim sections you don't need, add demo-specific guidance.
-- **`book/test_01_aito_schema_book.py`** — adapt to test your demo's actual queries (use as a pattern; add more `book/test_NN_*.py` files for each capability you want snapshot-tested).
-- **`tests/test_health.py`** — add unit tests for any pure logic in your routes.
-
-Walk **`CHECKLIST.md`** before declaring done.
-
-## What you should NOT change (without a good reason)
-
-- **`frontend/next.config.ts`** — the `output: "export"` + dev rewrite pattern is what lets the platform run you as a single uvicorn process. Diverging means you need `extra_processes` in `demos.config.yaml` and the operator complexity that comes with that.
-- **`src/app.py`'s StaticFiles mount line** — the platform expects `frontend/out/` to be served at `/` from the same uvicorn process as `/api/*`.
-- **`/health` endpoint** — nginx in the platform's container proxies `<demo>.aito.ai/health` to this route; if it 404s, monitoring breaks.
-- **Env var names** — `AITO_API_URL` + `AITO_API_KEY` is the canonical pair the platform's `env:` block remaps from per-demo secrets (`AITO_<DEMO_NAME>_API_URL`). Picking different names means adjusting the yaml.
-
-## Local development
+Change `lead_source` to `"Cold outbound"` and the probability drops — the
+history is what conditions it. Now ask which outreach **books a meeting**
+for that buyer (an `_recommend`, the op that optimises rather than
+describes):
 
 ```bash
-./do install     # uv sync + npm install
-./do dev         # runs uvicorn (backend) + next dev (frontend) on separate ports
-                 # frontend proxies /api/* to backend; hot-reload on both
+curl -X POST https://shared.aito.ai/db/aito-agent-demo/api/v1/_recommend \
+  -H "x-api-key: 08b98adef5a80260a41273d5efb9e050fc24cef3dece1eb725c675b4bb1dd5a8" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "from": "outreach",
+    "where": { "target_industry": "SaaS", "target_role": "Head of Data" },
+    "recommend": "angle",
+    "goal": { "meeting": "yes" },
+    "limit": 3
+  }'
 ```
 
-In dev, the frontend (UI) listens on `4100` (configurable via `FRONTEND_PORT`) and the backend on `4101` (configurable via `BACKEND_PORT`) — picked in the 4100+ range to avoid common local port conflicts. The next.config.ts proxy rewrite is dev-only — production builds skip it and FastAPI serves both `/api/*` and the static UI from the single `PORT` the platform assigns.
+## What's in the demo
 
-## Where this lives
+Three fictional companies, one shell, every surface in the left menu. Each
+domain shows the same thesis from a different angle.
 
-This template is committed inside `aito-demo-server/template/` rather than as a separate repo. Rationale: the platform's conventions evolve over time (env-var naming, `/health` shape, Next.js output config) and co-locating the template means a single PR updates both the platform and the canonical example. New demo repos are forks-by-copy from this folder, not git clones from a separate template repo.
+### 1 · Northlight — a consulting firm (`Sales`)
 
-If you change the platform conventions, update this template in the same PR.
+Tables: **`engagements`** (1,800 past deals) · **`outreach`** (2,200 sends).
+
+| Surface | What it does | Ops |
+|---------|--------------|-----|
+| **Opportunity Assistant** | A deal-sheet dashboard: win odds + `$why`, effort in person-days, three reference engagements, and the best way in — the four numbers an LLM can't invent, called *directly*. | `_predict` · `_estimate` · `_query` · `_recommend` |
+| **Sales agent** | The same numbers, but the model calls them as **tools** in a chat. It doesn't just answer — it optimises the outcome and quantifies the lift over the unoptimised baseline. | agent → 4 Aito tools + 1 gated action |
+| **Toolbox** | Flip the Aito tools off and ask again: the agent has to **guess**, and it tells you it's guessing. The augment thesis, A/B in one switch. | toggle |
+
+→ [docs/use-cases/01-opportunity-assistant.md](docs/use-cases/01-opportunity-assistant.md) ·
+[02-sales-agent.md](docs/use-cases/02-sales-agent.md)
+
+### 2 · Northwind Cloud — a SaaS company (`Company`)
+
+A **360° linked model**: one `customers` master (1,500) joined to
+`deals`, `tickets`, `feedback`, `usage` and `invoices`. Conditioning a
+child table on `customer.size` traverses the link — no join to write.
+
+| Surface | What it does | Ops |
+|---------|--------------|-----|
+| **360 Dashboard** | Pick a segment → six KPIs (conversion, churn, NPS, CSAT, adoption, on-time), each with its **root causes** (`_relate` scoped to the segment with `$on`), the **lever that moves it** (`_recommend` + projected lift), and a `$why` behind every number. | `_predict` · `_relate $on` · `_recommend` |
+| **Company AI agent** | Ask the company's own numbers in a chat; the agent calls the KPI, the lever, the per-customer 360 join, and an MRR estimate. A BI bot can `COUNT(*)`; this one optimises. | agent → 5 Aito tools + 1 gated play |
+| **Toolbox** | Same on/off switch — the agent falls back to flagged guesses without the Aito ops. | toggle |
+
+→ [docs/use-cases/03-company-360-dashboard.md](docs/use-cases/03-company-360-dashboard.md) ·
+[04-company-agent.md](docs/use-cases/04-company-agent.md)
+
+![360 Dashboard](docs/product-sheet/shots/company-360.png)
+
+### 3 · Sonipra Telecom — support operations (`Support`)
+
+Tables: **`resolutions`** (4,000 resolved tickets) · **`tool_calls`** (a
+240-tool catalog with the right pick per ticket).
+
+| Surface | What it does | Ops |
+|---------|--------------|-----|
+| **Ticket resolution** | The same ticket resolved two ways, side by side: a live `gpt-5-mini` call (seconds, tokens) vs. two `_predict` calls (sub-second, $0, with a calibrated `$why`). The response-rate gap, live. | `_predict` ×2 vs LLM |
+| **Tool routing · short-list** | `_predict` narrows the 240-tool catalog to the ~5 that fit, so the LLM picks from 5 not 240 — smaller prompt, same answer, ~16× fewer tokens. Aito *augments* the LLM, it doesn't replace it. | `_predict` short-list |
+| **Human handoff** | Calibrated confidence as **governance**: `$p ≥ .85` auto-resolves, a borderline read is handed to a human, and anything sensitive (refund, cancel) is gated regardless. The number decides who acts. | `_predict` `$p` gate |
+
+→ [docs/use-cases/05-ticket-resolution.md](docs/use-cases/05-ticket-resolution.md) ·
+[06-tool-routing-and-handoff.md](docs/use-cases/06-tool-routing-and-handoff.md)
+
+**Full use-case library: [docs/use-cases/](docs/use-cases/)** — one
+document per surface, each with the exact Aito query, how the UI renders
+it, and what's deliberately out of scope.
+
+## Architecture
+
+```
+browser ── /api/* ──▶ FastAPI (src/app.py) ──▶ Aito  (predictions)
+                              │
+                              └──────────────▶ Azure OpenAI gpt-5-mini  (the agent)
+```
+
+- **Backend** — Python 3.12 + FastAPI + uvicorn. One process serves both
+  `/api/*` and the static frontend. Every Aito call goes through the shared
+  `AitoClient` (`src/aito_client.py`), which records the last call's op +
+  latency so the topbar's latency badge stays honest. The agent loop lives
+  in `src/agent_core.py`; per-agent tool sets in `src/sales_agent.py` /
+  `src/company_agent.py`.
+- **Frontend** — Next.js 16 static export (`frontend/out/`). The whole demo
+  is one client shell (`frontend/components/AppShell.tsx`) — left nav,
+  centre view, right Aito context panel — so navigation never unmounts.
+- **Data backend** — Aito only. No other database. The three domains share
+  one Aito instance; tables are seeded by `scripts/seed_*.py`.
+- **The agent is live and rate-limited** — the chat + resolution surfaces
+  make real `gpt-5-mini` calls, capped per-IP so the public demo can't run
+  up a bill. Aito calls are free and unmetered.
+
+## Local dev
+
+```bash
+./do install    # uv sync + npm install (one-time)
+./do dev        # next dev on :4100 + uvicorn on :4101, hot-reload both
+./do build      # production-shape static export → frontend/out/
+./do test-book  # booktest snapshot suite
+```
+
+Copy `.env.example` to `.env` — it ships with the public read-only Aito
+key, so predictions work out of the box. For the live agent surfaces you
+need Azure OpenAI creds (`OPENAI_MODEL_*`); without them the predictive
+surfaces still work and the chat reports the agent as unavailable.
+
+Re-seed the Aito instance (needs a write key, not the public one):
+
+```bash
+uv run python scripts/seed_sales.py      # engagements + outreach
+uv run python scripts/seed_company.py    # customers + products + 5 linked child tables
+uv run python scripts/seed_routing.py    # tool_calls (240-tool catalog)
+```
+
+The `resolutions` table (the ticket-resolution race) is uploaded by the
+`resolution-scorecard/` benchmark harness rather than a `scripts/` seeder —
+see [resolution-scorecard/](resolution-scorecard/).
+
+## Pointers
+
+- **[docs/use-cases/](docs/use-cases/)** — the use-case library (start here)
+- [CHEATSHEET.md](CHEATSHEET.md) — the Aito query cookbook used throughout
+- [CLAUDE.md](CLAUDE.md) — repo conventions + platform contract
+- [docs/product-sheet/product-sheet.pdf](docs/product-sheet/product-sheet.pdf) — the one-pager
+- Hosted by `aito-demo-server` alongside the other demos; catalog at [demos.aito.ai](https://demos.aito.ai)
+</content>
