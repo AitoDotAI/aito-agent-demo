@@ -1,0 +1,241 @@
+# Migrating the agent demo onto `/api/v2`
+
+Status as of **2026-08-15**: the demo *runs* on v2, but **cannot cut over yet** —
+two core defects (G1, G2) change behaviour, one of them silently.
+
+This document is the "file each break as a core gap" half of the migration task.
+The instruments that produce it are committed:
+
+```bash
+./do v2-probe     # op-level: every Aito query shape, v1 vs v2   (exit = #diffs)
+./do v2-parity    # route-level: every /api/* response, v1 vs v2 (exit = #diffs)
+```
+
+Re-run both as core lands fixes. When they report zero, flip the env (below) and
+the demo is on v2.
+
+## How this repo targets v2
+
+Nothing in the code hardcodes an API version any more. Two env vars, both
+defaulting to today's production behaviour:
+
+| Var | Default | Meaning |
+|---|---|---|
+| `AITO_API_VERSION` | `v1` | `v1` or `v2` — the REST path prefix |
+| `AITO_ENV` | *(unset)* | Aito environment (copy-on-write branch); unset = `env.master` |
+
+`AITO_ENV` is folded into the base URL by `src/config.py`, because an Aito
+environment is selected **purely by URL path** — never by a body field, query
+param, or header:
+
+```
+https://shared.aito.ai/db/aito-agent-demo             → env.master   (production)
+https://shared.aito.ai/db/aito-agent-demo/env/v2      → the v2 branch
+```
+
+Production sets neither var, so it is byte-identical to before this change.
+
+## The separate db env
+
+The v2 work has its own database environment, branched from production:
+
+```bash
+curl -X POST "$AITO_API_URL/api/v2/_envs" \
+  -H "x-api-key: $AITO_RW_KEY" -H 'content-type: application/json' \
+  -d '{"name":"v2","basedOn":"env.master"}'
+```
+
+It is **copy-on-write — no data was copied** and `env.master` is untouched.
+Verified identical at branch time (`resolutions` 4000, `invoices` 2600,
+`tool_calls` 300, 12 tables). Writes to `env/v2` diverge from master; master
+never sees them.
+
+Two properties worth knowing:
+
+- **There is no env-scoped API key.** The same key that reads/writes master
+  reads/writes every env. The demo's production key is read-only, so it cannot
+  damage the branch either.
+- **Cutover is an atomic promote**, not a re-import:
+  `POST /api/v2/_envs/v2/promote` swaps the branch into master. So the eventual
+  v2 migration needs no data migration at all — which is the main reason to do
+  the work in an env rather than a second database.
+
+To run locally against it:
+
+```bash
+AITO_API_VERSION=v2 AITO_ENV=v2 ./do dev
+```
+
+## Core gaps
+
+Ordered by whether they block the cutover. G1/G2 are the ones that matter.
+
+### G1 — BLOCKING · `bit & operation requires same sized bit sets`
+
+An AND that combines a table-sized bitset with an index covering fewer rows
+returns **HTTP 400 with an internal error message** instead of a result.
+
+```
+POST /api/v2/_query
+{"from":"resolutions","where":{"intent":"refund","customer":"cust_0001"},"limit":0}
+→ 400 {"code":"request.invalid",
+       "message":"bit & operation requires same sized bit sets, found: 4000, 0"}
+
+v1, same data → 200 {"total": 0}
+```
+
+Reproduces on `_query`, `_search` and `_predict`, via every one of:
+
+| Trigger | Example | Sizes reported |
+|---|---|---|
+| Implicit AND where one conjunct matches 0 rows | `{"intent":"refund","customer":"cust_0001"}` | `4000, 0` |
+| Explicit `$and`, same | `{"$and":[{"intent":"refund"},{"customer":"cust_0001"}]}` | `4000, 0` |
+| Any predicate on a **nullable** column | `{"location":"Helsinki"}` | `4000, 3954` |
+| `$has` on a Text column with empty values | `{"text":{"$has":"broadband"}}` | `4000, 3987` |
+
+`$or` is unaffected. The non-zero second size (3954 = non-null `location`
+rows, 3987 = rows with a non-empty `text`) says the operand bitset is sized to
+the *index* rather than to the table, and the AND never aligns them.
+
+**Demo impact:** `/api/opportunity?industry=Manufacturing&service_line=Analytics`
+→ **502** (a 4-field where where one conjunct is empty).
+`/api/company-360` → `causes` and `drivers` silently empty, because
+`_relate_drivers` catches the error and degrades.
+
+This is the single blocker: `resolutions` has three nullable columns and every
+route filters on multiple fields.
+
+### G2 — BLOCKING · a bare string on a `Text` column means something different
+
+Same rows, same query, different answer — and **no error**:
+
+```
+POST _predict {"from":"resolutions",
+               "where":{"text":"my broadband keeps dropping every evening"},
+               "predict":"intent","limit":3}
+
+v1 → repair_help    0.9474   ← correct
+v2 → cancel_service 0.5756   ← wrong
+```
+
+Isolated to the API version, not the environment — all four combinations were
+tested and the branch makes no difference:
+
+| | `/api/v1` | `/api/v2` |
+|---|---|---|
+| `env.master` | repair_help 0.9474 | cancel_service 0.5756 |
+| `env/v2` | repair_help 0.9474 | cancel_service 0.5756 |
+
+The inference engine agrees; only the implicit coercion differs. With explicit
+`$has` the two surfaces are **byte-identical** (`refund 0.4265 / cancel_service
+0.3446` on both), and v2 is not simply ignoring the evidence either — with no
+`where` at all it returns a flat 0.1667 prior, so it applies *some*, different,
+evidence.
+
+**Demo impact:** `/api/resolve` — the flagship route — returns a wrong intent on
+both test tickets. This is the dangerous one: 200 OK, plausible output, wrong
+answer. Any demo that migrates without a golden-output diff will ship it.
+
+### G3 — contract · `feature` → `$value`, inconsistently
+
+v2 renames the predicted value on `_predict`/`_recommend` hits and drops `field`:
+
+```
+v1 hit: {"$p":0.9474, "field":"intent", "feature":"repair_help"}
+v2 hit: {"$p":0.5756, "$value":"cancel_service"}
+```
+
+`select:["$p","feature","$why"]` → 400 `no such field 'feature'`.
+
+But **`_match` was not renamed** — its v2 hits still carry `field`/`feature`. So
+within one API version, `_predict` and `_match` disagree about what to call the
+same thing. Whichever name wins, it should be the same on both.
+
+*Shimmed here:* `AitoClient` publishes both spellings on every hit and rewrites
+`feature` → `$value` in `select`, so `src/app.py` reads one name on either
+surface. `$why` itself is byte-identical between versions.
+
+### G4 — contract · `_relate` proposition shape
+
+```
+v1: {"related":{"plan":{"$has":"Free"}}, "condition":{"churned":{"$has":"yes"}}}
+v2: {"related":{"plan":"Free"},          "condition":{"churned":"yes"}}
+```
+
+v2's spelling is nicer, but it is a breaking change and undocumented.
+
+Worse, for the `$on` form v2 echoes the **whole `$on` argument** back as
+`condition`:
+
+```
+v2: "condition": {"$on":[{"churned":"yes"},{"size":"SMB"}]}
+```
+
+where v1 returns the individual driver condition. The `$on` form exists so each
+hit names one driver and `ps.pOnCondition` gives its within-segment rate; echoing
+the input makes scoped drivers unreadable. *Partially shimmed* (`_why_props` now
+accepts bare values); the `$on` echo is not shimmable.
+
+### G5 — numeric · `_relate` statistics differ
+
+Same query, same rows:
+
+| | `lift` | `fs.f` |
+|---|---|---|
+| v1 | 1.446849 | 330.6875 |
+| v2 | 1.462282 | 327.0 |
+
+v1's fractional `f` suggests smoothing that v2 drops for a raw count. Probably
+deliberate — but it is a silent numbers change in a value demos display, so it
+needs to be a documented decision rather than a diff someone finds later.
+
+### G6 — gap · no `orderBy` for similarity-ranked search
+
+Every spelling fails on v2:
+
+```
+orderBy "$similarity" → 400 Field not found: $similarity
+orderBy "$score"      → 400 Field not found: $score
+orderBy "$p"          → 400 prediction proposition can only be used with
+                            contextful instance examination
+```
+
+The last is the D4 wall from `docs/aito-sql-dialect.md`, reached through REST
+rather than SQL — worth noting on that decision, since it shows D4 is not
+SQL-specific.
+
+### G7 — gap · `POST /_similarity` removed
+
+404 `The path you requested [/_similarity] does not exist` on v2, with no
+documented replacement. `book/test_03_match_book.py` uses it to contrast match
+vs. plain retrieval. If `_match` is meant to subsume it, that should be written
+down; if it is a removal, it needs a migration note.
+
+### G8 — cosmetic · schema response shape
+
+v2 omits `nullable: false` (present in v1) and adds `engine: "v1"` per table.
+Harmless, but `/api/schema` is rendered by the AitoPanel's "verify yourself"
+link, so it is user-visible.
+
+## What is done here
+
+- `src/config.py` — `AITO_API_VERSION` + `AITO_ENV`, both defaulting to prod's
+  current behaviour
+- `src/aito_client.py` — version-aware paths; G3 normalisation both directions
+- `src/app.py` — `_why_props` accepts v2's bare-value propositions (G4, partial)
+- `scripts/seed_*.py` — version-aware, so the branch can be re-seeded on v2
+- `scripts/v2_probe.py`, `scripts/v2_parity.py` + `./do` targets
+
+## What is left
+
+1. Core fixes G1 and G2 (blocking), decisions on G4–G7.
+2. Re-run `./do v2-probe` and `./do v2-parity` — both must reach zero.
+3. Re-record the booktest snapshots, which are pinned to v1 URLs and payloads.
+4. Flip `AITO_API_VERSION=v2` in `aito-demo-server`'s `demos.config.yaml`, or
+   `POST /api/v2/_envs/v2/promote` and flip only the version.
+5. Update the `/api/v1` samples in `README.md`, `CHEATSHEET.md`, `docs/use-cases/`
+   and `frontend/` — deliberately left on v1 so the docs match what is live.
+
+The benchmark harnesses (`telco-tool-routing-bench/`, `ticket-assignment-bench/`,
+`resolution-scorecard/`) still call v1 directly. They are offline and write their
+own tables, so they are out of scope here and unaffected by the cutover.

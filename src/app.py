@@ -155,6 +155,10 @@ def _why_props(prop: dict):
         if isinstance(cond, dict):
             for _op, val in cond.items():
                 yield field, val
+        elif isinstance(cond, (str, int, float, bool)):
+            # v2 _relate states propositions as bare values ({"plan": "Free"})
+            # where v1 wrapped them in an operator ({"plan": {"$has": "Free"}}).
+            yield field, cond
 
 
 def _flatten_why(node, out: list):

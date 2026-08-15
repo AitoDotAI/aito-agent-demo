@@ -100,6 +100,10 @@ If you want to deploy a feature branch for testing without merging, in aito-demo
 
 ## Pointers
 
+- [docs/v2-migration.md](./docs/v2-migration.md) — the `/api/v2` migration: how to
+  target v2 (`AITO_API_VERSION` + `AITO_ENV`), the copy-on-write db branch it uses,
+  and the core gaps that still block the cutover. **Prod is still v1** — the two
+  env vars default to v1/`env.master`, so don't "helpfully" flip them.
 - [CHEATSHEET.md](./CHEATSHEET.md) — Aito query cookbook
 - [CHECKLIST.md](./CHECKLIST.md) — pre-launch checklist (analytics, product sheet, teaser, etc.)
 - `/home/arau/episto/src/aito-demo-server/README.md` — the platform that hosts this demo

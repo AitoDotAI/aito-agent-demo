@@ -18,8 +18,10 @@ load_dotenv(override=True)
 
 @dataclass(frozen=True)
 class Config:
-    aito_url: str
+    aito_url: str          # db root, already including /env/<name> when aito_env is set
     aito_key: str
+    aito_api_version: str  # "v1" | "v2" — which REST surface AitoClient targets
+    aito_env: str | None   # Aito environment (copy-on-write branch); None = env.master
 
 
 def load_config() -> Config:
@@ -30,4 +32,19 @@ def load_config() -> Config:
             "No Aito credentials found. Set AITO_API_URL + AITO_API_KEY in .env "
             "(copy from .env.example to get started)."
         )
-    return Config(aito_url=url.rstrip("/"), aito_key=key)
+    # Both default to today's production behaviour: v1 against env.master. The v2
+    # migration is opt-in per-environment so prod is unaffected until we cut over.
+    version = os.environ.get("AITO_API_VERSION", "v1").strip().lower()
+    if version not in ("v1", "v2"):
+        raise ValueError(f"AITO_API_VERSION must be 'v1' or 'v2', got {version!r}")
+
+    # An Aito environment is selected purely by URL path — never by a body field,
+    # query param or header — so it is folded into the base URL here:
+    #   https://host/db/<db>            → env.master
+    #   https://host/db/<db>/env/<name> → that branch
+    env = (os.environ.get("AITO_ENV") or "").strip() or None
+    base = url.rstrip("/")
+    if env and not base.endswith(f"/env/{env}"):
+        base = f"{base}/env/{env}"
+
+    return Config(aito_url=base, aito_key=key, aito_api_version=version, aito_env=env)

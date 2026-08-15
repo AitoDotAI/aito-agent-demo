@@ -9,6 +9,8 @@
 #   ./do backend                  run backend only (foreground; matches production shape)
 #   ./do test                     run pytest unit tests (tests/)
 #   ./do test-book                run booktest snapshot tests (book/, via booktest CLI)
+#   ./do v2-probe                 /api/v1 vs /api/v2 op-level parity (exit = #diffs)
+#   ./do v2-parity                /api/v1 vs /api/v2 route-level parity (boots both)
 #   ./do screenshot-teaser        render assets/teaser.html → assets/teaser.png (1200×630)
 #   ./do product-sheet            compile docs/product-sheet/product-sheet.typ → PDF (needs typst)
 #   ./do screenshot-pages [...]   desktop full-page screenshots of given paths
@@ -70,6 +72,33 @@ cmd_test_book() {
   exec uv run booktest "${@:-book}"
 }
 
+cmd_v2_probe() {
+  # Op-level /api/v1 vs /api/v2 parity probe. Exit code = number of differences.
+  exec uv run python -m scripts.v2_probe "$@"
+}
+
+cmd_v2_parity() {
+  # Route-level parity: boot the backend twice (v1/master and v2/env.v2) and diff
+  # every /api/* response. The op-level probe says which Aito shapes differ; this
+  # says which demo SURFACES differ, which is what actually gates the cutover.
+  local P1=4111 P2=4112
+  # NOT `local`: the EXIT trap runs after this function's scope is gone, and
+  # `set -u` would then abort on the unbound name instead of killing the servers.
+  V2PAR_PIDS=""
+  trap 'kill $V2PAR_PIDS 2>/dev/null || true' EXIT INT TERM
+  AITO_API_VERSION=v1 AITO_ENV=""   uv run uvicorn src.app:app --host 127.0.0.1 --port $P1 >/tmp/aito-v1.log 2>&1 &
+  V2PAR_PIDS="$!"
+  AITO_API_VERSION=v2 AITO_ENV="${AITO_V2_ENV:-v2}" uv run uvicorn src.app:app --host 127.0.0.1 --port $P2 >/tmp/aito-v2.log 2>&1 &
+  V2PAR_PIDS="$V2PAR_PIDS $!"
+  local i
+  for i in $(seq 1 60); do
+    curl -sf "http://127.0.0.1:$P1/api/health" >/dev/null 2>&1 \
+      && curl -sf "http://127.0.0.1:$P2/api/health" >/dev/null 2>&1 && break
+    sleep 0.5
+  done
+  uv run python -m scripts.v2_parity "http://127.0.0.1:$P1" "http://127.0.0.1:$P2"
+}
+
 cmd_screenshot_teaser() {
   [ -d frontend/node_modules ] || cmd_install
   ( cd frontend && node scripts/screenshot-teaser.cjs )
@@ -119,6 +148,8 @@ case "${1:-help}" in
   backend)             shift; cmd_backend "$@" ;;
   test)                shift; cmd_test "$@" ;;
   test-book)           shift; cmd_test_book "$@" ;;
+  v2-probe)            shift; cmd_v2_probe "$@" ;;
+  v2-parity)           shift; cmd_v2_parity "$@" ;;
   screenshot-teaser)   shift; cmd_screenshot_teaser "$@" ;;
   product-sheet)       shift; cmd_product_sheet "$@" ;;
   screenshot-pages)    shift; cmd_screenshot_pages "$@" ;;

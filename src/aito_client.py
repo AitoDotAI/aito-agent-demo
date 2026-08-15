@@ -53,10 +53,18 @@ class AitoCall:
 
 
 class AitoClient:
-    """Synchronous Aito client. One instance per process; thread-safe via httpx."""
+    """Synchronous Aito client. One instance per process; thread-safe via httpx.
+
+    Speaks either REST surface. `config.aito_api_version` picks the path prefix
+    (`/api/v1` or `/api/v2`); the v2 contract differences that are pure renames
+    are normalised here so callers stay version-agnostic. See `docs/v2-migration.md`
+    for the differences that are NOT shimmable.
+    """
 
     def __init__(self, config: Config) -> None:
         self._url = config.aito_url
+        self._ver = config.aito_api_version
+        self._env = config.aito_env
         self._headers = {
             "x-api-key": config.aito_key,
             "content-type": "application/json",
@@ -79,6 +87,34 @@ class AitoClient:
 
     # ── Low-level ──────────────────────────────────────────────────────
 
+    def _path(self, suffix: str) -> str:
+        """`_predict` → `/api/v1/_predict` or `/api/v2/_predict`."""
+        return f"/api/{self._ver}/{suffix.lstrip('/')}"
+
+    # v2 renamed the predicted value on _predict/_recommend hits from `feature`
+    # to `$value` and dropped `field`. It is a pure rename, so both spellings are
+    # published on every hit and callers can read either. NOTE: v2's _match hits
+    # were NOT renamed — they still carry field/feature (core gap G3).
+    def _normalize_hits(self, payload: dict) -> dict:
+        hits = payload.get("hits")
+        if not isinstance(hits, list):
+            return payload
+        for h in hits:
+            if not isinstance(h, dict):
+                continue
+            if "$value" in h and "feature" not in h:
+                h["feature"] = h["$value"]
+            elif "feature" in h and "$value" not in h:
+                h["$value"] = h["feature"]
+        return payload
+
+    def _select(self, select: list[str] | None) -> list[str] | None:
+        """v2 rejects `feature` in select ("no such field 'feature'"); it spells
+        the predicted value `$value`. Translate so call sites keep one spelling."""
+        if select is None or self._ver == "v1":
+            return select
+        return ["$value" if s == "feature" else s for s in select]
+
     def _request(self, method: str, path: str, body: dict | None = None, op: str | None = None) -> dict:
         try:
             r = self._http.request(method, path, json=body)
@@ -95,7 +131,7 @@ class AitoClient:
                 status_code=r.status_code,
                 body=body_json,
             )
-        return r.json()
+        return self._normalize_hits(r.json())
 
     # ── Convenience methods ────────────────────────────────────────────
 
@@ -109,7 +145,7 @@ class AitoClient:
 
     def get_schema(self) -> dict:
         """Whole-DB schema. Cheap; safe to call on every request."""
-        return self._request("GET", "/api/v1/schema", op="schema")
+        return self._request("GET", self._path("schema"), op="schema")
 
     def predict(
         self,
@@ -123,31 +159,31 @@ class AitoClient:
         per-prediction explanation alongside the probability."""
         body: dict = {"from": table, "where": where, "predict": predict_field, "limit": limit}
         if select is not None:
-            body["select"] = select
-        return self._request("POST", "/api/v1/_predict", body, op="_predict")
+            body["select"] = self._select(select)
+        return self._request("POST", self._path("_predict"), body, op="_predict")
 
     def estimate(self, table: str, where: dict, field: str) -> dict:
         """Numeric estimate of `field` from the given context (price/effort/demand)."""
-        return self._request("POST", "/api/v1/_estimate",
+        return self._request("POST", self._path("_estimate"),
                              {"from": table, "where": where, "estimate": field}, op="_estimate")
 
     def recommend(self, table: str, where: dict, field: str, goal: dict, limit: int = 5) -> dict:
         """Rank the values of `field` that most increase the probability of `goal`."""
-        return self._request("POST", "/api/v1/_recommend",
+        return self._request("POST", self._path("_recommend"),
                              {"from": table, "where": where, "recommend": field, "goal": goal, "limit": limit},
                              op="_recommend")
 
     def relate(self, table: str, where: dict, fields: list[str]) -> dict:
         """Statistical relationships ('drivers'): how each value of `fields` is
         over/under-represented under `where`. lift > 1 = a root cause of `where`."""
-        return self._request("POST", "/api/v1/_relate",
+        return self._request("POST", self._path("_relate"),
                              {"from": table, "where": where, "relate": fields}, op="_relate")
 
     def relate_on(self, table: str, target: dict, on: dict) -> dict:
         """Drivers of `target` SCOPED to `on` — relate the outcome (e.g. churned=yes)
         within a population (e.g. size=SMB). Each hit's `condition` is a field-value
         and ps.pOnCondition is the within-population outcome RATE for it."""
-        return self._request("POST", "/api/v1/_relate",
+        return self._request("POST", self._path("_relate"),
                              {"from": table, "relate": {"$on": [target, on]}}, op="_relate")
 
     def query(self, table: str, where: dict | None = None, select: list[str] | None = None,
@@ -160,7 +196,7 @@ class AitoClient:
             body["select"] = select
         if order_by is not None:
             body["orderBy"] = order_by
-        return self._request("POST", "/api/v1/_query", body, op="_query")
+        return self._request("POST", self._path("_query"), body, op="_query")
 
     def match(
         self,
@@ -172,7 +208,7 @@ class AitoClient:
         """Find rows similar to the given where-fields. Returns $score per hit."""
         return self._request(
             "POST",
-            "/api/v1/_match",
+            self._path("_match"),
             {"from": table, "where": where, "match": match_field, "limit": limit},
             op="_match",
         )
@@ -188,4 +224,4 @@ class AitoClient:
         body: dict = {"from": table, "where": where, "limit": limit}
         if order_by is not None:
             body["orderBy"] = order_by
-        return self._request("POST", "/api/v1/_search", body, op="_search")
+        return self._request("POST", self._path("_search"), body, op="_search")

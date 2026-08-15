@@ -265,17 +265,17 @@ _DROP_ORDER = ["feedback", "invoices", "usage", "tickets", "deals", "customers",
 
 
 def _drop_all(http):
-    sc = http.get("/api/v1/schema").json().get("schema", {})
+    sc = http.get("/schema").json().get("schema", {})
     for table in _DROP_ORDER:
         if table in sc:
-            assert http.delete(f"/api/v1/schema/{table}").status_code < 400, f"drop {table} failed"
+            assert http.delete(f"/schema/{table}").status_code < 400, f"drop {table} failed"
 
 
 def _upload(http, table, rows, schema):
-    assert http.put(f"/api/v1/schema/{table}", json=schema).status_code < 400, f"create {table} failed"
-    r = http.post(f"/api/v1/data/{table}/batch", json=rows)
+    assert http.put(f"/schema/{table}", json=schema).status_code < 400, f"create {table} failed"
+    r = http.post(f"/data/{table}/batch", json=rows)
     assert r.status_code < 400, f"upload {table} failed: {r.text[:200]}"
-    cnt = http.post("/api/v1/_query", json={"from": table, "limit": 0}).json().get("total")
+    cnt = http.post("/_query", json={"from": table, "limit": 0}).json().get("total")
     assert cnt == len(rows), f"{table}: {cnt} != {len(rows)}"
     print(f"  uploaded {table}: {cnt} rows")
 
@@ -297,7 +297,7 @@ def main() -> None:
 
     pcust = _cols(customers[0].keys(), ints=("mrr_eur",), links={"primary_product": "products.product_id"})
     pprod = _cols(PRODUCTS[0].keys())
-    with httpx.Client(base_url=cfg.aito_url, headers={"x-api-key": cfg.aito_key, "content-type": "application/json"}, timeout=120.0) as http:
+    with httpx.Client(base_url=f"{cfg.aito_url}/api/{cfg.aito_api_version}", headers={"x-api-key": cfg.aito_key, "content-type": "application/json"}, timeout=120.0) as http:
         _drop_all(http)  # children before parents
         # products + customers first (link targets must exist)
         _upload(http, "products", PRODUCTS, pprod)
