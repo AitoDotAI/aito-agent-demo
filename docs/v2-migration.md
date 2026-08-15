@@ -68,9 +68,13 @@ AITO_API_VERSION=v2 AITO_ENV=v2 ./do dev
 
 ## Core gaps
 
+All eight are filed against `AitoDotAI/aito-core` as issues **#1061–#1068**. A ninth (#1069, a v2 schema-union rejection breaking the company-ai search index) was found alongside these but is not a demo gap.
+
 Ordered by whether they block the cutover. G1/G2 are the ones that matter.
 
 ### G1 — BLOCKING · `bit & operation requires same sized bit sets`
+
+Filed as **aito-core#1061**.
 
 An AND that combines a table-sized bitset with an index covering fewer rows
 returns **HTTP 400 with an internal error message** instead of a result.
@@ -107,6 +111,8 @@ route filters on multiple fields.
 
 ### G2 — BLOCKING · a bare string on a `Text` column means something different
 
+Filed as **aito-core#1062**.
+
 Same rows, same query, different answer — and **no error**:
 
 ```
@@ -138,6 +144,8 @@ answer. Any demo that migrates without a golden-output diff will ship it.
 
 ### G3 — contract · `feature` → `$value`, inconsistently
 
+Filed as **aito-core#1063**.
+
 v2 renames the predicted value on `_predict`/`_recommend` hits and drops `field`:
 
 ```
@@ -156,6 +164,8 @@ same thing. Whichever name wins, it should be the same on both.
 surface. `$why` itself is byte-identical between versions.
 
 ### G4 — contract · `_relate` proposition shape
+
+Filed as **aito-core#1064**.
 
 ```
 v1: {"related":{"plan":{"$has":"Free"}}, "condition":{"churned":{"$has":"yes"}}}
@@ -178,6 +188,8 @@ accepts bare values); the `$on` echo is not shimmable.
 
 ### G5 — numeric · `_relate` statistics differ
 
+Filed as **aito-core#1065**.
+
 Same query, same rows:
 
 | | `lift` | `fs.f` |
@@ -190,6 +202,8 @@ deliberate — but it is a silent numbers change in a value demos display, so it
 needs to be a documented decision rather than a diff someone finds later.
 
 ### G6 — gap · no `orderBy` for similarity-ranked search
+
+Filed as **aito-core#1066**.
 
 Every spelling fails on v2:
 
@@ -206,12 +220,16 @@ SQL-specific.
 
 ### G7 — gap · `POST /_similarity` removed
 
+Filed as **aito-core#1067**.
+
 404 `The path you requested [/_similarity] does not exist` on v2, with no
 documented replacement. `book/test_03_match_book.py` uses it to contrast match
 vs. plain retrieval. If `_match` is meant to subsume it, that should be written
 down; if it is a removal, it needs a migration note.
 
 ### G8 — cosmetic · schema response shape
+
+Filed as **aito-core#1068**.
 
 v2 omits `nullable: false` (present in v1) and adds `engine: "v1"` per table.
 Harmless, but `/api/schema` is rendered by the AitoPanel's "verify yourself"
