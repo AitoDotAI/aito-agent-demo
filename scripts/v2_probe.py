@@ -113,7 +113,7 @@ def call(base: str, ver: str, key: str, method: str, suffix: str, body):
     try:
         r = httpx.request(method, url,
                           headers={"x-api-key": key, "content-type": "application/json"},
-                          json=body, timeout=30.0)
+                          json=body, timeout=90.0)
     except httpx.HTTPError as e:
         return None, {"unreachable": str(e)}, url
     try:

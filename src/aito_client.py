@@ -16,6 +16,7 @@ tracking), lift from `aito-accounting-demo/src/aito_client.py`.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Any
 
@@ -71,10 +72,13 @@ class AitoClient:
         }
         # httpx.Client is thread-safe + pools connections; one for the
         # lifetime of the process beats per-call construction.
+        # 10s was too tight: the shared instance now answers some v2 calls in
+        # ~5s, and under concurrent load that tipped ordinary requests into
+        # timeouts surfacing as 502s. Overridable for local experiments.
         self._http = httpx.Client(
             base_url=self._url,
             headers=self._headers,
-            timeout=10.0,
+            timeout=float(os.environ.get("AITO_TIMEOUT_S", "30")),
         )
         self.last_call: AitoCall | None = None
 
