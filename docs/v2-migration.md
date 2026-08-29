@@ -66,6 +66,35 @@ To run locally against it:
 AITO_API_VERSION=v2 AITO_ENV=v2 ./do dev
 ```
 
+## The storage engine — migrate it, or you are testing the adapter
+
+**`/api/v2` is engine-dispatched.** A `type: "table"` created through the v1 path
+is *rep1* (`engine: v1`); the v2 endpoints run the **v1 pipeline** for it. Only a
+*rep2* table (`engine: v2`) runs native v2 code.
+
+So pointing a client at `/api/v2` proves very little on its own — it exercises the
+adapter, not the engine. Everything in this document up to 2026-08-29 was measured
+that way, and migrating the engine changed several answers. Migrate first, then
+compare:
+
+```bash
+# atomic across tables, and warms them inside the same transaction
+curl -X POST "$AITO_API_URL/env/v2/api/v2/data/_modify" \
+  -H "x-api-key: $AITO_RW_KEY" -H 'content-type: application/json' \
+  -d '{"operations":[{"migrate":"customers","engine":"v2"}, …]}'
+# → {"migrated": 12, "warmedLinkageFields": 9}
+```
+
+Per-table equivalent: `POST /api/v2/schema/{table}/_migrate` `{"engine":"v2"}`.
+Both are idempotent; there is no reverse migration.
+
+This env branch's 12 tables were migrated on 2026-08-29 (row counts verified
+unchanged). **Production master is deliberately still rep1** — migrating it is
+part of the cutover, not preparation for it.
+
+Note you currently **cannot tell which engine a table is on**: the `engine` field
+was removed from the schema response (aito-core#1224). Track what you migrated.
+
 ## Core gaps
 
 All eight are filed against `AitoDotAI/aito-core` as issues **#1061–#1068**. A ninth (#1069, a v2 schema-union rejection breaking the company-ai search index) was found alongside these but is not a demo gap.
@@ -257,3 +286,28 @@ link, so it is user-visible.
 The benchmark harnesses (`telco-tool-routing-bench/`, `ticket-assignment-bench/`,
 `resolution-scorecard/`) still call v1 directly. They are offline and write their
 own tables, so they are out of scope here and unaffected by the cutover.
+
+## Gaps found only after the engine migration (2026-08-29)
+
+These were invisible while the tables were rep1 — the adapter returned v1 shapes.
+They are the reason "the demo runs on v2" was an overstatement.
+
+| | Issue | What changes on rep2 |
+|---|---|---|
+| E1 | aito-core#1221 | `_estimate` returns `{"kind":"estimate","data":{"value":…}}` instead of `{"estimate":…}`, and **drops `why`** entirely. *Shimmed in `AitoClient.estimate`; the lost `why` is not recoverable.* |
+| E2 | aito-core#1222 | `_match` **ranking changes** (`refund` → `cancel_service` at the top), and `_similarity` reports its score under `$p` — with a value `> 1` — instead of `$score`. |
+| E3 | aito-core#1223 | An internal `__cache` object appears in `GET /schema` after migrating; querying it returns a raw Scala `ClassCastException`. |
+| E4 | aito-core#1224 | `engine` was removed from the schema response, so rep1 and rep2 tables are now indistinguishable. Filed as a partial revert of #1068, which I had over-argued. |
+| E5 | aito-core#1225 | `/api/v2/_relate` drops the `ps` block (`pOnCondition` / `pOnNotCondition`) on **both** engines — the within-population rates `/api/company-360` renders. Not engine-specific, but found here. |
+
+`#1212` — v2 silently accepting unknown columns — turned out to be the rep1
+adapter, not v2: a rep2 `type:table` correctly rejects them with a strict-schema
+error. It stands only as "the adapter does not enforce `type:table` strictness".
+
+### Where the demo actually stands on the v2 engine
+
+`./do v2-parity` against the migrated branch: 9 routes differ. `cost_eur` on
+`/api/opportunity` collapsed to `0` (E1 — now shimmed), `company-360`'s driver
+rates read `0.0` (E5), and `_match`/`_predict` confidences shift enough that
+`/api/resolve`'s 0.85 auto-resolve gate is in play on one test ticket
+(`0.9621 → 0.8511`). None of that is fixable in the demo; it needs E1–E5.

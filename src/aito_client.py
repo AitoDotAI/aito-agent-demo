@@ -167,9 +167,18 @@ class AitoClient:
         return self._request("POST", self._path("_predict"), body, op="_predict")
 
     def estimate(self, table: str, where: dict, field: str) -> dict:
-        """Numeric estimate of `field` from the given context (price/effort/demand)."""
-        return self._request("POST", self._path("_estimate"),
-                             {"from": table, "where": where, "estimate": field}, op="_estimate")
+        """Numeric estimate of `field` from the given context (price/effort/demand).
+
+        Normalised to v1's `{"estimate": <n>, "why": …}` shape. On the v2 STORAGE
+        ENGINE (rep2) the same call answers `{"kind":"estimate","data":{"value":…}}`
+        and drops `why` entirely — see aito-core#1221. Callers read `.get("estimate")`
+        on either; `why` is simply absent on rep2.
+        """
+        r = self._request("POST", self._path("_estimate"),
+                          {"from": table, "where": where, "estimate": field}, op="_estimate")
+        if "estimate" not in r and isinstance(r.get("data"), dict):
+            r["estimate"] = r["data"].get("value")
+        return r
 
     def recommend(self, table: str, where: dict, field: str, goal: dict, limit: int = 5) -> dict:
         """Rank the values of `field` that most increase the probability of `goal`."""
