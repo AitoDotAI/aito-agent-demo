@@ -169,15 +169,27 @@ class AitoClient:
     def estimate(self, table: str, where: dict, field: str) -> dict:
         """Numeric estimate of `field` from the given context (price/effort/demand).
 
-        Normalised to v1's `{"estimate": <n>, "why": …}` shape. On the v2 STORAGE
-        ENGINE (rep2) the same call answers `{"kind":"estimate","data":{"value":…}}`
-        and drops `why` entirely — see aito-core#1221. Callers read `.get("estimate")`
-        on either; `why` is simply absent on rep2.
+        Normalised to v1's `{"estimate": <n>, "why": …}` shape so call sites keep
+        one spelling.
+
+        The v2 contract is `{"kind":"estimate","data":{"value":…}}` — scalar results
+        carry a `kind`, row results stay bare (api-docs `base-v2.md`). `why` is not
+        lost on v2; it is a `select`, so we ask for it explicitly. A rep1 table under
+        /api/v2 still answers in the bare v1 shape (aito-core#1238), hence both
+        branches below.
         """
+        # `select: ["estimate", …]` is the portable spelling: v2 accepts either
+        # `estimate` or `value` and echoes back the name you asked for, so one body
+        # works on both surfaces (api-docs base-v2.md). Asking explicitly is also
+        # what gets `why` on v2 — it is a select there, not a default.
         r = self._request("POST", self._path("_estimate"),
-                          {"from": table, "where": where, "estimate": field}, op="_estimate")
+                          {"from": table, "where": where, "estimate": field,
+                           "select": ["estimate", "why"]}, op="_estimate")
         if "estimate" not in r and isinstance(r.get("data"), dict):
-            r["estimate"] = r["data"].get("value")
+            d = r["data"]
+            r["estimate"] = d.get("estimate", d.get("value"))
+            if "why" in d:
+                r.setdefault("why", d["why"])
         return r
 
     def recommend(self, table: str, where: dict, field: str, goal: dict, limit: int = 5) -> dict:

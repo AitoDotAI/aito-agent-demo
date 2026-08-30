@@ -287,27 +287,39 @@ The benchmark harnesses (`telco-tool-routing-bench/`, `ticket-assignment-bench/`
 `resolution-scorecard/`) still call v1 directly. They are offline and write their
 own tables, so they are out of scope here and unaffected by the cutover.
 
-## Gaps found only after the engine migration (2026-08-29)
+## Read `api-docs/content/base-v2.md` first
 
-These were invisible while the tables were rep1 — the adapter returned v1 shapes.
-They are the reason "the demo runs on v2" was an overstatement.
+Most of what this document originally called a "v2 gap" was specified behaviour I
+had not read, measured against rep1 tables. The spec answers, in one page:
 
-| | Issue | What changes on rep2 |
+| Thing | Spec says |
+|---|---|
+| `_estimate` shape | scalar ops carry `{"kind","data"}`; row ops stay bare. Unwrap by shape: `res.kind ? res.data : res.hits` |
+| `_estimate` `why` | a **`select`**, not a default — `select: ["estimate","why"]` (portable: v2 takes `estimate` or `value` and echoes the name you asked for) |
+| `feature` / `field` | `feature` → `$value`; `field` **removed** by design — it was your own request parameter |
+| `orderBy: "$similarity"` | replaced by `$nearest` (vector) or a `$match` where-term; works on rep2 |
+| `POST /_similarity` | deliberately not on v2 |
+| `engine` in schema | opt-in: `GET /api/v2/schema/{t}?meta` |
+| unknown columns | v2 fails loud by design — "a `200` with an empty result always means *no match*, never *unsupported and swallowed*" |
+
+Issues aito-core#1063, #1066, #1067, #1212, #1221 and #1224 were all filed against
+this document's earlier claims and are **closed as invalid**.
+
+## What is actually left (2026-08-30)
+
+| | Issue | |
 |---|---|---|
-| E1 | aito-core#1221 | `_estimate` returns `{"kind":"estimate","data":{"value":…}}` instead of `{"estimate":…}`, and **drops `why`** entirely. *Shimmed in `AitoClient.estimate`; the lost `why` is not recoverable.* |
-| E2 | aito-core#1222 | `_match` **ranking changes** (`refund` → `cancel_service` at the top), and `_similarity` reports its score under `$p` — with a value `> 1` — instead of `$score`. |
-| E3 | aito-core#1223 | An internal `__cache` object appears in `GET /schema` after migrating; querying it returns a raw Scala `ClassCastException`. |
-| E4 | aito-core#1224 | `engine` was removed from the schema response, so rep1 and rep2 tables are now indistinguishable. Filed as a partial revert of #1068, which I had over-argued. |
-| E5 | aito-core#1225 | `/api/v2/_relate` drops the `ps` block (`pOnCondition` / `pOnNotCondition`) on **both** engines — the within-population rates `/api/company-360` renders. Not engine-specific, but found here. |
+| A1 | aito-core#1238 | The **rep1 adapter** under `/api/v2` does not follow the v2 contract: bare v1 `_estimate` envelope, `_match` still emitting the removed `field`/`feature`, no `type:table` strictness, and a malformed `$similarity` error. This is the real residue of the five closed issues, and the reason "point at `/api/v2`" proves nothing until the engine is migrated. |
+| A2 | aito-core#1223 | Internal `__cache` appears in `GET /schema` after a migration; querying it returns a raw `ClassCastException`. |
+| A3 | aito-core#1225 | `/api/v2/_relate` drops the `ps` block (within-population rates) on both engines. Not covered by the spec either way — an open question, not a confirmed defect. |
+| A4 | aito-core#1064 / #1065 | `_relate` proposition shape and statistics. Both spellings are documented as accepted, so #1064 is narrower than filed; #1065's numeric difference is v1-engine vs v2-engine and may simply be the rebuilt engine. |
 
-`#1212` — v2 silently accepting unknown columns — turned out to be the rep1
-adapter, not v2: a rep2 `type:table` correctly rejects them with a strict-schema
-error. It stands only as "the adapter does not enforce `type:table` strictness".
+`_match` ranking differences between the engines are **expected** — rep1 runs the
+v1 pipeline, so that comparison is v1-vs-v2 inference, not a regression.
 
-### Where the demo actually stands on the v2 engine
+### Where the demo stands
 
-`./do v2-parity` against the migrated branch: 9 routes differ. `cost_eur` on
-`/api/opportunity` collapsed to `0` (E1 — now shimmed), `company-360`'s driver
-rates read `0.0` (E5), and `_match`/`_predict` confidences shift enough that
-`/api/resolve`'s 0.85 auto-resolve gate is in play on one test ticket
-(`0.9621 → 0.8511`). None of that is fixable in the demo; it needs E1–E5.
+`./do v2-parity` still reports differences, but they are now mostly *engine*
+differences (different probabilities from a rebuilt engine) rather than contract
+breaks. The remaining contract issue that affects rendering is A3, which zeroes
+`/api/company-360`'s driver percentages.
