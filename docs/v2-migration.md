@@ -287,6 +287,29 @@ The benchmark harnesses (`telco-tool-routing-bench/`, `ticket-assignment-bench/`
 `resolution-scorecard/`) still call v1 directly. They are offline and write their
 own tables, so they are out of scope here and unaffected by the cutover.
 
+## Two things to check before believing any v2 finding
+
+**1. Which build are you probing?**
+
+```bash
+curl -s "$AITO_API_URL/api/v2/_version"
+# {"version":"3de8f4f7ede5","builtAt":"2026-08-27T18:57:27Z"}
+```
+
+`shared.aito.ai` lags `aito-core` master — by 149 commits as of 2026-08-30.
+Several findings in this repo's history were re-reported as live defects when the
+engine had already fixed them; that costs a fresh investigation every round.
+Check the SHA, or probe the tree.
+
+**2. Which engine served it?**
+
+```bash
+curl -s "$AITO_API_URL/api/v2/schema/<table>?meta"   # → "engine": "v1" | "v2"
+```
+
+`/api/v2` over a rep1 table runs the v1 pipeline. `?meta` was the spelling on the
+deployed build; on master `engine` is unconditional (aito-core#1224, PR #1228).
+
 ## Read `api-docs/content/base-v2.md` first
 
 Most of what this document originally called a "v2 gap" was specified behaviour I
