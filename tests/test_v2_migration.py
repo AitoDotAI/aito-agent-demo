@@ -61,3 +61,33 @@ print(json.dumps([c.aito_api_version, c.aito_env, c.aito_url]))
                             env=dict(os.environ, AITO_API_VERSION="v2", AITO_ENV="v2"),
                             capture_output=True, text=True)
     assert json.loads(result.stdout) == ["v2", "v2", "https://example.invalid/db/demo/env/v2"]
+
+
+def test_why_propositions_flatten_on_both_v1_and_v2_encodings():
+    """A `$why` proposition arrives shaped differently on the two APIs, and
+    reading only one encoding is a SILENT failure — the factor renders with
+    no conditions at all rather than raising. v1 groups ANDed propositions
+    under `$and` and wraps values in an operator (`$has`); v2 groups under
+    `$group`, encodes text matches as `$match`, and states other values
+    bare. Both must flatten to the same (field, value) pairs.
+
+    This is the defect that reached a partner meeting in the accounting
+    demo, where `$why` silently degraded to a bare base rate on v2.
+    """
+    from src.app import _why_props
+
+    v1 = {"$and": [{"plan": {"$has": "Free"}}, {"text": {"$has": "billing"}}]}
+    v2 = {"$group": [{"plan": "Free"}, {"text": {"$match": "billing"}}]}
+
+    expected = [("plan", "Free"), ("text", "billing")]
+    assert list(_why_props(v1)) == expected
+    assert list(_why_props(v2)) == expected
+
+
+def test_v2_group_proposition_is_not_silently_dropped():
+    """The specific regression: an unrecognised conjunction key matches no
+    branch, so the generator yields nothing and the card loses its
+    'When ... is ...' line without any error."""
+    from src.app import _why_props
+
+    assert list(_why_props({"$group": [{"plan": "Pro"}]})) == [("plan", "Pro")]
