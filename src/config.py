@@ -13,7 +13,11 @@ from dotenv import load_dotenv
 # python-dotenv finds no .env and is a no-op. In local dev it loads ./.env —
 # with override=True so a real .env wins over shell defaults (e.g. shell.nix
 # exports an empty AITO_API_KEY that would otherwise shadow the .env value).
+# Keep .env's credential precedence, but allow explicit migration targets to
+# select the API and branch in `AITO_API_VERSION=v2 AITO_ENV=v2 ./do ...`.
+_target_overrides = {k: os.environ[k] for k in ("AITO_API_VERSION", "AITO_ENV") if k in os.environ}
 load_dotenv(override=True)
+os.environ.update(_target_overrides)
 
 
 @dataclass(frozen=True)

@@ -2,7 +2,8 @@
 `/api/v1` and `/api/v2` on the same data, diffed.
 
 This is the instrument behind `docs/v2-migration.md`. Re-run it as core lands
-fixes; when it reports no breaks, the demo can cut over.
+fixes. Differences require review, not automatic rejection: v2 uses a rebuilt
+inference engine. `./do v2-check` gates observable correctness separately.
 
     ./do v2-probe                 # master (v1) vs env.v2 (v2)
     ./do v2-probe --env ""        # both surfaces against master, isolating the
@@ -61,7 +62,7 @@ OPS: list[tuple[str, str, str, dict | None]] = [
     ("search/$has", "POST", "_search",
      {"from": "resolutions", "where": {"text": {"$has": "broadband"}}, "limit": 3}),
     ("search/orderBy $similarity", "POST", "_search",
-     {"from": "resolutions", "where": {"text": "router"}, "orderBy": "$similarity", "limit": 3}),
+     {"from": "resolutions", "where": {"text": {"$match": "router"}}, "orderBy": "$similarity", "limit": 3}),
     ("similarity", "POST", "_similarity",
      {"from": "resolutions", "where": {"text": {"$has": "broadband"}},
       "similarity": {"text": "broadband"}, "limit": 3}),
@@ -83,6 +84,9 @@ def fingerprint(payload) -> object:
     """A small, comparable summary — the parts a demo actually renders."""
     if not isinstance(payload, dict):
         return payload
+    if payload.get("kind") == "estimate" and isinstance(payload.get("data"), dict):
+        data = payload["data"]
+        return fingerprint({"estimate": data.get("estimate", data.get("value"))})
     if "hits" in payload:
         out = []
         for h in (payload["hits"] or [])[:3]:
@@ -98,6 +102,8 @@ def fingerprint(payload) -> object:
                     row[k] = round(h[k], 6)
             if "related" in h:
                 row["related"] = h["related"]
+                for k in ("condition", "fs", "ps"):
+                    row[k] = h.get(k)
             out.append(row)
         return {"total": payload.get("total"), "top": out}
     if "estimate" in payload:
@@ -186,7 +192,7 @@ def main() -> int:
                 print(f"    {json.dumps(body)}")
             print(f"    {detail}\n")
     else:
-        print("\nfull parity — the demo can cut over to v2")
+        print("\nfull op-level parity — also run ./do v2-check")
     return len(breaks)
 
 

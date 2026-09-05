@@ -11,6 +11,7 @@
 #   ./do test-book                run booktest snapshot tests (book/, via booktest CLI)
 #   ./do v2-probe                 /api/v1 vs /api/v2 op-level parity (exit = #diffs)
 #   ./do v2-parity                /api/v1 vs /api/v2 route-level parity (boots both)
+#   ./do v2-check                 read-only v2 correctness + engine/count checks
 #   ./do screenshot-teaser        render assets/teaser.html → assets/teaser.png (1200×630)
 #   ./do product-sheet            compile docs/product-sheet/product-sheet.typ → PDF (needs typst)
 #   ./do screenshot-pages [...]   desktop full-page screenshots of given paths
@@ -150,6 +151,7 @@ case "${1:-help}" in
   test-book)           shift; cmd_test_book "$@" ;;
   v2-probe)            shift; cmd_v2_probe "$@" ;;
   v2-parity)           shift; cmd_v2_parity "$@" ;;
+  v2-check)            shift; exec uv run python -m scripts.v2_check "$@" ;;
   screenshot-teaser)   shift; cmd_screenshot_teaser "$@" ;;
   product-sheet)       shift; cmd_product_sheet "$@" ;;
   screenshot-pages)    shift; cmd_screenshot_pages "$@" ;;

@@ -2,7 +2,8 @@
 
 `./do v2-parity` boots one backend on v1/master and one on v2/env.v2 and runs
 this. The op-level probe (`./do v2-probe`) says which Aito query shapes differ;
-this says which demo SURFACES differ — that is what gates the cutover.
+this says which demo SURFACES differ. Review those differences alongside
+`./do v2-check`: rebuilt-engine probabilities need not equal v1's.
 
     uv run python -m scripts.v2_parity http://127.0.0.1:4111 http://127.0.0.1:4112
 
@@ -17,7 +18,7 @@ import sys
 import httpx
 
 # Routes with deterministic, Aito-backed output. The LLM-backed ones
-# (/api/resolve-llm, /api/*-agent/chat) are excluded: live gpt-5-mini calls are
+# (/api/route, /api/resolve-llm, /api/*-agent/chat) are excluded: live LLM calls are
 # non-deterministic, so a diff there says nothing about the API version.
 ROUTES = [
     "/api/health",
@@ -25,7 +26,6 @@ ROUTES = [
     "/api/resolve?text=my+broadband+keeps+dropping+every+evening",
     "/api/resolve?text=I+was+charged+twice+this+month",
     "/api/handoff",
-    "/api/route?text=reset+my+router",
     "/api/opportunity",
     "/api/opportunity?industry=Manufacturing&service_line=Analytics",
     "/api/company-360",
@@ -102,8 +102,8 @@ def main(argv: list[str]) -> int:
     for path in ROUTES:
         s1, j1 = get(v1, path)
         s2, j2 = get(v2, path)
-        if s1 != s2:
-            verdict, detail = "STATUS", f"{s1} vs {s2}"
+        if s1 != 200 or s2 != 200:
+            verdict, detail = "FAIL", f"expected 200 on both sides, got {s1} vs {s2}"
         else:
             detail = first_diff(scrub(j1), scrub(j2)) or ""
             verdict = "DIFF" if detail else "ok"
@@ -117,7 +117,7 @@ def main(argv: list[str]) -> int:
         for path, verdict, detail in diffs:
             print(f"### [{verdict}] {path}\n    {detail}\n")
     else:
-        print("\nall routes identical — the demo behaves the same on v2")
+        print("\nall compared routes identical — also run ./do v2-check")
     return len(diffs)
 
 

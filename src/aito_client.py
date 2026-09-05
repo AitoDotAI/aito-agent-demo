@@ -97,8 +97,7 @@ class AitoClient:
 
     # v2 renamed the predicted value on _predict/_recommend hits from `feature`
     # to `$value` and dropped `field`. It is a pure rename, so both spellings are
-    # published on every hit and callers can read either. NOTE: v2's _match hits
-    # were NOT renamed — they still carry field/feature (core gap G3).
+    # published on every hit and callers can read either, including _match.
     def _normalize_hits(self, payload: dict) -> dict:
         hits = payload.get("hits")
         if not isinstance(hits, list):
@@ -113,8 +112,8 @@ class AitoClient:
         return payload
 
     def _select(self, select: list[str] | None) -> list[str] | None:
-        """v2 rejects `feature` in select ("no such field 'feature'"); it spells
-        the predicted value `$value`. Translate so call sites keep one spelling."""
+        """Use v2's canonical `$value` select spelling (older builds lack the
+        `feature` alias). Call sites keep one spelling across both versions."""
         if select is None or self._ver == "v1":
             return select
         return ["$value" if s == "feature" else s for s in select]
@@ -230,7 +229,7 @@ class AitoClient:
         match_field: str,
         limit: int = 5,
     ) -> dict:
-        """Find rows similar to the given where-fields. Returns $score per hit."""
+        """Rank values of match_field by $p, normalising feature/$value."""
         return self._request(
             "POST",
             self._path("_match"),

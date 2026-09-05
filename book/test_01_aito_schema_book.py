@@ -33,7 +33,7 @@ def test_aito_schema(t: bt.TestCaseRun):
         headers={"x-api-key": config.aito_key, "content-type": "application/json"},
         timeout=10.0,
     ) as client:
-        r = client.get("/api/v1/schema")
+        r = client.get(f"/api/{config.aito_api_version}/schema")
         r.raise_for_status()
         data = r.json()
 
@@ -48,4 +48,4 @@ def test_aito_schema(t: bt.TestCaseRun):
             t.iln(f"- `{table}` — {len(cols)} columns")
 
     t.tln("")
-    t.assertln("schema returns successfully", isinstance(data, dict))
+    t.assertln(isinstance(data, dict), "schema returns successfully")
