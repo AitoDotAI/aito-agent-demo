@@ -15,12 +15,12 @@ ticket text and hands back the ~5 tools history says are relevant, so the
 LLM picks from 5, not 240.
 
 ```jsonc
-POST /api/v1/_predict
+POST /api/v2/_predict
 {
   "from": "tool_calls",
   "where": { "text": "My screen is cracked, the glass is shattered. Help?" },
   "predict": "tool",
-  "select": ["$p", "feature"],
+  "select": ["$p", "$value"],
   "limit": 5
 }
 // → a 5-tool short-list, ranked by calibrated probability

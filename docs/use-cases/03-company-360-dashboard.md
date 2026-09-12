@@ -35,7 +35,7 @@ genuinely changes the recommendation.
 read the segment-attribute drivers behind the base rate:
 
 ```jsonc
-POST /api/v1/_predict
+POST /api/v2/_predict
 {
   "from": "customers",
   "where": { "size": "Enterprise", "plan": "Pro" },
@@ -51,7 +51,7 @@ propositions — the outcome and the segment — so multi-condition segments
 go inside an `$and`:
 
 ```jsonc
-POST /api/v1/_relate
+POST /api/v2/_relate
 {
   "from": "customers",
   "relate": { "$on": [
@@ -73,7 +73,7 @@ this segment's churn" — the second is actionable.
 most increase the *good* outcome for the segment:
 
 ```jsonc
-POST /api/v1/_recommend
+POST /api/v2/_recommend
 {
   "from": "customers",
   "where": { "size": "Enterprise", "plan": "Pro" },

@@ -106,12 +106,12 @@ All three resolve the **same TEST tickets**, with the **same Anthropic model** (
 
 **Predict tool (`aito/predict.py`).**
 ```json
-POST {AITO_URL}/api/v1/_predict
+POST {AITO_URL}/api/v2/_predict
 {
   "from": "tickets",
   "where": { "text": "<ticket text>" },
   "predict": "tool",
-  "select": ["$p", "feature", "$why"],
+  "select": ["$p", "$value", "$why"],
   "limit": 4
 }
 ```
