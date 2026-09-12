@@ -41,6 +41,7 @@ def test_match_vs_retrieval(t: bt.TestCaseRun):
     t.tln("")
 
     direct_correct = 0
+    retrieved_correct = 0
     with httpx.Client(base_url=cfg.aito_url,
                       headers={"x-api-key": cfg.aito_key, "content-type": "application/json"},
                       timeout=15.0) as c:
@@ -48,22 +49,24 @@ def test_match_vs_retrieval(t: bt.TestCaseRun):
             t.h2(q)
 
             # (1) direct answer — _match the answer field
-            m = c.post("/api/v1/_match", json={
+            m = c.post(f"/api/{cfg.aito_api_version}/_match", json={
                 "from": "resolutions", "where": {"text": q}, "match": "kb_article", "limit": 2})
             m.raise_for_status()
             hits = m.json().get("hits", [])
             top = hits[0] if hits else {}
-            ok = top.get("feature") == gold
+            value = top.get("$value", top.get("feature"))
+            ok = value == gold
             direct_correct += ok
-            t.tln(f"- **direct answer** (`_match kb_article`): **{top.get('feature')}** "
+            t.tln(f"- **direct answer** (`_match kb_article`): **{value}** "
                   f"(p={top.get('$p', 0):.3f}){'' if ok else f'  ✗ expected {gold}'}")
 
             # (2) retrieval — _similarity over past tickets (what a vector store returns)
-            s = c.post("/api/v1/_similarity", json={
+            s = c.post(f"/api/{cfg.aito_api_version}/_similarity", json={
                 "from": "resolutions", "similarity": {"text": q},
                 "select": ["text", "kb_article", "$score"], "limit": 2})
             s.raise_for_status()
             sims = s.json().get("hits", [])
+            retrieved_correct += any(h.get("kb_article") == gold for h in sims)
             t.tln("- retrieved neighbours (`_similarity`):")
             for h in sims:
                 t.iln(f"    · “{h.get('text')}” → {h.get('kb_article')}")
@@ -71,5 +74,8 @@ def test_match_vs_retrieval(t: bt.TestCaseRun):
 
     t.h2("Summary")
     t.tln(f"- direct-answer accuracy (`_match`): {direct_correct}/{len(QUESTIONS)}")
-    t.assertln("Aito matches the answer directly on clear questions",
-               direct_correct >= len(QUESTIONS) - 1)
+    t.assertln(direct_correct >= len(QUESTIONS) - 1,
+               "Aito matches the answer directly on clear questions")
+    t.tln(f"- retrieval recall@2: {retrieved_correct}/{len(QUESTIONS)}")
+    t.assertln(retrieved_correct >= len(QUESTIONS) - 1,
+               "retrieval includes the relevant article on clear questions")

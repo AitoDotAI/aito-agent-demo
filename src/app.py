@@ -144,17 +144,28 @@ import re as _re
 
 
 def _why_props(prop: dict):
-    """Yield (field, value) pairs from a _why proposition (handles $and nesting)."""
+    """Yield (field, value) pairs from a _why proposition.
+
+    Handles conjunction nesting in both encodings: v1 groups ANDed
+    propositions under `$and`, v2 (Rep2) under `$group`. Missing `$group`
+    is a silent drop, not an error — the list value matches neither branch
+    below, so the factor would render with no conditions at all.
+    """
     if not isinstance(prop, dict):
         return
-    if "$and" in prop:
-        for sub in prop["$and"]:
-            yield from _why_props(sub)
-        return
+    for conjunction in ("$and", "$group"):
+        if conjunction in prop:
+            for sub in prop[conjunction] or []:
+                yield from _why_props(sub)
+            return
     for field, cond in prop.items():
         if isinstance(cond, dict):
             for _op, val in cond.items():
                 yield field, val
+        elif isinstance(cond, (str, int, float, bool)):
+            # v2 _relate states propositions as bare values ({"plan": "Free"})
+            # where v1 wrapped them in an operator ({"plan": {"$has": "Free"}}).
+            yield field, cond
 
 
 def _flatten_why(node, out: list):

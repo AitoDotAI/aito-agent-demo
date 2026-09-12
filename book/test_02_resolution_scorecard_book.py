@@ -54,7 +54,7 @@ def test_resolution_scorecard(t: bt.TestCaseRun):
     by_intent = Counter(r["intent"] for r in train)
     for intent in C.INTENTS:
         t.tln(f"- {intent}: {by_intent[intent]}")
-    t.assertln("all intents present", set(by_intent) == set(C.INTENTS))
+    t.assertln(set(by_intent) == set(C.INTENTS), "all intents present")
 
     # --- live Aito (recorded by snapshot_httpx) ---
     t.h2("Aito `_predict` on a fixed sample")
@@ -85,4 +85,4 @@ def test_resolution_scorecard(t: bt.TestCaseRun):
     t.h2("Summary")
     t.tln(f"- intent accuracy on sample: {intent_hits}/{len(SAMPLE)}")
     t.tln(f"- parameter accuracy on sample: {param_hits}/{param_total}")
-    t.assertln("intent prediction is reliable on clear tickets", intent_hits >= len(SAMPLE) - 1)
+    t.assertln(intent_hits >= len(SAMPLE) - 1, "intent prediction is reliable on clear tickets")
