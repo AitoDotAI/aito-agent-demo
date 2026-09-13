@@ -47,3 +47,5 @@ DB `https://shared.aito.ai/db/aito-agent-demo` · table `resolutions` (question 
 
 - direct-answer accuracy (`_match`): 4/5
 ok
+- retrieval recall@2: 5/5
+ok

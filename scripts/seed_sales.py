@@ -172,13 +172,13 @@ OUT_SCHEMA = {
 
 
 def _upload(http: httpx.Client, table: str, schema: dict, rows: list[dict]) -> None:
-    sc = http.get("/api/v1/schema").json().get("schema", {})
+    sc = http.get("/schema").json().get("schema", {})
     if table in sc:
-        assert http.delete(f"/api/v1/schema/{table}").status_code < 400
-    assert http.put(f"/api/v1/schema/{table}", json=schema).status_code < 400, "create failed"
-    r = http.post(f"/api/v1/data/{table}/batch", json=rows)
+        assert http.delete(f"/schema/{table}").status_code < 400
+    assert http.put(f"/schema/{table}", json=schema).status_code < 400, "create failed"
+    r = http.post(f"/data/{table}/batch", json=rows)
     assert r.status_code < 400, f"upload {table} failed: {r.text[:200]}"
-    cnt = http.post("/api/v1/_query", json={"from": table, "limit": 0}).json().get("total")
+    cnt = http.post("/_query", json={"from": table, "limit": 0}).json().get("total")
     assert cnt == len(rows), f"{table}: {cnt} != {len(rows)}"
     print(f"  uploaded {table}: {cnt} rows")
 
@@ -191,7 +191,7 @@ def main() -> None:
     from collections import Counter
     print(f"engagements={len(eng)} win-rate={sum(e['outcome']=='won' for e in eng)/len(eng):.2f}")
     print(f"outreach={len(out)} reply-rate={sum(o['replied']=='yes' for o in out)/len(out):.2f} meeting-rate={sum(o['meeting']=='yes' for o in out)/len(out):.2f}")
-    with httpx.Client(base_url=cfg.aito_url, headers={"x-api-key": cfg.aito_key, "content-type": "application/json"}, timeout=60.0) as http:
+    with httpx.Client(base_url=f"{cfg.aito_url}/api/{cfg.aito_api_version}", headers={"x-api-key": cfg.aito_key, "content-type": "application/json"}, timeout=60.0) as http:
         _upload(http, "engagements", ENG_SCHEMA, eng)
         _upload(http, "outreach", OUT_SCHEMA, out)
     print("done.")

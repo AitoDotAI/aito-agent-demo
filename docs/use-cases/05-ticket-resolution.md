@@ -22,7 +22,7 @@ resolved ticket.
 sent it:
 
 ```jsonc
-POST /api/v1/_predict
+POST /api/v2/_predict
 {
   "from": "resolutions",
   "where": {

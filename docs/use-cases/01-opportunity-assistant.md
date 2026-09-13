@@ -23,7 +23,7 @@ numbers an LLM would otherwise have to invent, each a real Aito call.
 calibrated probability and the drivers behind it:
 
 ```jsonc
-POST /api/v1/_predict
+POST /api/v2/_predict
 {
   "from": "engagements",
   "where": {
@@ -34,7 +34,7 @@ POST /api/v1/_predict
     "relationship": "Existing client"
   },
   "predict": "outcome",
-  "select": ["$p", "feature", "$why"]
+  "select": ["$p", "$value", "$why"]
 }
 // → won ≈ 0.92  (Cold outbound instead of Referral drops it sharply)
 ```
@@ -42,7 +42,7 @@ POST /api/v1/_predict
 **Effort** — the same shape, a numeric answer instead of a class:
 
 ```jsonc
-POST /api/v1/_estimate
+POST /api/v2/_estimate
 {
   "from": "engagements",
   "where": { "service_line": "Data Platform", "deal_size_band": "L",
@@ -54,7 +54,7 @@ POST /api/v1/_estimate
 **References** — the won deals that look like this one, for the proposal:
 
 ```jsonc
-POST /api/v1/_query
+POST /api/v2/_query
 {
   "from": "engagements",
   "where": { "service_line": "Data Platform", "outcome": "won" },
@@ -68,7 +68,7 @@ increase the probability of `meeting = yes` for this buyer. This is the
 op that *optimises* rather than describes:
 
 ```jsonc
-POST /api/v1/_recommend
+POST /api/v2/_recommend
 {
   "from": "outreach",
   "where": { "target_industry": "SaaS", "target_role": "Head of Data" },

@@ -48,7 +48,7 @@ The demo's Aito instance is public **read-only**. Predict the win odds of
 a consulting opportunity straight from history:
 
 ```bash
-curl -X POST https://shared.aito.ai/db/aito-agent-demo/api/v1/_predict \
+curl -X POST https://shared.aito.ai/db/aito-agent-demo/api/v2/_predict \
   -H "x-api-key: 08b98adef5a80260a41273d5efb9e050fc24cef3dece1eb725c675b4bb1dd5a8" \
   -H "Content-Type: application/json" \
   -d '{
@@ -61,7 +61,7 @@ curl -X POST https://shared.aito.ai/db/aito-agent-demo/api/v1/_predict \
       "relationship": "Existing client"
     },
     "predict": "outcome",
-    "select": ["$p", "feature", "$why"]
+    "select": ["$p", "$value", "$why"]
   }'
 ```
 
@@ -71,7 +71,7 @@ for that buyer (an `_recommend`, the op that optimises rather than
 describes):
 
 ```bash
-curl -X POST https://shared.aito.ai/db/aito-agent-demo/api/v1/_recommend \
+curl -X POST https://shared.aito.ai/db/aito-agent-demo/api/v2/_recommend \
   -H "x-api-key: 08b98adef5a80260a41273d5efb9e050fc24cef3dece1eb725c675b4bb1dd5a8" \
   -H "Content-Type: application/json" \
   -d '{

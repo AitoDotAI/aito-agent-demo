@@ -47,14 +47,14 @@ def main() -> None:
              "escalation_target": t["escalation_target"]} for t in tickets]
     print(f"{TABLE}: {len(rows)} rows · with-tool={sum(1 for r in rows if r['tool'])} · "
           f"escalations={sum(1 for r in rows if r['tool'] is None)}")
-    with httpx.Client(base_url=cfg.aito_url, headers={"x-api-key": cfg.aito_key, "content-type": "application/json"}, timeout=60.0) as http:
-        sc = http.get("/api/v1/schema").json().get("schema", {})
+    with httpx.Client(base_url=f"{cfg.aito_url}/api/{cfg.aito_api_version}", headers={"x-api-key": cfg.aito_key, "content-type": "application/json"}, timeout=60.0) as http:
+        sc = http.get("/schema").json().get("schema", {})
         if TABLE in sc:
-            assert http.delete(f"/api/v1/schema/{TABLE}").status_code < 400
-        assert http.put(f"/api/v1/schema/{TABLE}", json=SCHEMA).status_code < 400, "create failed"
-        r = http.post(f"/api/v1/data/{TABLE}/batch", json=rows)
+            assert http.delete(f"/schema/{TABLE}").status_code < 400
+        assert http.put(f"/schema/{TABLE}", json=SCHEMA).status_code < 400, "create failed"
+        r = http.post(f"/data/{TABLE}/batch", json=rows)
         assert r.status_code < 400, f"upload failed: {r.text[:200]}"
-        cnt = http.post("/api/v1/_query", json={"from": TABLE, "limit": 0}).json().get("total")
+        cnt = http.post("/_query", json={"from": TABLE, "limit": 0}).json().get("total")
         assert cnt == len(rows), f"{cnt} != {len(rows)}"
         print(f"  uploaded {TABLE}: {cnt} rows")
     print("done.")

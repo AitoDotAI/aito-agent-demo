@@ -14,12 +14,18 @@
 // Configure via:
 //   NEXT_PUBLIC_AITO_API_URL  (e.g. https://shared.aito.ai/db/your-db)
 //   NEXT_PUBLIC_AITO_API_KEY  (read-only key — public exposure is the design)
+//   NEXT_PUBLIC_AITO_API_VERSION (v1 by default; set v2 at cutover)
 //
 // In production these are baked at `next build` time from the same env the
 // Python backend reads (the platform's `env:` block in demos.config.yaml).
 
 const API_URL = (process.env.NEXT_PUBLIC_AITO_API_URL || "").replace(/\/$/, "");
 const API_KEY = process.env.NEXT_PUBLIC_AITO_API_KEY || "";
+const API_VERSION = process.env.NEXT_PUBLIC_AITO_API_VERSION || "v1";
+if (API_VERSION !== "v1" && API_VERSION !== "v2") {
+  throw new Error("NEXT_PUBLIC_AITO_API_VERSION must be v1 or v2");
+}
+const apiPath = (op: string) => `/api/${API_VERSION}/${op}`;
 
 if (typeof window !== "undefined" && (!API_URL || !API_KEY)) {
   // Don't crash render — surface in console + return errors from the call below.
@@ -32,14 +38,12 @@ if (typeof window !== "undefined" && (!API_URL || !API_KEY)) {
 
 export type PredictHit<T = unknown> = {
   feature: T;
+  $value: T;
   $p: number;
   $why?: unknown;
 };
 
-export type MatchHit = {
-  $score: number;
-  [field: string]: unknown;
-};
+export type MatchHit = PredictHit;
 
 async function post<R>(endpoint: string, body: unknown): Promise<R> {
   if (!API_URL || !API_KEY) {
@@ -57,7 +61,13 @@ async function post<R>(endpoint: string, body: unknown): Promise<R> {
     const text = await r.text().catch(() => "");
     throw new Error(`Aito ${endpoint} returned ${r.status}: ${text.slice(0, 200)}`);
   }
-  return (await r.json()) as R;
+  const result = await r.json();
+  // Publish both spellings on v1 and v2, as the Python client does.
+  for (const hit of result.hits || []) {
+    if ("$value" in hit && !("feature" in hit)) hit.feature = hit.$value;
+    if ("feature" in hit && !("$value" in hit)) hit.$value = hit.feature;
+  }
+  return result as R;
 }
 
 /** Predict the value of `predict` given the constraints in `where`. */
@@ -67,27 +77,27 @@ export function aitoPredict<T = unknown>(query: {
   predict: string;
   limit?: number;
 }): Promise<{ hits: PredictHit<T>[] }> {
-  return post("/api/v1/_predict", { limit: 5, ...query });
+  return post(apiPath("_predict"), { limit: 5, ...query });
 }
 
-/** Find rows similar to the given fields. Higher `$score` = closer match. */
+/** Rank values of the match field by probability. */
 export function aitoMatch(query: {
   from: string;
   where: Record<string, unknown>;
   match: string;
   limit?: number;
 }): Promise<{ hits: MatchHit[] }> {
-  return post("/api/v1/_match", { limit: 5, ...query });
+  return post(apiPath("_match"), { limit: 5, ...query });
 }
 
-/** Full-text + filters; orderBy "$similarity" or any field name. */
+/** Full-text + filters; v2 similarity ordering requires a $match where term. */
 export function aitoSearch<T = Record<string, unknown>>(query: {
   from: string;
   where?: Record<string, unknown>;
   orderBy?: string | { field: string; desc?: boolean };
   limit?: number;
 }): Promise<{ hits: T[] }> {
-  return post("/api/v1/_search", { limit: 10, ...query });
+  return post(apiPath("_search"), { limit: 10, ...query });
 }
 
 /** Schema of the configured DB (tables + column types). Cheap. */
@@ -96,7 +106,7 @@ export function aitoSchema(): Promise<{ schema: Record<string, unknown> }> {
   if (!API_URL || !API_KEY) {
     return Promise.reject(new Error("Aito client not configured"));
   }
-  return fetch(`${API_URL}/api/v1/schema`, {
+  return fetch(`${API_URL}${apiPath("schema")}`, {
     headers: { "x-api-key": API_KEY },
   }).then((r) => {
     if (!r.ok) throw new Error(`Aito /schema returned ${r.status}`);

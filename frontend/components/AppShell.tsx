@@ -368,7 +368,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
           <div className="rc-pchip">_predict</div>
           <div className="rc-pdesc">Aito is a <b>predictive cache in front of the LLM</b>. Each ticket is resolved by reading the <b>intent</b> and the one parameter it needs from history — <b>two _predict calls, no chain</b>. A confident hit fires instantly and free; a miss falls through to the LLM, whose answer becomes the next cache entry.</div>
           <div className="rc-plabel">Live query</div>
-          <div className="rc-code"><span className="m">POST</span> /api/v1/_predict{"\n"}{"{"}{"\n"}  <span className="k">&quot;from&quot;</span>: <span className="s">&quot;resolutions&quot;</span>,{"\n"}  <span className="k">&quot;where&quot;</span>: {"{"} <span className="k">&quot;text&quot;</span>: <span className="s">&quot;…ticket…&quot;</span>,{"\n"}            <span className="k">&quot;sender_domain&quot;</span>: <span className="s">&quot;…&quot;</span> {"}"},{"\n"}  <span className="k">&quot;predict&quot;</span>: <span className="s">&quot;intent&quot;</span>,{"\n"}  <span className="k">&quot;select&quot;</span>: [<span className="s">&quot;$p&quot;</span>, <span className="s">&quot;$why&quot;</span>]{"\n"}{"}"}{"\n"}<span className="c">// → {aito ? `${aito.intent} (p ≈ ${aito.intent_p.toFixed(2)})` : "intent + $why"}</span></div>
+          <div className="rc-code"><span className="m">POST</span> /api/v2/_predict{"\n"}{"{"}{"\n"}  <span className="k">&quot;from&quot;</span>: <span className="s">&quot;resolutions&quot;</span>,{"\n"}  <span className="k">&quot;where&quot;</span>: {"{"} <span className="k">&quot;text&quot;</span>: <span className="s">&quot;…ticket…&quot;</span>,{"\n"}            <span className="k">&quot;sender_domain&quot;</span>: <span className="s">&quot;…&quot;</span> {"}"},{"\n"}  <span className="k">&quot;predict&quot;</span>: <span className="s">&quot;intent&quot;</span>,{"\n"}  <span className="k">&quot;select&quot;</span>: [<span className="s">&quot;$p&quot;</span>, <span className="s">&quot;$why&quot;</span>]{"\n"}{"}"}{"\n"}<span className="c">// → {aito ? `${aito.intent} (p ≈ ${aito.intent_p.toFixed(2)})` : "intent + $why"}</span></div>
           <div className="rc-plabel">Verify yourself</div>
           <div className="rc-pdesc" style={{ paddingTop: 8 }}>Every routed call traces back to an Aito query — no model file, no retrain. A row added today is in the next prediction.</div>
           <PanelLinks />
@@ -433,7 +433,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     chip: "augment, not compete",
     desc: "The agent keeps reasoning — Aito just hands it a <b>shorter menu</b>. <code>_predict</code> narrows the full tool catalog to the handful that fit this ticket, so the LLM picks from 5, not 240: smaller prompt, same answer, lower cost.",
     codeLabel: "Live query",
-    code: "POST /api/v1/_predict\n{\n  \"from\": \"tool_calls\",\n  \"where\": { \"ticket\": \"…\" },\n  \"predict\": \"tool\",\n  \"limit\": 5\n}\n// → 5-tool short-list",
+    code: "POST /api/v2/_predict\n{\n  \"from\": \"tool_calls\",\n  \"where\": { \"ticket\": \"…\" },\n  \"predict\": \"tool\",\n  \"limit\": 5\n}\n// → 5-tool short-list",
   },
   handoff: {
     pdb: "_predict · $p gate",
@@ -441,7 +441,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     chip: "_predict + $p",
     desc: "Calibrated confidence is <b>governance</b>. A confident prediction auto-resolves; a borderline one is handed to a human with the tentative read attached; anything sensitive (refund, cancel) is gated regardless. The number decides who acts.",
     codeLabel: "Live query",
-    code: "POST /api/v1/_predict\n{\n  \"from\": \"resolutions\",\n  \"where\": { \"text\": \"…\" },\n  \"predict\": \"intent\",\n  \"select\": [\"$p\"]\n}\n// $p ≥ .85 auto · else escalate",
+    code: "POST /api/v2/_predict\n{\n  \"from\": \"resolutions\",\n  \"where\": { \"text\": \"…\" },\n  \"predict\": \"intent\",\n  \"select\": [\"$p\"]\n}\n// $p ≥ .85 auto · else escalate",
   },
   sales: {
     pdb: "estimate · recommend · query",
@@ -449,7 +449,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     chip: "analyze · automate",
     desc: "The same index, asked four ways over the firm's own history: <b>win odds</b> (<code>_predict</code>+<code>$why</code>), <b>effort</b> (<code>_estimate</code>), <b>references</b> (<code>_query</code>) and the <b>best way in</b> (<code>_recommend</code>) — the numbers an LLM can't invent. This dashboard calls them <b>directly</b>; the Sales agent calls them as <b>tools</b>.",
     codeLabel: "Live query",
-    code: "POST /api/v1/_estimate\n{\n  \"from\": \"engagements\",\n  \"where\": { \"service_line\": \"…\",\n            \"complexity\": \"…\" },\n  \"estimate\": \"effort_days\"\n}\n// → person-days, from history",
+    code: "POST /api/v2/_estimate\n{\n  \"from\": \"engagements\",\n  \"where\": { \"service_line\": \"…\",\n            \"complexity\": \"…\" },\n  \"estimate\": \"effort_days\"\n}\n// → person-days, from history",
   },
   agent: {
     pdb: "Aito in the toolbox",
