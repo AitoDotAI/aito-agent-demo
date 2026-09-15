@@ -58,11 +58,24 @@ OPS: list[tuple[str, str, str, dict | None]] = [
      {"from": "resolutions", "where": {"$or": [{"intent": "refund"}, {"intent": "repair_help"}]}, "limit": 0}),
     ("match", "POST", "_match",
      {"from": "resolutions", "where": {"text": {"$has": "broadband"}}, "match": "intent", "limit": 3}),
-    ("search", "POST", "_search", {"from": "resolutions", "where": {"text": "router"}, "limit": 3}),
+    # NB: the probe term must actually occur in the corpus. "router" matches zero
+    # rows, so this case compared 0 against 0 and reported "ok" while testing
+    # nothing.
+    #
+    # `$match` is also the spelling that stays put. A BARE value on a Text column
+    # is being redefined to filter by EQUALITY (aito-core#1397, merged 2026-09-15,
+    # NOT yet in the deployed 2.8.4 — inference keeps tokenising, only filtering
+    # changes). So a bare term here would mean "tokens" today and "equality" after
+    # the next core deploy, silently turning this case vacuous again. `$match`
+    # means tokens under both.
+    ("search/$match", "POST", "_search",
+     {"from": "resolutions", "where": {"text": {"$match": "broadband"}}, "limit": 3}),
     ("search/$has", "POST", "_search",
      {"from": "resolutions", "where": {"text": {"$has": "broadband"}}, "limit": 3}),
+    # Same term problem as above: with "router" this ranked an empty result set.
     ("search/orderBy $similarity", "POST", "_search",
-     {"from": "resolutions", "where": {"text": {"$match": "router"}}, "orderBy": "$similarity", "limit": 3}),
+     {"from": "resolutions", "where": {"text": {"$match": "broadband"}},
+      "orderBy": "$similarity", "limit": 3}),
     ("similarity", "POST", "_similarity",
      {"from": "resolutions", "where": {"text": {"$has": "broadband"}},
       "similarity": {"text": "broadband"}, "limit": 3}),
