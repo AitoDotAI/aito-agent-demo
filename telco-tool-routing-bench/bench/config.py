@@ -25,17 +25,25 @@ CHOSEN_PARAMS = RESULTS_DIR / "chosen_params.json"
 
 
 # --- env loading (shares the parent demo's .env) ---------------------------
+def _set_default(key: str, value: str | None) -> None:
+    # A variable the caller set (non-empty) wins over .env. This used
+    # override=True, where the file won: on 2026-09-20 a loader run pointed
+    # at localhost silently wrote to production (shared.aito.ai) instead.
+    # An empty variable counts as unset, so a blank export does not shadow
+    # the file's credentials.
+    if value is not None and not os.environ.get(key):
+        os.environ[key] = value
+
+
 def _load_dotenv() -> None:
     """Load REPO_ROOT/.env. Uses python-dotenv if present, else a minimal parser
     so config import never hard-depends on the package being installed yet."""
-    # .env is authoritative for the benchmark: the dev shell (shell.nix) exports
-    # a localhost default + empty key that would otherwise shadow real creds, so
-    # we override ambient env from the file rather than deferring to it.
     env_path = REPO_ROOT / ".env"
     try:
-        from dotenv import load_dotenv  # type: ignore
+        from dotenv import dotenv_values  # type: ignore
 
-        load_dotenv(env_path, override=True)
+        for k, v in dotenv_values(env_path).items():
+            _set_default(k, v)
         return
     except ModuleNotFoundError:
         pass
@@ -46,7 +54,7 @@ def _load_dotenv() -> None:
         if not line or line.startswith("#") or "=" not in line:
             continue
         k, v = line.split("=", 1)
-        os.environ[k.strip()] = v.strip().strip('"').strip("'")
+        _set_default(k.strip(), v.strip().strip('"').strip("'"))
 
 
 _load_dotenv()

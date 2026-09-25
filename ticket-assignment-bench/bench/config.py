@@ -19,11 +19,20 @@ DATA_DIR = PKG_ROOT / "data"
 RESULTS_DIR = PKG_ROOT / "results"
 
 
+def _set_default(key: str, value: str | None) -> None:
+    # A variable the caller set (non-empty) wins over .env. This used
+    # override=True, where the file won: on 2026-09-20 a loader run pointed
+    # at localhost silently wrote to production (shared.aito.ai) instead.
+    if value is not None and not os.environ.get(key):
+        os.environ[key] = value
+
+
 def _load_dotenv() -> None:
     env_path = REPO_ROOT / ".env"
     try:
-        from dotenv import load_dotenv  # type: ignore
-        load_dotenv(env_path, override=True)
+        from dotenv import dotenv_values  # type: ignore
+        for k, v in dotenv_values(env_path).items():
+            _set_default(k, v)
         return
     except ModuleNotFoundError:
         pass
@@ -33,7 +42,7 @@ def _load_dotenv() -> None:
         line = line.strip()
         if line and not line.startswith("#") and "=" in line:
             k, v = line.split("=", 1)
-            os.environ[k.strip()] = v.strip().strip('"').strip("'")
+            _set_default(k.strip(), v.strip().strip('"').strip("'"))
 
 
 _load_dotenv()

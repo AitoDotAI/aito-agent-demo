@@ -56,22 +56,32 @@ pkgs.mkShell {
       unset _chrome
     fi
 
-    # Load .env if present (gitignored; holds AITO_API_KEY etc.)
+    # Load .env if present (gitignored; holds AITO_API_KEY etc.). A variable
+    # already exported when the shell starts wins over the file (same rule
+    # as src/config.py): a plain `set -a; . ./.env` let the file win, which
+    # is how on 2026-09-20 a run pointed at a local engine wrote to
+    # production. An empty variable counts as unset.
     if [ -f .env ]; then
+      _explicit=()
+      while IFS= read -r _name; do
+        [ -n "''${!_name:-}" ] && _explicit+=("$_name=''${!_name}")
+      done < <(sed -nE 's/^[[:space:]]*(export[[:space:]]+)?([A-Za-z_][A-Za-z0-9_]*)=.*/\2/p' .env)
       set -a
       # shellcheck disable=SC1091
       . ./.env
       set +a
+      for _kv in ''${_explicit[@]+"''${_explicit[@]}"}; do export "$_kv"; done
+      unset _explicit _name _kv
     fi
 
-    # Project env defaults
-    export AITO_API_URL="''${AITO_API_URL:-http://localhost:8200}"
-    export AITO_API_KEY="''${AITO_API_KEY:-}"
+    # Project env. No AITO_API_URL / AITO_API_KEY defaults here: an exported
+    # variable now wins over .env, so a default exported by the shell would
+    # silently shadow the .env credentials.
     export PYTHONDONTWRITEBYTECODE=1
     export PYTHONUNBUFFERED=1
 
     # Remind if Aito key is missing
-    if [ -z "$AITO_API_KEY" ]; then
+    if [ -z "''${AITO_API_KEY:-}" ]; then
       echo ""
       echo "  AITO_API_KEY not set. Export it or add to .env"
       echo "  export AITO_API_KEY=your-key-here"

@@ -7,17 +7,29 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values, find_dotenv
 
-# In production the platform sets env vars directly via App Service settings;
-# python-dotenv finds no .env and is a no-op. In local dev it loads ./.env —
-# with override=True so a real .env wins over shell defaults (e.g. shell.nix
-# exports an empty AITO_API_KEY that would otherwise shadow the .env value).
-# Keep .env's credential precedence, but allow explicit migration targets to
-# select the API and branch in `AITO_API_VERSION=v2 AITO_ENV=v2 ./do ...`.
-_target_overrides = {k: os.environ[k] for k in ("AITO_API_VERSION", "AITO_ENV") if k in os.environ}
-load_dotenv(override=True)
-os.environ.update(_target_overrides)
+
+def _load_dotenv() -> None:
+    """Fill the environment from .env without overriding it.
+
+    In production the platform sets env vars directly via App Service
+    settings and there is no .env, so this is a no-op. In local dev a
+    variable the caller set wins over the file, so
+    `AITO_API_URL=http://localhost:8080 AITO_API_VERSION=v2 ./do ...` really
+    targets that engine and API. This used `load_dotenv(override=True)`,
+    where the file won: on 2026-09-20 a loader run pointed at localhost
+    silently wrote to the production instance (shared.aito.ai) instead.
+
+    An empty variable counts as unset, so a blank export still picks up
+    the file's value rather than shadowing it.
+    """
+    for key, value in dotenv_values(find_dotenv()).items():
+        if value is not None and not os.environ.get(key):
+            os.environ[key] = value
+
+
+_load_dotenv()
 
 
 @dataclass(frozen=True)

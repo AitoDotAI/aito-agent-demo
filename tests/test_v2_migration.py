@@ -45,22 +45,39 @@ def test_parity_does_not_call_paid_llm_route():
     assert not any(path.split("?")[0] == "/api/route" for path in ROUTES)
 
 
-def test_explicit_migration_target_wins_over_dotenv():
-    # Simulate a .env pinning v1/master without touching the developer's file.
-    code = """
+def _load_config_with_dotenv(file_values, **explicit):
+    """Run load_config() in a fresh process against a simulated .env, so the
+    developer's own file is never read and the import-time load reruns."""
+    code = f"""
 import os, dotenv, json
-def dotenv_with_pinned_target(**kwargs):
-    os.environ.update(AITO_API_VERSION='v1', AITO_ENV='',
-                      AITO_API_URL='https://example.invalid/db/demo', AITO_API_KEY='test')
-dotenv.load_dotenv = dotenv_with_pinned_target
+dotenv.dotenv_values = lambda *a, **k: {file_values!r}
 from src.config import load_config
 c = load_config()
-print(json.dumps([c.aito_api_version, c.aito_env, c.aito_url]))
+print(json.dumps([c.aito_api_version, c.aito_env, c.aito_url, c.aito_key]))
 """
-    result = subprocess.run([sys.executable, "-c", code], check=True,
-                            env=dict(os.environ, AITO_API_VERSION="v2", AITO_ENV="v2"),
+    env = {k: v for k, v in os.environ.items() if not k.startswith("AITO_")}
+    env.update(explicit)
+    result = subprocess.run([sys.executable, "-c", code], check=True, env=env,
                             capture_output=True, text=True)
-    assert json.loads(result.stdout) == ["v2", "v2", "https://example.invalid/db/demo/env/v2"]
+    return json.loads(result.stdout)
+
+
+PINNED_DOTENV = {"AITO_API_VERSION": "v1", "AITO_ENV": "",
+                 "AITO_API_URL": "https://example.invalid/db/demo", "AITO_API_KEY": "test"}
+
+
+def test_explicit_migration_target_wins_over_dotenv():
+    assert _load_config_with_dotenv(PINNED_DOTENV, AITO_API_VERSION="v2", AITO_ENV="v2") \
+        == ["v2", "v2", "https://example.invalid/db/demo/env/v2", "test"]
+
+
+def test_explicit_aito_url_wins_over_dotenv():
+    # The 2026-09-20 incident: a loader run with AITO_API_URL pointing at
+    # localhost had it silently replaced by the file's production URL.
+    # A blank variable (AITO_API_KEY here) still takes the file's value.
+    assert _load_config_with_dotenv(PINNED_DOTENV, AITO_API_URL="http://localhost:8080",
+                                    AITO_API_KEY="") \
+        == ["v1", None, "http://localhost:8080", "test"]
 
 
 def test_why_propositions_flatten_on_both_v1_and_v2_encodings():
