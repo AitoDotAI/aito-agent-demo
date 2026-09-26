@@ -17,6 +17,7 @@ and /api/schema can stay verbatim across demos.
 
 from __future__ import annotations
 
+import logging
 import time
 from pathlib import Path
 
@@ -39,6 +40,7 @@ INTENT_PARAM = {
 
 config = load_config()
 aito = AitoClient(config)
+log = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Aito Agent demo",
@@ -249,7 +251,7 @@ def resolve(text: str, sender: str = ""):
         t0 = time.perf_counter()
         intent_resp = aito.predict("resolutions", where, "intent", limit=3, select=["$p", "feature", "$why"])
         intent, intent_p, intent_alts = _top_and_alts(intent_resp)
-        raw_why = (intent_resp.get("hits") or [{}])[0].get("$why")
+        raw_why = _why_of(intent_resp.get("hits") or [], intent)
         why = _transform_why(raw_why, text, intent) if raw_why else []
         param_field = INTENT_PARAM.get(intent)
         param = param_p = None
@@ -449,8 +451,8 @@ def opportunity(industry: str = "SaaS", client_size: str = "Mid-market", service
     try:
         wr = aito.predict("engagements", eng_where, "outcome", limit=2, select=["$p", "feature", "$why"])
         whits = wr.get("hits") or []
-        won_p = next((float(h["$p"]) for h in whits if h.get("feature") == "won"), 0.0)
-        drivers = _win_drivers((whits[0] if whits else {}).get("$why"))
+        won_p = _p_of(whits, "won")
+        drivers = _win_drivers(_why_of(whits, "won"))
 
         er = aito.estimate("engagements", {"service_line": service_line, "deal_size_band": deal_size_band,
                                             "complexity": complexity, "team_seniority": team_seniority,
@@ -517,10 +519,10 @@ def _tool_win_odds(args: dict) -> dict:
         return {"error": "need at least one field (industry, service_line, lead_source, …) to read win odds"}
     r = aito.predict("engagements", where, "outcome", limit=2, select=["$p", "feature", "$why"])
     hits = r.get("hits") or []
-    won_p = next((float(h["$p"]) for h in hits if h.get("feature") == "won"), 0.0)
+    won_p = _p_of(hits, "won")
     return {
         "win_probability": round(won_p, 2),
-        "drivers": _win_drivers((hits[0] if hits else {}).get("$why")),
+        "drivers": _win_drivers(_why_of(hits, "won")),
         "based_on": "Northlight's won/lost engagements with these attributes",
     }
 
@@ -645,6 +647,46 @@ def _p_of(hits: list, feature: str) -> float:
     return next((float(h["$p"]) for h in hits if h.get("feature") == feature), 0.0)
 
 
+def _why_target(why_node):
+    """The value a `$why` explains: the value in its `baseP` proposition.
+
+    `{"type": "baseP", "proposition": {"outcome": {"$has": "won"}}}` → "won".
+    None when the tree has no baseP to read.
+    """
+    leaves: list = []
+    _flatten_why(why_node, leaves)
+    for leaf in leaves:
+        if leaf.get("type") == "baseP":
+            for _field, value in _why_props(leaf.get("proposition", {})):
+                return value
+    return None
+
+
+def _why_of(hits: list, feature: str):
+    """The `$why` of the hit predicting `feature`, never another hit's.
+
+    Taking `hits[0]["$why"]` is only right when hits[0] is the value being
+    shown. Under a win probability it is not: hits[0] is `lost` whenever the
+    odds are below 50%, and its drivers are the drivers of LOSING, rendered
+    as reasons to win. That shipped (the 2026-09 $why integrity audit,
+    "index coupling").
+
+    If the hit's own explanation names a different target, the explanation
+    is DROPPED (None) and logged, never moved: a missing explanation is
+    honest, a wrong one is not. Dropping rather than raising keeps one bad
+    explanation from 502-ing a whole dashboard or agent turn.
+    """
+    hit = next((h for h in hits if h.get("feature") == feature), None)
+    why = (hit or {}).get("$why")
+    if not why:
+        return None
+    target = _why_target(why)
+    if target is not None and str(target).lower() != str(feature).lower():
+        log.warning("$why explains %r but would render under %r; dropped", target, feature)
+        return None
+    return why
+
+
 # structural / identity fields that are never useful "causes"
 _NON_CAUSE = {"mrr_eur", "name", "primary_product", "product", "duration_weeks", "brief", "customer", "region"}
 
@@ -743,8 +785,7 @@ def _tool_optimize_kpi(args: dict) -> dict:
     current = round(_p_of(hits, good), 2)
     # KPI RATE $why: explain the rate itself from the segment attributes' lifts
     # (base 23% × Free ×1.5 = 35%) — the "?" next to the headline number.
-    focus_hit = next((h for h in hits if h.get("feature") == focus), None)
-    kpi_why = _kpi_why((focus_hit or {}).get("$why"))
+    kpi_why = _kpi_why(_why_of(hits, focus))
     # CAUSES (diagnosis): _relate the BAD outcome to all fields, scoped to the segment
     # via $on — within-segment driver RATES; two-sided (drivers >1, protective <1).
     seg_props = [{f: v} for f, v in where.items()]
