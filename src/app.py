@@ -17,6 +17,7 @@ and /api/schema can stay verbatim across demos.
 
 from __future__ import annotations
 
+import logging
 import time
 from pathlib import Path
 
@@ -39,6 +40,7 @@ INTENT_PARAM = {
 
 config = load_config()
 aito = AitoClient(config)
+log = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Aito Agent demo",
@@ -666,9 +668,13 @@ def _why_of(hits: list, feature: str):
     Taking `hits[0]["$why"]` is only right when hits[0] is the value being
     shown. Under a win probability it is not: hits[0] is `lost` whenever the
     odds are below 50%, and its drivers are the drivers of LOSING, rendered
-    as reasons to win. That shipped (org/demo-why-integrity-audit.md,
-    "index coupling"). Raises if the hit's own explanation names a different
-    target, so a wrong explanation fails loudly instead of rendering.
+    as reasons to win. That shipped (the 2026-09 $why integrity audit,
+    "index coupling").
+
+    If the hit's own explanation names a different target, the explanation
+    is DROPPED (None) and logged, never moved: a missing explanation is
+    honest, a wrong one is not. Dropping rather than raising keeps one bad
+    explanation from 502-ing a whole dashboard or agent turn.
     """
     hit = next((h for h in hits if h.get("feature") == feature), None)
     why = (hit or {}).get("$why")
@@ -676,7 +682,8 @@ def _why_of(hits: list, feature: str):
         return None
     target = _why_target(why)
     if target is not None and str(target).lower() != str(feature).lower():
-        raise AitoError(f"$why explains {target!r} but is rendered under {feature!r}")
+        log.warning("$why explains %r but would render under %r; dropped", target, feature)
+        return None
     return why
 
 

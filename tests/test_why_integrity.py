@@ -1,14 +1,11 @@
-"""The `$why`-belongs-to-its-row invariant (org/demo-why-integrity-audit.md).
+"""The `$why`-belongs-to-its-row invariant (the 2026-09 $why integrity audit).
 
 An explanation rendered next to a value must be that value's own `$why`: the
 `baseP` proposition inside it names the value it explains. These run on
 fabricated `_predict` responses in the live shape, so they need no Aito.
 """
 
-import pytest
-
 from src import app as app_module
-from src.aito_client import AitoError
 
 
 def _why(outcome, lift_field, lift_value, lift):
@@ -40,10 +37,11 @@ def test_why_of_takes_the_explanation_of_the_value_shown_not_hits0():
     assert app_module._why_target(why) == "won"
 
 
-def test_why_of_refuses_an_explanation_of_another_value():
+def test_why_of_drops_an_explanation_of_another_value(caplog):
+    # Dropped, never moved: no explanation is honest, a wrong one is not.
     swapped = [{"feature": "won", "$p": 0.41, "$why": _why("lost", "a", "b", 1.5)}]
-    with pytest.raises(AitoError, match="rendered under 'won'"):
-        app_module._why_of(swapped, "won")
+    assert app_module._why_of(swapped, "won") is None
+    assert "would render under 'won'" in caplog.text
 
 
 def test_why_of_matches_boolean_targets():
