@@ -60,7 +60,11 @@ master. Explicit shell target variables override `.env` target values:
 AITO_API_VERSION=v2 AITO_ENV=v2 ./do dev
 ```
 
-Credentials retain the existing `.env` precedence. Never print keys in probes.
+A variable set on the command line or exported in your shell wins over `.env`
+(src/config.py); `.env` only fills what is unset or empty. `AITO_API_VERSION`
+and `AITO_ENV` count as set even when empty, so `AITO_ENV=""` means master.
+`./do v2-parity` reads `AITO_V2_ENV` from the shell only (default `v2`); it is
+not taken from `.env`. Never print keys in probes.
 The optional browser client supports `NEXT_PUBLIC_AITO_API_VERSION` and
 normalizes `feature`/`$value`; the app currently uses the Python backend instead.
 Always inspect the deployed server revision and per-table engine metadata before
