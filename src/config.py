@@ -22,11 +22,20 @@ def _load_dotenv() -> None:
     silently wrote to the production instance (shared.aito.ai) instead.
 
     An empty variable counts as unset, so a blank export still picks up
-    the file's value rather than shadowing it.
+    the file's value rather than shadowing it, except for the two that pick
+    the target: for AITO_API_VERSION and AITO_ENV, being present is enough.
+    An empty AITO_ENV is a deliberate "master" (`./do v2-parity` runs its v1
+    server with `AITO_ENV=""`), and filling it from the file would silently
+    point that server at a branch.
     """
     for key, value in dotenv_values(find_dotenv()).items():
-        if value is not None and not os.environ.get(key):
+        explicit = key in os.environ if key in _TARGET_SELECTORS else bool(os.environ.get(key))
+        if value is not None and not explicit:
             os.environ[key] = value
+
+
+#: Present-but-empty still means "the caller chose": AITO_ENV="" is master.
+_TARGET_SELECTORS = frozenset({"AITO_API_VERSION", "AITO_ENV"})
 
 
 _load_dotenv()

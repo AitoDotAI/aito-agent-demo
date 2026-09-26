@@ -71,6 +71,15 @@ def test_explicit_migration_target_wins_over_dotenv():
         == ["v2", "v2", "https://example.invalid/db/demo/env/v2", "test"]
 
 
+def test_an_explicitly_empty_aito_env_means_master_even_if_dotenv_names_a_branch():
+    # `./do v2-parity` runs its v1 server with AITO_ENV="" to mean master. If
+    # "empty counts as unset" applied here, a .env naming a branch would fill
+    # it in and the parity check would compare v1-on-a-branch with v2.
+    branch_dotenv = dict(PINNED_DOTENV, AITO_ENV="v2")
+    assert _load_config_with_dotenv(branch_dotenv, AITO_API_VERSION="v1", AITO_ENV="") \
+        == ["v1", None, "https://example.invalid/db/demo", "test"]
+
+
 def test_explicit_aito_url_wins_over_dotenv():
     # The 2026-09-20 incident: a loader run with AITO_API_URL pointing at
     # localhost had it silently replaced by the file's production URL.
