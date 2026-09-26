@@ -56,22 +56,17 @@ pkgs.mkShell {
       unset _chrome
     fi
 
-    # Load .env if present (gitignored; holds AITO_API_KEY etc.)
-    if [ -f .env ]; then
-      set -a
-      # shellcheck disable=SC1091
-      . ./.env
-      set +a
-    fi
-
-    # Project env defaults
-    export AITO_API_URL="''${AITO_API_URL:-http://localhost:8200}"
-    export AITO_API_KEY="''${AITO_API_KEY:-}"
+    # .env (gitignored; holds AITO_API_KEY etc.) is NOT exported into this
+    # shell: src/config.py and the bench configs read it on every run, and a
+    # variable exported in the shell wins over the file. Exporting the file
+    # here would make every value in it count as "exported by you", so an
+    # edit to .env inside an open shell would be silently ignored. For the
+    # same reason there are no AITO_API_URL / AITO_API_KEY defaults here.
     export PYTHONDONTWRITEBYTECODE=1
     export PYTHONUNBUFFERED=1
 
     # Remind if Aito key is missing
-    if [ -z "$AITO_API_KEY" ]; then
+    if [ -z "''${AITO_API_KEY:-}" ] && [ ! -f .env ]; then
       echo ""
       echo "  AITO_API_KEY not set. Export it or add to .env"
       echo "  export AITO_API_KEY=your-key-here"
