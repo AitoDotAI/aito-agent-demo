@@ -147,7 +147,7 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
         <div className="pains">
           {[
             ["Tool / option sprawl", "Hundreds of tools or SKUs in context → selection degrades, prompts bloat.", "_predict shortlists the handful that actually apply."],
-            ["An LLM call on every step", "Multi-step workflows take seconds and burn tokens, per ticket, at scale.", "_predict caches the routine — ~10× faster, ~10× fewer tokens."],
+            ["An LLM call on every step", "Multi-step workflows take seconds and burn tokens, per ticket, at scale.", "_predict answers the routine steps in one round-trip instead of a chain of calls."],
             ["Vector search misfires", "Embeddings dilute identifiers — the nearest neighbour is the wrong customer.", "_match / _similarity conditions on structure, aimed at what matters."],
             ["Bad with numbers", "Aggregation, drivers, estimates — the model guesses, often confidently wrong.", "_relate / _estimate compute it from your data."],
             ["No sense of “how sure”", "Overconfident output gives no signal for when to act vs ask a human.", "$p is a calibrated gate — auto when sure, escalate when not."],
@@ -205,8 +205,8 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
           <div className="pc">
             <div className="pn">02 · latency</div>
             <div className="ptt">Agentic workflows get painfully slow</div>
-            <div className="vs"><span className="tag">Standard · LLM agent</span>A 6-step resolution chains calls sequentially ≈ <b>22 s</b>; one call ≈ 3.6 s. Per ticket, at volume.</div>
-            <div className="ai"><span className="tag">Aito · predict-first</span>Predicts in parallel, <b>~0.15 s</b> — resolved before the agent clears step one; <b>~9–10×</b> on a single call, measured live.</div>
+            <div className="vs"><span className="tag">Standard · LLM agent</span>One clean call measured 3.6 s, so a 6-step chain projects to <b>about 22 s</b>. Under our shared rate limit, 78 back-to-back calls had a median of 20 s each.</div>
+            <div className="ai"><span className="tag">Aito · predict-first</span>Predicts in parallel in <b>about 0.15 s</b> (median over 800 tickets), before the agent&apos;s first call has returned.</div>
             <div className="bm">→ resolution-scorecard · live console</div>
           </div>
           <div className="pc">
