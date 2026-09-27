@@ -206,7 +206,7 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
             <div className="pn">02 · latency</div>
             <div className="ptt">Agentic workflows get painfully slow</div>
             <div className="vs"><span className="tag">Standard · LLM agent</span>One clean call measured 3.6 s, so a 6-step chain projects to <b>about 22 s</b>. Under our shared rate limit, 78 back-to-back calls had a median of 20 s each.</div>
-            <div className="ai"><span className="tag">Aito · predict-first</span>Predicts in parallel in <b>about 0.15 s</b> (median over 800 tickets), before the agent&apos;s first call has returned.</div>
+            <div className="ai"><span className="tag">Aito · predict-first</span>Each prediction takes <b>about 0.15 s</b> (median over 800 tickets), so the whole resolution is back before the agent&apos;s first call returns.</div>
             <div className="bm">→ resolution-scorecard · live console</div>
           </div>
           <div className="pc">
