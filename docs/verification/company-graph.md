@@ -51,6 +51,16 @@ separates independent sources from repeats, industry-to-vendor link prediction, 
 events that change outcomes) is being prepared in aito-python-tools' graph sandbox. Put
 predictive graph claims there, with their measurements, not on /company.
 
+One of its stories, "a deal wins more often when the company's use of Initech is
+corroborated", cannot be one query on v2.10.x. From `deals` it needs a nested `$refs`
+filter (company, then its claims, then their evidence) and a condition on a
+`$distinctLength`. Until Stage 3 of the path model ships (nested `$exists` / `$refs` as
+filters, td-20260927120731197939), the sandbox carries a derived `companies.initech_use`
+column computed from the claims' corroboration. Any view or doc that uses it must say
+"precomputed from the claims' corroboration" and must not present it as a live
+traversal. When Stage 3 ships, replace the column with the query and make that view its
+showcase.
+
 ## Re-checking
 
 Re-run the node-classification query above for each row of the table and compare with
