@@ -1008,6 +1008,35 @@ def company_360(industry: str = "", size: str = "", plan: str = ""):
     return {"segment": seg or "all customers", "kpis": kpis, "customer": spotlight}
 
 
+# ── Governance: the rules the agent's decisions follow (use case #15) ──
+# Read-only. The rule objects follow aito-accounting-demo's promote API (ADR 0025),
+# plus an `op` per condition; the writable version adds POST /api/rules/promote and
+# /demote. ADR 0025 keys rules by customer_id (tenant); here the key is the log.
+
+_GOV_CACHE: dict[str, dict] = {}  # the decision logs are static seed data: mine once per process
+
+
+@app.get("/api/governance/rules")
+def governance_rules(log: str = "resolutions"):
+    from src.governance import LOGS, mine_rules
+    if log not in LOGS:
+        raise HTTPException(status_code=400, detail=f"log must be one of {sorted(LOGS)}")
+    if log not in _GOV_CACHE:
+        try:
+            _GOV_CACHE[log] = mine_rules(aito, log)
+        except AitoError as e:
+            raise HTTPException(status_code=502, detail=str(e))
+    return {**_GOV_CACHE[log], "logs": {k: v["label"] for k, v in LOGS.items()}}
+
+
+@app.get("/api/rules/active")
+def rules_active(log: str = "resolutions"):
+    """The promoted rules in force. None yet: promotion needs a writable engine,
+    so no decision is made by a rule; the model path decides (see RulesView)."""
+    return {"log": log, "rules": [], "writable": False,
+            "note": "Read-only demo: no rule has been promoted, so no decision is made by a rule."}
+
+
 # ── Static files — keep this last ─────────────────────────────────
 
 _frontend_dir = Path(__file__).resolve().parent.parent / "frontend" / "out"
