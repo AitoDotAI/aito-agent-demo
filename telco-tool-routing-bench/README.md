@@ -2,8 +2,9 @@
 
 Measures whether a **predictive tool layer (Aito `_predict`)** beats LLM-only
 agents on cost, latency and calibrated reliability on a telco support-ticket
-tool-routing task — **without losing resolution quality**. Output feeds measured
-numbers into `../docs/aito-agent-demo-shell.html` via `results/results.json`.
+tool-routing task — **without losing resolution quality**. Output is
+`results/results.json`; the live app's Overview cites it (the static prototype it
+first fed, `docs/aito-agent-demo-shell.html`, was removed 2026-09-28).
 
 The single claim under test (stated so it can fail):
 

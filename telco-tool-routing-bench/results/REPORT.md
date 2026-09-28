@@ -67,7 +67,7 @@ Secondary caveat: tickets and tools are **synthetic and seeded**, and Aito's TRA
 Model note: TASK.md specifies an Anthropic model; this run substitutes **gpt-5-mini** (Azure OpenAI) for every LLM step. Both baselines use the identical model, so the comparison is not confounded.
 
 ## results.json → demo KPI-card mapping
-The demo (`docs/aito-agent-demo-shell.html`) currently hardcodes modeled values in `simulate()`. Measured replacements, per tool count `by_tool_count["<n>"]`:
+This maps results to the KPI cards of the original static prototype (`docs/aito-agent-demo-shell.html`, removed 2026-09-28; the live app in `frontend/` replaced it). Per tool count `by_tool_count["<n>"]`:
 
 | demo KPI card | results.json field |
 |---|---|
