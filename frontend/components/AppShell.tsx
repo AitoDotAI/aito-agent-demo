@@ -6,7 +6,7 @@
    the sales assistant); the centre swaps the active view; the right Aito
    panel adapts its copy to whatever view is showing. Each route renders
    <AppShell initialView="…"> so deep links (and ?view=) still land on the
-   right tab, but navigation between tabs is in-place client state — the nav
+   right tab, but navigation between tabs is in-place client state, the nav
    and panel never unmount. */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -40,7 +40,7 @@ const SAMPLES: { label: string; text: string; sender: string }[] = [
   { label: "Outage · Helsinki", text: "Is there a network outage? Nothing works in Helsinki.", sender: "alerts.monitoring.io" },
   { label: "Repair · cracked screen", text: "My screen is cracked, the glass is shattered. Help?", sender: "tickets.helpdesk.io" },
   { label: "Cancel · broadband", text: "Please cancel my home internet, I'm moving abroad.", sender: "globex.com" },
-  { label: "Refund · roaming", text: "Hi — please refund the €45 charge on my roaming pack.", sender: "acme.com" },
+  { label: "Refund · roaming", text: "Hi, please refund the €45 charge on my roaming pack.", sender: "acme.com" },
   { label: "Balance", text: "What's my current account balance?", sender: "stark.com" },
 ];
 const ACTION: Record<string, (p: string | null) => string> = {
@@ -64,7 +64,7 @@ const SALES_EXAMPLES: Record<string, string> = {
   estimate_effort: "_estimate effort_days  →  person-days",
   find_references: "_query  where outcome=won  →  3 briefs",
   recommend_outreach: "_recommend channel/angle toward meeting=yes",
-  propose_send_email: "queues a draft for human approval — never sends",
+  propose_send_email: "queues a draft for human approval, never sends",
 };
 const CO_EXAMPLES: Record<string, string> = {
   kpi_snapshot: "_predict ×6  →  conv / churn / NPS / CSAT / adopt / on-time",
@@ -72,7 +72,7 @@ const CO_EXAMPLES: Record<string, string> = {
   customer_360: "_query (linked)  →  one customer, every domain",
   find_examples: "_query any domain  →  example rows + ids",
   estimate_mrr: "_estimate mrr_eur  →  expected € / month",
-  launch_play: "drafts a play for approval — never runs",
+  launch_play: "drafts a play for approval, never runs",
 };
 
 export default function AppShell({ initialView = "home" }: { initialView?: View }) {
@@ -240,12 +240,12 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
         {view === "agent" && <SalesAgentView tools={tools} toolOn={toolOn} />}
         {view === "toolbox" && <ToolboxView tools={tools} toolOn={toolOn} onToggle={toggleTool} onAllAito={setAllAito}
           agentLabel="Sales agent" examples={SALES_EXAMPLES}
-          lead={<>The sales agent is a plain gpt-5-mini chat loop — what makes it useful is what&apos;s in its toolbox. Four of these tools are <b>Aito ops</b> over Northlight&apos;s own history; the model calls them when it needs a number it can&apos;t invent. Flip them off and ask the same question: it has to <b>guess</b>, and it&apos;ll tell you so.</>} />}
+          lead={<>The sales agent is a plain gpt-5-mini chat loop; what makes it useful is what&apos;s in its toolbox. Four of these tools are <b>Aito ops</b> over Northlight&apos;s own history; the model calls them when it needs a number it can&apos;t invent. Flip them off and ask the same question: it has to <b>guess</b>, and it&apos;ll tell you so.</>} />}
         {view === "company" && <CompanyAgentView tools={coTools} toolOn={coToolOn} />}
         {view === "company-data" && <CompanyDashboardView />}
         {view === "company-toolbox" && <ToolboxView tools={coTools} toolOn={coToolOn} onToggle={toggleCoTool} onAllAito={setAllCoAito}
           agentLabel="Company AI agent" examples={CO_EXAMPLES}
-          lead={<>The Company AI agent is a plain gpt-5-mini chat loop over Northwind&apos;s <b>linked</b> data — one customers master joined to deals, tickets, usage, invoices and feedback. Five of these tools are <b>Aito ops</b>; the model calls them for the 360 KPIs, the lever that moves each one, and the customer join a BI bot can&apos;t produce. Flip them off and it has to <b>guess</b>, and it&apos;ll tell you so.</>} />}
+          lead={<>The Company AI agent is a plain gpt-5-mini chat loop over Northwind&apos;s <b>linked</b> data: one customers master joined to deals, tickets, usage, invoices and feedback. Five of these tools are <b>Aito ops</b>; the model calls them for the 360 KPIs, the lever that moves each one, and the customer join a BI bot can&apos;t produce. Flip them off and it has to <b>guess</b>, and it&apos;ll tell you so.</>} />}
 
         {hasTopbar && (
           <div className="rc-topbar">
@@ -283,7 +283,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
           </div>
 
           <div className="rc-h">Same ticket, two engines</div>
-          <div className="rc-sub">The <b>LLM agent</b> reasons the resolution out on every ticket — seconds and tokens. <code>aito._predict</code> reads the <b>intent</b> and the one parameter it needs straight from history — two calls, sub-second, $0, with a calibrated <b>why</b>. Watch the response rates live.</div>
+          <div className="rc-sub">The <b>LLM agent</b> reasons the resolution out on every ticket, seconds and tokens. <code>aito._predict</code> reads the <b>intent</b> and the one parameter it needs straight from history, two calls, sub-second, $0, with a calibrated <b>why</b>. Watch the response rates live.</div>
 
           {/* intake */}
           <div className="rc-ctl">
@@ -312,7 +312,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
                     </div>
                     <div className="rc-meta">1 model call · {llm.tokens} tokens · ${llm.cost_usd.toFixed(5)} · {llm.model}</div>
                     <div style={{ marginTop: 12, fontSize: 11.5, color: "var(--rc-faint)", lineHeight: 1.5, borderTop: "1px dashed var(--rc-line)", paddingTop: 10 }}>
-                      No calibrated confidence and no evidence to verify — the model just asserts. Aito returns a <b style={{ color: "var(--rc-ink2)" }}>$p</b> and the <b style={{ color: "var(--rc-ink2)" }}>why</b> →
+                      No calibrated confidence and no evidence to verify, the model just asserts. Aito returns a <b style={{ color: "var(--rc-ink2)" }}>$p</b> and the <b style={{ color: "var(--rc-ink2)" }}>why</b> →
                     </div>
                   </>
                 )}
@@ -339,7 +339,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
                     </div>
                     {aito.why?.length > 0 && (
                       <div className="rc-whywrap">
-                        <button className="rc-whytog" onClick={() => setShowWhy((v) => !v)}>{showWhy ? "▾" : "▸"} why — verifiable from history</button>
+                        <button className="rc-whytog" onClick={() => setShowWhy((v) => !v)}>{showWhy ? "▾" : "▸"} why, verifiable from history</button>
                         {showWhy && <WhyCards why={aito.why} confidence={aito.intent_p} />}
                       </div>
                     )}
@@ -366,11 +366,11 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
             <div className="rc-pstat"><div className="pv">{llmMs != null ? `${(llmMs / 1000).toFixed(1)}s` : "live"}</div><div className="pl">llm latency</div></div>
           </div>
           <div className="rc-pchip">_predict</div>
-          <div className="rc-pdesc">Aito is a <b>predictive cache in front of the LLM</b>. Each ticket is resolved by reading the <b>intent</b> and the one parameter it needs from history — <b>two _predict calls, no chain</b>. A confident hit fires instantly and free; a miss falls through to the LLM, whose answer becomes the next cache entry.</div>
+          <div className="rc-pdesc">Aito is a <b>predictive cache in front of the LLM</b>. Each ticket is resolved by reading the <b>intent</b> and the one parameter it needs from history, <b>two _predict calls, no chain</b>. A confident hit fires instantly and free; a miss falls through to the LLM, whose answer becomes the next cache entry.</div>
           <div className="rc-plabel">Live query</div>
           <div className="rc-code"><span className="m">POST</span> /api/v2/_predict{"\n"}{"{"}{"\n"}  <span className="k">&quot;from&quot;</span>: <span className="s">&quot;resolutions&quot;</span>,{"\n"}  <span className="k">&quot;where&quot;</span>: {"{"} <span className="k">&quot;text&quot;</span>: <span className="s">&quot;…ticket…&quot;</span>,{"\n"}            <span className="k">&quot;sender_domain&quot;</span>: <span className="s">&quot;…&quot;</span> {"}"},{"\n"}  <span className="k">&quot;predict&quot;</span>: <span className="s">&quot;intent&quot;</span>,{"\n"}  <span className="k">&quot;select&quot;</span>: [<span className="s">&quot;$p&quot;</span>, <span className="s">&quot;$why&quot;</span>]{"\n"}{"}"}{"\n"}<span className="c">// → {aito ? `${aito.intent} (p ≈ ${aito.intent_p.toFixed(2)})` : "intent + $why"}</span></div>
           <div className="rc-plabel">Verify yourself</div>
-          <div className="rc-pdesc" style={{ paddingTop: 8 }}>Every routed call traces back to an Aito query — no model file, no retrain. A row added today is in the next prediction.</div>
+          <div className="rc-pdesc" style={{ paddingTop: 8 }}>Every routed call traces back to an Aito query, no model file, no retrain. A row added today is in the next prediction.</div>
           <PanelLinks />
         </aside>
       ) : (
@@ -408,10 +408,10 @@ function PanelLinks() {
       <div className="rc-plabel">Learn more</div>
       <div className="rc-plinks">
         <a className="rc-plink" href="/api/schema" target="_blank" rel="noreferrer"><span className="ar">↗</span> View live schema (JSON)</a>
-        <div className="rc-plink"><span className="ar">↗</span> Predict API reference</div>
-        <div className="rc-plink"><span className="ar">{"{}"}</span> Source on GitHub</div>
+        <a className="rc-plink" href="https://aito.ai/docs/api/v2/" target="_blank" rel="noreferrer"><span className="ar">↗</span> Predict API reference</a>
+        <a className="rc-plink" href="https://github.com/AitoDotAI/aito-agent-demo" target="_blank" rel="noreferrer"><span className="ar">{"{}"}</span> Source on GitHub</a>
       </div>
-      <div className="rc-cta"><button>Start free trial →</button></div>
+      <div className="rc-cta"><a href="https://console.aito.ai/account/authentication/?signUp=true&utm_source=demo&utm_medium=aito-panel" target="_blank" rel="noreferrer">Start free trial →</a></div>
     </>
   );
 }
@@ -423,7 +423,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     pdb: "The Predictive DB",
     stats: [["5", "core ops"], ["$p", "calibrated"], ["$why", "explained"]],
     chip: "one query · no training",
-    desc: "Aito turns your rows into an <b>instant, calibrated answer</b> — the same act as a neural net, but live and over <b>your</b> data, with nothing to train. Every demo in the menu is a real call to one of five ops.",
+    desc: "Aito turns your rows into an <b>instant, calibrated answer</b>, the same act as a neural net, but live and over <b>your</b> data, with nothing to train. Every demo in the menu is a real call to one of five ops.",
     codeLabel: "The five ops",
     code: "_predict   class + $p + $why\n_match     relevant memory\n_relate    drivers / lift\n_estimate  a number\n_recommend best next action",
   },
@@ -431,7 +431,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     pdb: "_predict · short-list",
     stats: [["240→5", "tools"], ["~17×", "fewer tokens"], ["1", "LLM call"]],
     chip: "augment, not compete",
-    desc: "The agent keeps reasoning — Aito just hands it a <b>shorter menu</b>. <code>_predict</code> narrows the full tool catalog to the handful that fit this ticket, so the LLM picks from 5, not 240. On 20 live tickets the prompt shrank from 3,829 to 225 input tokens (median), and the pick was right 20 times out of 20, against 13 with the full catalog.",
+    desc: "The agent keeps reasoning, Aito just hands it a <b>shorter menu</b>. <code>_predict</code> narrows the full tool catalog to the handful that fit this ticket, so the LLM picks from 5, not 240. On 20 live tickets the prompt shrank from 3,829 to 225 input tokens (median), and the pick was right 20 times out of 20, against 13 with the full catalog.",
     codeLabel: "Live query",
     code: "POST /api/v2/_predict\n{\n  \"from\": \"tool_calls\",\n  \"where\": { \"ticket\": \"…\" },\n  \"predict\": \"tool\",\n  \"limit\": 5\n}\n// → 5-tool short-list",
   },
@@ -447,7 +447,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     pdb: "estimate · recommend · query",
     stats: [["_estimate", "effort"], ["_recommend", "way in"], ["_query", "refs"]],
     chip: "analyze · automate",
-    desc: "The same index, asked four ways over the firm's own history: <b>win odds</b> (<code>_predict</code>+<code>$why</code>), <b>effort</b> (<code>_estimate</code>), <b>references</b> (<code>_query</code>) and the <b>best way in</b> (<code>_recommend</code>) — the numbers an LLM can't invent. This dashboard calls them <b>directly</b>; the Sales agent calls them as <b>tools</b>.",
+    desc: "The same index, asked four ways over the firm's own history: <b>win odds</b> (<code>_predict</code>+<code>$why</code>), <b>effort</b> (<code>_estimate</code>), <b>references</b> (<code>_query</code>) and the <b>best way in</b> (<code>_recommend</code>), the numbers an LLM can't invent. This dashboard calls them <b>directly</b>; the Sales agent calls them as <b>tools</b>.",
     codeLabel: "Live query",
     code: "POST /api/v2/_estimate\n{\n  \"from\": \"engagements\",\n  \"where\": { \"service_line\": \"…\",\n            \"complexity\": \"…\" },\n  \"estimate\": \"effort_days\"\n}\n// → person-days, from history",
   },
@@ -455,7 +455,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     pdb: "Aito in the toolbox",
     stats: [["assist", "→ optimize"], ["+yield", "outcome"], ["live", "gpt-5-mini"]],
     chip: "it optimizes, not just informs",
-    desc: "A plain gpt-5-mini chat loop that <b>calls Aito ops as tools</b>. It doesn't only answer — it <b>optimizes the outcome</b>: <code>_recommend</code> picks the approach that books the most meetings and quantifies the <b>lift</b> over the unoptimised baseline (live, from history). Faster and cheaper than an LLM-only agent, and it measures the yield.",
+    desc: "A plain gpt-5-mini chat loop that <b>calls Aito ops as tools</b>. It doesn't only answer, it <b>optimizes the outcome</b>: <code>_recommend</code> picks the approach that books the most meetings and quantifies the <b>lift</b> over the unoptimised baseline (live, from history). Faster and cheaper than an LLM-only agent, and it measures the yield.",
     codeLabel: "Optimize, not describe",
     code: "recommend_outreach({industry,role})\n// ⇒ aito._recommend → meeting=yes\n//   channel · angle\n//   meeting rate vs baseline → lift, live",
   },
@@ -463,7 +463,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     pdb: "the agent's tools",
     stats: [["_predict", "win"], ["_estimate", "effort"], ["_recommend", "reach"]],
     chip: "one toggle",
-    desc: "Each tool the agent can call. Four are <b>Aito ops</b> over Northlight's history; one is a gated action that only drafts. Flip the Aito tools off to see the agent fall back to <b>flagged guesses</b> — the augment thesis, A/B in one switch.",
+    desc: "Each tool the agent can call. Four are <b>Aito ops</b> over Northlight's history; one is a gated action that only drafts. Flip the Aito tools off to see the agent fall back to <b>flagged guesses</b>, the augment thesis as an A/B in one switch.",
     codeLabel: "Tool → op",
     code: "win_odds          → _predict\nestimate_effort   → _estimate\nfind_references   → _query\nrecommend_outreach→ _recommend\npropose_send_email→ action (gated)",
   },
@@ -471,7 +471,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     pdb: "360 · optimise KPIs",
     stats: [["360", "linked"], ["optimise", "any KPI"], ["learn", "no retrain"]],
     chip: "see · optimise · act · learn",
-    desc: "One <b>linked</b> customers master across sales, support, product, finance and CX. A SQL+LLM bot can <code>COUNT(*)</code>; this agent calls Aito for the <b>360 KPIs</b>, the <b>lever that moves each one</b> (<code>_recommend</code> + projected lift), and drafts the play. Aito has no training step — a logged outcome sharpens the next prediction. A closed loop, no retrain.",
+    desc: "One <b>linked</b> customers master across sales, support, product, finance and CX. A SQL+LLM bot can <code>COUNT(*)</code>; this agent calls Aito for the <b>360 KPIs</b>, the <b>lever that moves each one</b> (<code>_recommend</code> + projected lift), and drafts the play. Aito has no training step, a logged outcome sharpens the next prediction. A closed loop, no retrain.",
     codeLabel: "Optimise a KPI",
     code: "optimize_kpi(\"churn\",\n  {size:\"SMB\", plan:\"Free\"})\n// ⇒ _predict $why + _recommend\n//   65% → 78% via Exec-sponsor CSM",
   },
@@ -479,7 +479,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     pdb: "the data view",
     stats: [["6", "KPIs"], ["1", "lever each"], ["360", "join"]],
     chip: "Aito, no agent",
-    desc: "The same ops the Company agent calls, here <b>directly</b> as a dashboard (like the Opportunity Assistant). Pick a segment → every KPI with the <b>lever that moves it</b> (<code>_predict</code> + <code>_recommend</code>) and a spotlight customer joined across every domain (<code>_query</code> the link). No LLM in this view — just the predictive database.",
+    desc: "The same ops the Company agent calls, here <b>directly</b> as a dashboard (like the Opportunity Assistant). Pick a segment → every KPI with the <b>lever that moves it</b> (<code>_predict</code> + <code>_recommend</code>) and a spotlight customer joined across every domain (<code>_query</code> the link). No LLM in this view, just the predictive database.",
     codeLabel: "Live query",
     code: "GET /api/company-360?size=SMB&plan=Free\n// per KPI: _predict + _recommend\n//   churn 35% → 22% via Exec-sponsor\n// + one customer, every domain",
   },
@@ -487,7 +487,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     pdb: "the 360 toolbox",
     stats: [["_predict", "KPIs"], ["_recommend", "lever"], ["_query", "360"]],
     chip: "one toggle",
-    desc: "The Company AI agent's tools over the <b>linked</b> Northwind data (customers · deals · tickets · usage · invoices · feedback). Five are Aito ops; one is a gated play draft. Turn the Aito tools off and the same agent has to guess the numbers — and flags that it's guessing.",
+    desc: "The Company AI agent's tools over the <b>linked</b> Northwind data (customers · deals · tickets · usage · invoices · feedback). Five are Aito ops; one is a gated play draft. Turn the Aito tools off and the same agent has to guess the numbers, and flags that it's guessing.",
     codeLabel: "Tool → op",
     code: "kpi_snapshot  → _predict ×6\noptimize_kpi  → _predict + _recommend\ncustomer_360  → _query (linked)\nfind_examples → _query\nestimate_mrr  → _estimate\nlaunch_play   → action (gated)",
   },
