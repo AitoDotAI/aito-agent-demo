@@ -114,11 +114,11 @@
     <div class="lbl">Benchmarked against the standard solution (live Aito, and live gpt-5-mini where an LLM is involved)</div>
     <div class="row r3">
       <div class="pc"><div class="pt">Shortlisting is non-trivial</div>
-        <div class="vs"><span class="tg">embedding-retrieval shortlist</span>right option drops out of the top 8 as the catalog grows: <b>58→42 / 75</b></div>
+        <div class="vs"><span class="tg">embedding-retrieval shortlist</span>with a top-8 retrieval shortlist, handled correctly fell <b>58→42 / 75</b> as the catalog grew</div>
         <div class="ai"><span class="tg">Aito calibrated shortlist</span>240 tools to 5, <b>~17× fewer input tokens</b> (3,829→225, median of 20 live tickets)</div></div>
       <div class="pc"><div class="pt">Agentic workflows are slow</div>
         <div class="vs"><span class="tg">LLM agent</span>6-step resolution projects to <b>about 22 s</b> (6 × one clean 3.6 s call)</div>
-        <div class="ai"><span class="tg">Aito predict-first</span><b>about 0.15 s</b> per prediction (median over 800 tickets)</div></div>
+        <div class="ai"><span class="tg">Aito predict-first</span><b>about 0.15 s</b> per whole resolution (median over 800 tickets)</div></div>
       <div class="pc"><div class="pt">Right context-memory is hard</div>
         <div class="vs"><span class="tg">vector search</span>grabs the <b>wrong customer</b> for 47% to 72% of tickets</div>
         <div class="ai"><span class="tg">Aito conditions on structure</span>gets the customer right for 63% to 66%, from 250 tickets of history</div></div>
@@ -131,7 +131,7 @@
         <div class="uc"><b>Estimate</b> demand, lead time, effort, price <span class="op">_estimate</span></div>
         <div class="uc"><b>Flag &amp; explain</b> anomalies with the evidence <span class="op">_predict + $why</span></div></div>
       <div class="lane s"><div class="lh"><span class="dot"></span>Assist</div>
-        <div class="uc"><b>Shortlist</b> from 1,800 SKUs / 255 GL codes <span class="op">_predict</span></div>
+        <div class="uc"><b>Shortlist</b> SKUs or GL codes <span class="op">_predict</span></div>
         <div class="uc"><b>Aim the memory</b> to the relevant past case <span class="op">_match</span></div>
         <div class="uc"><b>Recommend</b> the next best action / upsell <span class="op">_recommend</span></div></div>
       <div class="lane m"><div class="lh"><span class="dot"></span>Automate</div>
@@ -145,7 +145,7 @@
       <div class="gov"><div class="gt">Calibrated <span class="em">$p</span></div><div class="gp">Acts automatically only when confident; escalates the rest. The agent knows what it knows.</div></div>
       <div class="gov"><div class="gt">Explainable <span class="em">$why</span></div><div class="gp">Every prediction traces straight to the rows behind it. Auditable and reproducible by design.</div></div>
       <div class="gov"><div class="gt">Zero <span class="em">MLOps</span></div><div class="gp">No model files, no retrain, no drift, no ML team to staff. It learns from each new row.</div></div>
-      <div class="gov"><div class="gt">Multi-tenant <span class="em">by where-clause</span></div><div class="gp">One instance, isolated per customer: 255 tenants, zero per-tenant models, no data leakage.</div></div>
+      <div class="gov"><div class="gt">Multi-tenant <span class="em">by where-clause</span></div><div class="gp">One instance, each customer isolated by a where-clause, with no per-tenant models and no data leakage.</div></div>
     </div>
 
     <div class="cta">

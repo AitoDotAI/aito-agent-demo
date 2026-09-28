@@ -52,3 +52,68 @@ def test_enum_values_the_user_never_said_are_flagged():
     history = [{"role": "user", "content": "A bank wants help."}]
     trace = [{"result": {"channel": "Warm intro"}}]
     assert unstated_args({"industry": "Banking"}, spec, trace, history) == {}
+
+
+# ── review findings (PR #11): each case below was a live miss or a false block ──
+
+def _win_odds_spec():
+    from src.sales_agent import TOOLS
+    return next(t for t in TOOLS if t["name"] == "win_odds")
+
+
+def _unstated(args, said, trace=()):
+    from src.agent_core import unstated_args
+    return unstated_args(args, _win_odds_spec(), list(trace), [{"role": "user", "content": said}])
+
+
+def test_a_guards_own_message_never_grounds_the_retry():
+    rejected = [{"result": {"error": "not queued: 70% did not come from a tool."}}]
+    assert ungrounded_figures({"body": "~70% more meetings"}, rejected, []) == ["70%"]
+    annotated = [{"result": {"win_probability": 0.6,
+                             "ignored_unstated_fields": {"client_size": "Enterprise"}}}]
+    assert _unstated({"client_size": "Enterprise"}, "A bank.", annotated) == {"client_size": "Enterprise"}
+
+
+def test_near_misses_do_not_count_as_said():
+    assert _unstated({"deal_size_band": "M"}, "I'm keen, it's a bank") == {"deal_size_band": "M"}
+    assert _unstated({"lead_source": "Partner"}, "it is part of a programme") == {"lead_source": "Partner"}
+    assert _unstated({"lead_source": "Event"}, "they will eventually buy") == {"lead_source": "Event"}
+    assert _unstated({"complexity": "High"}, "a highly regulated bank") == {"complexity": "High"}
+
+
+def test_the_ways_a_rep_actually_says_a_value_count():
+    cases = [({"industry": "Telecom"}, "a telco wants help"),
+             ({"client_size": "Mid-market"}, "a mid-size retailer"),
+             ({"service_line": "Custom Dev"}, "custom development for a bank"),
+             ({"service_line": "Analytics & ML"}, "an analytics project"),
+             ({"relationship": "New logo"}, "a new client in retail"),
+             ({"industry": "Logistics"}, "a logistic company"),
+             ({"deal_size_band": "L"}, "an L deal, sole-source")]
+    for args, said in cases:
+        assert _unstated(args, said) == {}, (args, said)
+
+
+def test_figures_must_match_closely_and_counts_are_not_claims():
+    lift = [{"result": {"outcome_lift": 3.7, "meeting_probability": 0.59}}]
+    assert ungrounded_figures({"body": "3.3x more meetings"}, lift, []) == ["3.3x"]
+    assert ungrounded_figures({"body": "1x the baseline"}, lift, []) == ["1x"]  # not grounded by p=0.59
+    assert ungrounded_figures({"body": "two calls, 2 x 30 min"}, lift, []) == []
+
+
+def test_odd_model_output_does_not_crash_the_guards():
+    from src.agent_core import _safe_args
+    assert _safe_args("[]") == {} and _safe_args("null") == {} and _safe_args("{bad") == {}
+    assert ungrounded_figures({"body": "59%"}, [], [{"role": "assistant", "content": None}]) == ["59%"]
+    from src.agent_core import unstated_args
+    assert unstated_args({"industry": "Banking"}, _win_odds_spec(), [],
+                         [{"role": "user", "content": None}]) == {"industry": "Banking"}
+
+
+def test_a_returned_value_grounds_only_its_own_field():
+    # live: recommend_outreach returned personalization "High", and complexity "High" rode on it
+    trace = [{"result": {"personalization": "High", "channel": "Warm intro",
+                         "drivers": [{"field": "competitive", "value": "Competitive", "lift": 0.9}]}}]
+    assert _unstated({"complexity": "High"}, "a bank", trace) == {"complexity": "High"}
+    assert _unstated({"competitive": "Competitive"}, "a bank", trace) == {}
+    trace = [{"result": {"client_industry": "Banking"}}]
+    assert _unstated({"industry": "Banking"}, "this one", trace) == {}

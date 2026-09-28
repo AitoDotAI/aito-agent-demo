@@ -28,9 +28,10 @@ def openai_tools(tools: list[dict], enabled: list[str]) -> list[dict]:
 
 def _safe_args(raw: str) -> dict:
     try:
-        return json.loads(raw or "{}")
+        args = json.loads(raw or "{}")
     except json.JSONDecodeError:
         return {}
+    return args if isinstance(args, dict) else {}
 
 
 def plain_dashes(text: str) -> str:
@@ -39,22 +40,35 @@ def plain_dashes(text: str) -> str:
     return re.sub(r"\s*—\s*", ", ", re.sub(r"(?<=\w)—(?=\w)", "-", text or ""))
 
 
-# A percentage ("~70%") or a multiplier ("3.7x", "3.7×"): the figures a draft must not invent.
-_FIGURE = re.compile(r"(\d+(?:\.\d+)?)\s*(%|[x×](?!\w))", re.I)
+# A percentage ("~70%") or a multiplier written onto its number ("3.7x", "3.7×"); "2 x 30 min"
+# is a count, not a claim.
+_FIGURE = re.compile(r"(\d+(?:\.\d+)?)(\s*%|[x×](?!\w))", re.I)
 
 
-def _known_figures(values: Any, out: set[float]) -> set[float]:
-    """Every number a source holds; a probability also counts as its percentage."""
+def _sources(trace: list[dict]) -> list:
+    """What the tools actually returned this turn. A guard's own rejection or
+    annotation is not a source: otherwise "70% did not come from a tool" would
+    ground 70% on the retry, and a dropped guess would ground itself."""
+    out = []
+    for t in trace:
+        r = t.get("result")
+        if isinstance(r, dict):
+            if "error" in r:
+                continue
+            r = {k: v for k, v in r.items() if k != "ignored_unstated_fields"}
+        out.append(r)
+    return out
+
+
+def _numbers(values: Any, out: set[float]) -> set[float]:
     if isinstance(values, dict):
         for v in values.values():
-            _known_figures(v, out)
+            _numbers(v, out)
     elif isinstance(values, list):
         for v in values:
-            _known_figures(v, out)
+            _numbers(v, out)
     elif isinstance(values, (int, float)) and not isinstance(values, bool):
         out.add(float(values))
-        if 0 <= values <= 1:
-            out.add(float(values) * 100)
     elif isinstance(values, str):
         out |= {float(x) for x in re.findall(r"\d+(?:\.\d+)?", values)}
     return out
@@ -64,36 +78,87 @@ def ungrounded_figures(draft: dict, trace: list[dict], history: list[dict]) -> l
     """Percentages / multipliers in a draft that no tool returned this turn and no
     earlier message stated. Earlier turns' tool results only survive as the
     assistant's own quoted text, so that text counts as a source too. A figure
-    matches a source number when it is that number rounded (59% for 0.587)."""
-    known: set[float] = set()
-    _known_figures([t["result"] for t in trace], known)
-    _known_figures([m.get("content", "") for m in history], known)
+    matches when it is a source number rounded: 59% for 0.587 or 58.7, 3.7x for
+    3.66, but not 3.3x for 3.7."""
+    raw: set[float] = set()
+    _numbers(_sources(trace), raw)
+    _numbers([m.get("content") or "" for m in history], raw)
+    pct = raw | {x * 100 for x in raw if 0 <= x <= 1}
     text = " ".join(v for v in draft.values() if isinstance(v, str))
-    return [m.group(0) for m in _FIGURE.finditer(text)
-            if not any(abs(float(m.group(1)) - k) <= 0.5 for k in known)]
+    bad = []
+    for m in _FIGURE.finditer(text):
+        f, is_pct = float(m.group(1)), "%" in m.group(2)
+        ok = any(abs(f - k) <= 0.5 for k in pct) if is_pct else any(abs(f - k) <= 0.05 for k in raw if k >= 1)
+        if not ok:
+            bad.append(m.group(0))
+    return bad
 
 
-def _words(text: str) -> set[str]:
-    return set(re.findall(r"[a-z0-9]+", (text or "").lower()))
+def _norm(text: str) -> str:
+    return " ".join(re.findall(r"[a-z0-9]+", (text or "").lower()))
 
 
-def _said(value: str, heard: set[str]) -> bool:
-    """Every word of an enum value was said, allowing inflection ("bank" for
-    "Banking", "custom-dev" for "Custom Dev") by a shared 4+ letter stem."""
-    def one(w: str) -> bool:
-        return w in heard or (len(w) >= 4 and any(len(h) >= 4 and (h.startswith(w[:5]) or w.startswith(h[:5]))
-                                                   for h in heard))
-    return all(one(w) for w in _words(value))
+def _heard(text: str) -> set[str]:
+    """Words the user said. One- and two-letter tokens only count as a standalone
+    capital ("an L deal", "XL"), so "I'm" or "it's" never says size M or S."""
+    words = {w for w in _norm(text).split() if len(w) > 2}
+    return words | {w.lower() for w in re.findall(r"(?<![\w'’])[A-Z]{1,2}(?![\w'’])", text or "")}
+
+
+def _word_said(w: str, heard: set[str]) -> bool:
+    """Exactly, or as an inflection of a 5+ letter word: "logistic" says
+    "Logistics", but "part" never says "Partner" nor "eventually" "Event"."""
+    if w in heard:
+        return True
+    for h in heard:
+        short, long_ = sorted((w, h), key=len)
+        if len(short) >= 5 and long_.startswith(short) and len(long_) - len(short) <= 3:
+            return True
+    return False
+
+
+def _said(value: str, heard: set[str], text: str, aliases: dict[str, list[str]]) -> bool:
+    if any(f" {_norm(a)} " in f" {text} " for a in aliases.get(value, [])):
+        return True
+    words = [w for w in _norm(value).split()]
+    return bool(words) and all(_word_said(w, heard) for w in words)
+
+
+def _returned(values: Any, key: str = "", out: dict | None = None) -> dict[str, set[str]]:
+    """Field -> the string values tools returned for it: {"personalization": "High"}
+    and driver pairs {"field": "complexity", "value": "High"} alike."""
+    out = {} if out is None else out
+    if isinstance(values, dict):
+        if isinstance(values.get("field"), str) and isinstance(values.get("value"), str):
+            out.setdefault(values["field"], set()).add(values["value"])
+        for k, v in values.items():
+            _returned(v, k, out)
+    elif isinstance(values, list):
+        for v in values:
+            _returned(v, key, out)
+    elif isinstance(values, str) and key:
+        out.setdefault(key, set()).add(values)
+    return out
 
 
 def unstated_args(args: dict, spec: dict, trace: list[dict], history: list[dict]) -> dict:
-    """The enum arguments whose value the user never said and no tool returned:
-    the model filled them in. Free-text arguments are not checked."""
-    heard = _words(" ".join(m.get("content", "") for m in history if m.get("role") == "user"))
-    heard |= _words(json.dumps([t["result"] for t in trace]))
+    """The enum arguments whose value the user never said and no tool returned
+    for that field: the model filled them in. A value a tool returned grounds only
+    its own field ("personalization": "High" says nothing about complexity).
+    Free-text arguments are not checked. A tool spec's `aliases`
+    ({value: [phrase, ...]}) lists other ways a user says a value."""
+    said = " ".join(m.get("content") or "" for m in history if m.get("role") == "user")
+    heard, text = _heard(said), _norm(said)
+    returned = _returned(_sources(trace))
     props = spec.get("parameters", {}).get("properties", {})
+    aliases = spec.get("aliases", {})
+
+    def from_tool(k: str, v: str) -> bool:
+        return any(v in vals for f, vals in returned.items() if f == k or f.endswith("_" + k))
+
     return {k: v for k, v in args.items()
-            if isinstance(v, str) and "enum" in props.get(k, {}) and not _said(v, heard)}
+            if isinstance(v, str) and "enum" in props.get(k, {})
+            and not (_said(v, heard, text, aliases) or from_tool(k, v))}
 
 
 def run_turn(history: list[dict], system: str, tools: list[dict],
@@ -107,7 +172,7 @@ def run_turn(history: list[dict], system: str, tools: list[dict],
     agent = get_agent()
     by_name = {t["name"]: t for t in tools}
     msgs: list[dict] = [{"role": "system", "content": system}]
-    msgs += [{"role": m["role"], "content": m.get("content", "")} for m in history]
+    msgs += [{"role": m["role"], "content": m.get("content") or ""} for m in history]
 
     oai_tools = openai_tools(tools, enabled)
     trace: list[dict] = []

@@ -37,6 +37,26 @@ _SEN = ["junior-heavy", "balanced", "senior-heavy"]
 _ROLE = ["CTO", "Head of Data", "COO", "CEO", "Procurement"]
 
 
+# Other ways a rep says an enum value, for agent_core's "did the rep say it?" check.
+# Everything else must be said as the value's own words (or an inflection).
+_ALIASES = {
+    "Banking": ["bank", "banks"], "Healthcare": ["health", "hospital", "hospitals"],
+    "Manufacturing": ["manufacturer", "manufacturers", "factory"], "Telecom": ["telco", "telcos", "operator"],
+    "Public": ["government", "municipality", "agency"],
+    "SMB": ["small business", "small company", "startup"],
+    "Mid-market": ["mid size", "midsize", "mid sized", "midsized", "medium sized", "medium size"],
+    "Analytics & ML": ["analytics", "machine learning"], "Custom Dev": ["custom development", "bespoke"],
+    "Referral": ["referred", "intro from", "introduced by"],
+    "New logo": ["new client", "new customer", "new account", "net new"],
+    "Existing client": ["existing customer", "current client", "current customer"],
+    "Sole-source": ["sole source", "single source", "no competition"],
+    "Competitive": ["competition", "tender", "rfp", "bake off"],
+    "junior-heavy": ["junior team"], "senior-heavy": ["senior team"],
+    "CTO": ["chief technology officer"], "CEO": ["chief executive"], "COO": ["chief operating officer"],
+    "Head of Data": ["data lead", "chief data officer", "cdo"],
+}
+
+
 def _enum(desc: str, values: list[str]) -> dict:
     return {"type": "string", "description": f"{desc}. Omit unless the rep said it.", "enum": values}
 
@@ -51,7 +71,7 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "win_odds",
         "aito": True,
-        "grounded_args": True,  # agent_core drops enum values the rep never said
+        "grounded_args": True, "aliases": _ALIASES,  # agent_core drops enum values the rep never said
         "op": "_predict",
         "summary": "Probability this opportunity is won, with the drivers behind it.",
         "parameters": {
@@ -73,7 +93,7 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "estimate_effort",
         "aito": True,
-        "grounded_args": True,  # agent_core drops enum values the rep never said
+        "grounded_args": True, "aliases": _ALIASES,  # agent_core drops enum values the rep never said
         "op": "_estimate",
         "summary": "Estimated effort in person-days from similar past engagements.",
         "parameters": {
@@ -91,7 +111,7 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "find_references",
         "aito": True,
-        "grounded_args": True,  # agent_core drops enum values the rep never said
+        "grounded_args": True, "aliases": _ALIASES,  # agent_core drops enum values the rep never said
         "op": "_query",
         "summary": "Past *won* engagements in this segment, to cite as references.",
         "parameters": {
@@ -106,7 +126,7 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "recommend_outreach",
         "aito": True,
-        "grounded_args": True,  # agent_core drops enum values the rep never said
+        "grounded_args": True, "aliases": _ALIASES,  # agent_core drops enum values the rep never said
         "op": "_recommend",
         "summary": "The channel + angle most likely to land a meeting, and the predicted meeting rate.",
         "parameters": {

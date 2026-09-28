@@ -170,7 +170,7 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
               ["Explain the flag", "_predict + $why", "Anomaly detection <em>with the evidence</em> behind it: the agent cites, doesn’t hallucinate."],
             ]],
             ["assist", "Assist", "Augment the model in the loop: narrow, ground, recommend.", [
-              ["Shortlist the haystack", "_predict", "300 tools · 1,800 SKUs · 255 GL codes → the few that apply. <em>~17× smaller prompts</em>."],
+              ["Shortlist the haystack", "_predict", "Tool catalogs, SKU lists, GL codes → the few that apply. <em>~17× smaller prompts</em> on our 240-tool catalog."],
               ["Aim the memory", "_match / _similarity", "Surface the past case that fits <em>this</em> context: targeted recall, not a fuzzy global hit."],
               ["Next best action", "_recommend", "The upsell, product, or resolution that maximizes your KPI, learned from history."],
             ]],
@@ -198,7 +198,7 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
           <div className="pc">
             <div className="pn">01 · shortlisting</div>
             <div className="ptt">Shortlisting is a non-trivial problem</div>
-            <div className="vs"><span className="tag">Standard · embedding-retrieval shortlist</span>As the catalog grows, the right tool slides out of the top 8: tickets handled correctly fell from <b>58 to 42 of 75</b> between 12 and 340 tools.</div>
+            <div className="vs"><span className="tag">Standard · embedding-retrieval shortlist</span>With a top-8 retrieval shortlist, tickets handled correctly fell from <b>58 to 42 of 75</b> as the catalog grew from 12 to 340 tools.</div>
             <div className="ai"><span className="tag">Aito · calibrated shortlist</span>Narrows 240 tools to 5 from history, so the same LLM reads <b>about 17× fewer tokens</b>: 3,829 → 225 input tokens (median of 20 live tickets).</div>
             <div className="bm">→ telco-tool-routing-bench: sweep on the v1 engine, tokens on v2 (results/shortlist_live.json)</div>
           </div>
@@ -206,7 +206,7 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
             <div className="pn">02 · latency</div>
             <div className="ptt">Agentic workflows get painfully slow</div>
             <div className="vs"><span className="tag">Standard · LLM agent</span>One clean call measured 3.6 s, so a 6-step chain projects to <b>about 22 s</b>. Under our shared rate limit, 78 back-to-back calls had a median of 20 s each.</div>
-            <div className="ai"><span className="tag">Aito · predict-first</span>Each prediction takes <b>about 0.15 s</b> (median over 800 tickets), so the whole resolution is back before the agent&apos;s first call returns.</div>
+            <div className="ai"><span className="tag">Aito · predict-first</span>The whole resolution takes <b>about 0.15 s</b> (median over 800 tickets, one or two predictions in sequence), so it is back before the agent&apos;s first call returns.</div>
             <div className="bm">→ resolution-scorecard · live console</div>
           </div>
           <div className="pc">
@@ -228,7 +228,7 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
             ["One query", "_predict · _match · _relate · _estimate · _recommend. Call it from any agent, any language."],
             ["Zero MLOps", "No model files, no retrain, no drift. A row added today is in the next prediction."],
             ["Calibrated & explainable", "Every answer has a $p and a $why that traces straight to your data. Auditable by design."],
-            ["Multi-tenant by a where-clause", "One instance, isolated per customer: 255 tenants, zero per-tenant models."],
+            ["Multi-tenant by a where-clause", "One instance, each customer isolated by a where-clause, with no per-tenant models."],
           ].map(([t, p], i) => {
             const parts = (t as string).split(" ");
             return <div className="pillar" key={i}><div className="pt">{parts.slice(0, -1).join(" ")} <span className="em">{parts.slice(-1)}</span></div><div className="pp">{p}</div></div>;

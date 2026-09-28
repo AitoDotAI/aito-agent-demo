@@ -3,7 +3,9 @@
 onClick, so every URL check passed).
 
 Rules, over every .tsx file: a <button> has an onClick (or is a form submit), an
-<a> has an href, and no other element carries a link/button class.
+<a> or <Link> has an href, and no other element carries a link/button class.
+Limits: a computed className={...} is not inspected, and a ">" inside a quoted
+attribute value ends the tag early; neither occurs in this tree today.
 """
 
 import re
@@ -16,7 +18,7 @@ LINKY_CLASS = re.compile(r"(?:^|-)(?:link|plink|btn|button)$")
 def _open_tags(src: str):
     """(tag, attrs) for each JSX opening tag. Scans to the closing `>` at brace
     depth 0, so arrow functions in `onClick={() => ...}` don't end the tag."""
-    for m in re.finditer(r"<([a-z][a-z0-9]*)\b", src):
+    for m in re.finditer(r"<([a-z][a-z0-9]*|Link)\b", src):
         depth, i = 0, m.end()
         while i < len(src):
             ch = src[i]
@@ -35,9 +37,9 @@ def dead_clickables(src: str) -> list[str]:
     for tag, attrs, line in _open_tags(src):
         if tag == "button" and "onClick" not in attrs and 'type="submit"' not in attrs:
             dead.append(f"{line}: <button> without onClick")
-        elif tag == "a" and "href" not in attrs:
-            dead.append(f"{line}: <a> without href")
-        elif tag not in ("a", "button"):
+        elif tag in ("a", "Link") and "href" not in attrs:
+            dead.append(f"{line}: <{tag}> without href")
+        elif tag not in ("a", "Link", "button"):
             cls = re.search(r'className="([^"]*)"', attrs)
             if cls and any(LINKY_CLASS.search(c) for c in cls.group(1).split()):
                 dead.append(f"{line}: <{tag} className=\"{cls.group(1)}\"> looks like a link but is not one")
@@ -49,6 +51,8 @@ def test_the_check_catches_what_the_review_found():
     assert dead_clickables("<button>Start free trial →</button>")
     assert not dead_clickables('<button onClick={() => go(x > 1)}>Go</button>')
     assert not dead_clickables('<a className="rc-plink" href="/api/schema">Schema</a>')
+    assert dead_clickables("<Link className=\"x\">Home</Link>")
+    assert not dead_clickables('<Link href="/sales">Sales</Link>')
 
 
 def test_nothing_in_the_frontend_is_a_dead_clickable():

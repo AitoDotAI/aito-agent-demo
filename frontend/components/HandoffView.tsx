@@ -15,7 +15,7 @@ const ACTION: Record<string, string> = {
 
 export function HandoffView({ data, loading }: { data: HandoffData | null; loading: boolean }) {
   const c = data?.counts;
-  const [picked, setPicked] = useState<Set<number>>(new Set());
+  const [picked, setPicked] = useState<Set<string>>(new Set());
   return (
     <div className="rc-body">
       <div className="rc-kpis">
@@ -51,9 +51,9 @@ export function HandoffView({ data, loading }: { data: HandoffData | null; loadi
                     <span style={{ fontSize: 11.5, color: "var(--rc-faint)" }}>Aito&apos;s tentative read</span>
                     <PredictionBadge value={h.intent} confidence={h.p} alternatives={h.alts} />
                     <div style={{ width: 150 }}><ConfidenceBar value={h.p} /></div>
-                    {picked.has(i)
+                    {picked.has(h.text)
                       ? <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--rc-faint)" }}>✓ Yours (demo: nothing was assigned)</span>
-                      : <button onClick={() => setPicked((s) => new Set(s).add(i))} style={{ marginLeft: "auto", fontWeight: 700, fontSize: 12.5, background: "var(--purple)", color: "#fff", border: "none", borderRadius: 7, padding: "7px 14px", cursor: "pointer" }}>Pick up →</button>}
+                      : <button onClick={() => setPicked((s) => new Set(s).add(h.text))} style={{ marginLeft: "auto", fontWeight: 700, fontSize: 12.5, background: "var(--purple)", color: "#fff", border: "none", borderRadius: 7, padding: "7px 14px", cursor: "pointer" }}>Pick up →</button>}
                   </div>
                 </div>
               );
