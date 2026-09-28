@@ -872,20 +872,24 @@ _NEIGHBOURHOOD_SELECT = [
 def _customer_neighbourhood(cid: str) -> dict | None:
     """Retrieval and provenance only. On this dataset none of these facts moves churn
     (docs/verification/company-graph.md), so never present them as drivers."""
-    hits = aito.query("customers", where={"customer_id": cid},
-                      select=_NEIGHBOURHOOD_SELECT, limit=1).get("hits") or []
+    try:  # an optional add-on: without it the spotlight still shows profile + domains
+        hits = aito.query("customers", where={"customer_id": cid},
+                          select=_NEIGHBOURHOOD_SELECT, limit=1).get("hits") or []
+    except AitoError as e:
+        print(f"customer neighbourhood unavailable for {cid}: {e}")
+        return None
     if not hits:
         return None
     h = hits[0]
     n = lambda k, v: sum(1 for x in h.get(k) or [] if x == v)  # noqa: E731
     return {
         "tickets": {"count": len(h.get("tickets") or []), "bad_csat": n("tickets", "bad"),
-                    "channels": h.get("ticket_channels", 0)},
-        "usage": {"products": h.get("distinct_products", 0), "active": n("usage_active", "yes")},
+                    "channels": h.get("ticket_channels") or 0},
+        "usage": {"products": h.get("distinct_products") or 0, "active": n("usage_active", "yes")},
         "deals": {"count": len(h.get("deals") or []), "won": n("deals", "yes")},
         "invoices": {"count": len(h.get("invoices") or []), "overdue": n("invoices", "overdue")},
         "feedback": {"count": len(h.get("feedback") or []), "detractor": n("feedback", "detractor"),
-                     "channels": h.get("feedback_channels", 0)},
+                     "channels": h.get("feedback_channels") or 0},
         "note": "Facts retrieved through the links, not predictions: on this data they do not move churn.",
     }
 

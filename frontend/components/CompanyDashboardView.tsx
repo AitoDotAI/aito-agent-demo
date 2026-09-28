@@ -116,7 +116,7 @@ const graphFacts = (g: Graph): [string, number, string][] => [
   ["products", g.usage.products, `${g.usage.active} active`],
   ["deals", g.deals.count, `${g.deals.won} won`],
   ["invoices", g.invoices.count, `${g.invoices.overdue} overdue`],
-  ["feedback", g.feedback.count, g.feedback.count ? `${g.feedback.detractor} detractor · ${plural(g.feedback.channels, "channel")}` : "none yet"],
+  ["feedback", g.feedback.count, g.feedback.count ? `${plural(g.feedback.detractor, "detractor")} · ${plural(g.feedback.channels, "channel")}` : "none yet"],
 ];
 type Sheet = { segment: Record<string, string> | string; kpis: Kpi[]; customer: Customer | null };
 

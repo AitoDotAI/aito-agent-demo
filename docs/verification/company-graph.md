@@ -36,13 +36,20 @@ next product for this customer" from the graph would be a ranked guess.
 
 ## Why: the fixture has no cross-table signal
 
-`scripts/seed_company.py` generates every child row as `c = _pick(rng, customers)` and draws
-its outcome from that customer's `size` and `plan` only (e.g. `build_feedback`,
-`build_tickets`). Churn is drawn in `build_customers` from the customer's own attributes
-(plan, health, onboarding, tenure, nps_band, csm_motion by size) before any child row
-exists. Nothing links a ticket's CSAT, an overdue invoice or inactive usage to that
-customer's churn, so the engine correctly finds no lift. Regenerating the data to plant
-one would change every published /company number, so it is out of scope.
+`scripts/seed_company.py` draws churn first, in `build_customers`, from the customer's
+own attributes (plan, health, onboarding, tenure, nps_band, csm_motion by size). The child
+tables come after, and none of their outcomes reads churn:
+
+- tickets, deals, invoices and feedback pick their customer at random (`c = _pick(rng, customers)`);
+  usage loops over every customer, 1 to 4 products each;
+- each outcome depends on the row's own attributes (ticket category, channel and first
+  response; deal source and nurture track; usage adoption and onboarding push; invoice
+  term; feedback theme) plus the customer's `size`, and for feedback and invoices also its `plan`.
+
+So a bad-CSAT ticket, an overdue invoice or inactive usage carries no information about
+that customer's churn beyond what its plan and size already say, and the engine correctly finds no lift.
+Regenerating the data to plant one would change every published /company number,
+so it is out of scope.
 
 ## Where the graph story does live
 
