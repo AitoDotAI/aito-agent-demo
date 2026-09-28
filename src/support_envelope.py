@@ -25,8 +25,16 @@ INCOMING = Path(__file__).resolve().parent / "data" / "support_incoming.json"
 
 #: What a ticket carries at intake, before anyone has worked on it.
 INTAKE = {"text", "sender_domain", "channel", "month", "customer", "product", "adoption_band", "repeat_30d"}
-#: Linked fields are allowed through these links (customer.plan, product.tier, ...).
-LINKS = ("customer.", "product.")
+#: The linked attributes a prediction may name, per link. An explicit list, like
+#: everything else here: `customer.churned` is an outcome recorded on the account
+#: and is not on it. (Aito can still see a linked row's columns when `customer` is
+#: an input; churn in this fixture is drawn from plan, health and the rest before
+#: any ticket, and never from a ticket's outcome, so it carries no target.)
+LINKED = {
+    "customer": {"industry", "size", "plan", "region", "tenure_band", "seats_band", "onboarding",
+                 "health", "nps_band", "csm_motion", "mrr_eur", "primary_product"},
+    "product": {"category", "name", "tier"},
+}
 
 #: target (table, field) -> the inputs it may use. Anything else refuses.
 ALLOWED: dict[tuple[str, str], set[str]] = {
@@ -53,10 +61,10 @@ class LeakError(ValueError):
 def _allowed(field: str, allowed: set[str]) -> bool:
     if field in allowed:
         return True
-    # a linked attribute is allowed when its link is: customer.plan via "customer"
-    head = field.split(".", 1)[0]
-    return (field.startswith(LINKS) and head in allowed) or \
-        (field.startswith("ticket.customer.") and "ticket.customer" in allowed)
+    # a linked attribute: its link must be allowed AND the attribute on LINKED's list
+    link, _, attr = field.removeprefix("ticket.").rpartition(".")
+    via = ("ticket." + link) if field.startswith("ticket.") else link
+    return via in allowed and attr in LINKED.get(link, set())
 
 
 def check_inputs(table: str, target: str, where: dict) -> None:
@@ -71,16 +79,26 @@ def check_inputs(table: str, target: str, where: dict) -> None:
             raise LeakError(f"{table}.{target} must be predicted with {f} = {v!r}")
 
 
+def _p(hit: dict) -> float | None:
+    p = hit.get("$p")
+    return round(float(p), 3) if isinstance(p, (int, float)) else None
+
+
+def _ranked(hits: list[dict], where: dict, t0: float) -> dict:
+    return {"value": hits[0].get("feature", hits[0].get("$value")) if hits else None,
+            "p": _p(hits[0]) if hits else None,
+            "alternatives": [{"value": h.get("feature", h.get("$value")), "p": _p(h)} for h in hits[1:]],
+            "inputs": sorted(where), "ms": round((time.perf_counter() - t0) * 1000)}
+
+
 def guarded(aito: AitoClient, table: str, where: dict, target: str, limit: int = 3) -> dict:
     """_predict through the leak guard; returns the top value, its $p, the runners-up and the latency."""
+    if any(v is None for v in where.values()):
+        raise LeakError(f"{table}.{target}: an input is missing ({sorted(k for k, v in where.items() if v is None)})")
     check_inputs(table, target, where)
     t0 = time.perf_counter()
-    r = aito.predict(table, where, target, limit=limit, select=["$p", "feature"])
-    hits = r.get("hits") or []
-    return {"value": hits[0].get("feature") if hits else None,
-            "p": round(float(hits[0]["$p"]), 3) if hits else None,
-            "alternatives": [{"value": h.get("feature"), "p": round(float(h["$p"]), 3)} for h in hits[1:]],
-            "inputs": sorted(where), "ms": round((time.perf_counter() - t0) * 1000)}
+    return _ranked(aito.predict(table, where, target, limit=limit, select=["$p", "feature"]).get("hits") or [],
+                   where, t0)
 
 
 def guarded_recommend(aito: AitoClient, table: str, where: dict, field: str, goal: dict, limit: int = 4) -> dict:
@@ -89,11 +107,7 @@ def guarded_recommend(aito: AitoClient, table: str, where: dict, field: str, goa
     (target,) = goal
     check_inputs(table, target, {**where, field: None})
     t0 = time.perf_counter()
-    hits = aito.recommend(table, where, field, goal, limit=limit).get("hits") or []
-    return {"value": hits[0].get("feature") if hits else None,
-            "p": round(float(hits[0]["$p"]), 3) if hits else None,
-            "alternatives": [{"value": h.get("feature"), "p": round(float(h["$p"]), 3)} for h in hits[1:]],
-            "inputs": sorted(where), "ms": round((time.perf_counter() - t0) * 1000)}
+    return _ranked(aito.recommend(table, where, field, goal, limit=limit).get("hits") or [], where, t0)
 
 
 def load_incoming(path: Path = INCOMING) -> dict:
@@ -102,12 +116,15 @@ def load_incoming(path: Path = INCOMING) -> dict:
     for s in held["steps"]:
         steps.setdefault(s["ticket"], []).append(s)
     return {"tickets": {t["ticket_id"]: t for t in held["tickets"]},
-            "order": [t["ticket_id"] for t in held["tickets"]],
+            "order": [t["ticket_id"] for t in sorted(held["tickets"], key=lambda t: (t["created_at"], t["ticket_id"]))],
             "steps": {k: sorted(v, key=lambda s: s["step_no"]) for k, v in steps.items()}}
 
 
 #: $p at or above this is served from history; the demo's existing gates (app.py)
 AUTO, ASSIST = 0.85, 0.65
+#: a sender domain shared by many people identifies no account
+FREEMAIL = {"freemail.example"}
+DETOURS = {"ask_for_details", "wait_for_customer"}
 
 
 def _gate(p: float | None) -> str:
@@ -125,23 +142,30 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict]) -> dict:
                       "truth": truth, "correct": (result.get("value") == truth) if truth is not None else None,
                       "note": note})
 
-    who = guarded(aito, "support_tickets", {"text": ticket["text"], "sender_domain": ticket["sender_domain"]}, "customer")
-    add("customer", "Who is this?", "_predict customer", who, ticket["customer"],
-        note="the agent confirms the account before going on, so later steps use the confirmed one")
-    known = {**intake, "customer": ticket["customer"], "product": ticket["product"]}  # the account, once confirmed
+    confirmed = "later steps use the account and product as confirmed on the ticket"
+    if ticket["sender_domain"] in FREEMAIL:  # no account to infer: don't guess, ask
+        add("customer", "Who is this?", "_predict customer",
+            {"value": None, "p": None, "alternatives": [], "inputs": [], "ms": 0, "skipped": True},
+            note=f"a freemail address names no account, so the agent asks the customer; {confirmed}")
+    else:
+        who = guarded(aito, "support_tickets", {"text": ticket["text"], "sender_domain": ticket["sender_domain"]},
+                      "customer")
+        add("customer", "Who is this?", "_predict customer", who, ticket["customer"], note=confirmed)
+    known = {**intake, "customer": ticket["customer"], "product": ticket["product"]}
 
     cat = guarded(aito, "support_tickets", known, "category")
     add("category", "What is it about?", "_predict category", cat, ticket["category"])
-    pri = guarded(aito, "support_tickets", {**known, "category": cat["value"]}, "priority")
+    triaged = {**known, **({"category": cat["value"]} if cat["value"] is not None else {})}
+    pri = guarded(aito, "support_tickets", triaged, "priority")
     add("priority", "How urgent?", "_predict priority", pri, ticket["priority"])
 
-    res = guarded(aito, "support_tickets", {**known, "category": cat["value"]}, "resolution")
+    res = guarded(aito, "support_tickets", triaged, "resolution")
     gate = _gate(res["p"])
-    add("resolution", "Decide from history, or ask the LLM?", "_predict resolution  ·  $p gate", res,
+    add("resolution", "Does history already decide it?", "_predict resolution  ·  $p gate", res,
         ticket["resolution"])
     steps[-1]["gate"] = gate
 
-    kb = guarded(aito, "support_tickets", {**known, "category": cat["value"]}, "kb_article")
+    kb = guarded(aito, "support_tickets", triaged, "kb_article")
     add("kb", "Which article helps?", "_predict kb_article", kb, ticket["kb_article"])
 
     t0 = time.perf_counter()
@@ -152,11 +176,14 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict]) -> dict:
          "cases": similar})
 
     # the first step of the fix, and what follows it, from the step log
-    first = guarded(aito, "support_steps", {"previous_action": "start", "category": cat["value"]}, "action")
-    add("first_step", "Where to start?", "_predict next action", first,
-        true_steps[0]["action"] if true_steps else None)
+    first = guarded(aito, "support_steps", {"previous_action": "start",
+                                            **({"category": cat["value"]} if cat["value"] is not None else {})}, "action")
+    # scored against the fix's first real action: asking for details or waiting is a detour, not a plan
+    real = [s["action"] for s in true_steps if s["action"] not in DETOURS]
+    add("first_step", "Where to start?", "_predict next action", first, real[0] if real else None)
 
-    risk = guarded(aito, "support_tickets", {**known, "category": cat["value"], "priority": pri["value"]}, "nps_after")
+    risk = guarded(aito, "support_tickets",
+                   {**triaged, **({"priority": pri["value"]} if pri["value"] is not None else {})}, "nps_after")
     add("risk", "Will this customer turn detractor?", "_predict nps_after", risk, ticket["nps_after"],
         note="recorded after the ticket; compared, never used as an input")
     rec = guarded_recommend(aito, "support_tickets", {"customer": ticket["customer"], "repeat_30d": ticket["repeat_30d"]},
@@ -171,4 +198,4 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict]) -> dict:
 
     return {"ticket": {k: ticket[k] for k in ("ticket_id", "created_at", "text", "sender_domain", "channel")},
             "steps": steps, "gate": gate,
-            "aito_calls": len(steps), "aito_ms": sum(s["ms"] for s in steps)}
+            "aito_calls": sum(1 for s in steps if not s.get("skipped")), "aito_ms": sum(s["ms"] for s in steps)}

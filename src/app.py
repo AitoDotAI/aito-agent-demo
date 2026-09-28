@@ -1065,9 +1065,10 @@ def _support_loaded() -> bool:
         try:
             tables = _support_client().get_schema().get("schema", {})
             _support_state["loaded"] = {"support_tickets", "support_steps", "customers"} <= set(tables)
-        except AitoError:
+            _support_state["checked"] = time.time()
+        except AitoError:  # a blip: say "not loaded" now, but look again in 10 s, not 60
             _support_state["loaded"] = False
-        _support_state["checked"] = time.time()
+            _support_state["checked"] = time.time() - 50
     return _support_state["loaded"]
 
 

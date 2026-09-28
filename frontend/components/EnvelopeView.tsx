@@ -14,7 +14,7 @@ type Case = { ticket_id: string; text: string; resolution: string; nps_after: st
 type Step = {
   key: string; title: string; op: string; value: string | null; p: number | null; alternatives: Alt[];
   inputs: string[]; ms: number; truth: string | null; correct: boolean | null; note: string | null;
-  gate?: "auto" | "assist" | "human"; cases?: Case[];
+  gate?: "auto" | "assist" | "human"; cases?: Case[]; skipped?: boolean;
 };
 type Envelope = {
   ticket: { ticket_id: string; created_at: string; text: string; sender_domain: string; channel: string };
@@ -25,20 +25,21 @@ type Incoming = { ticket_id: string; created_at: string; text: string; channel: 
 const pct = (p: number | null) => (p == null ? "" : `${Math.round(p * 100)}%`);
 const label = (v: string | null) => (v == null ? "none" : v.replace(/_/g, " "));
 const GATE = {
-  auto: "served from history: no LLM call",
-  assist: "the LLM decides, from Aito's shortlist",
-  human: "a person decides, with Aito's tentative read",
+  auto: "confident: answer from history",
+  assist: "less sure: hand the shortlist to the LLM",
+  human: "unsure: a person decides, with this read",
 };
 
 export function EnvelopeView() {
   const [queue, setQueue] = useState<Incoming[]>([]);
+  const [queued, setQueued] = useState(0);
   const [sel, setSel] = useState<string | null>(null);
   const [env, setEnv] = useState<Envelope | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     apiFetch<{ tickets: Incoming[] }>("/api/support/incoming")
-      .then((r) => { setQueue(r.tickets.slice(0, 12)); setSel(r.tickets[0]?.ticket_id ?? null); })
+      .then((r) => { setQueue(r.tickets.slice(0, 12)); setQueued(r.tickets.length); setSel(r.tickets[0]?.ticket_id ?? null); })
       .catch((e) => setErr(String(e?.message ?? e)));
   }, []);
 
@@ -59,15 +60,15 @@ export function EnvelopeView() {
     <div className="rc-body ev">
       <div className="rc-h">One ticket, inside Aito&apos;s predictive envelope</div>
       <div className="rc-sub">
-        The agent (an LLM) reads and writes. Around it, every step a support agent takes is grounded by one Aito call:
-        who wrote, what it&apos;s about, how urgent, whether history already knows the answer, what to try first, and
-        how to keep the customer. These tickets are held out: Aito has never seen them, and each step is checked
-        against what really happened.
+        The Aito side of a support agent: every step it takes, grounded by one Aito call. Who wrote, what it&apos;s
+        about, how urgent, whether history already decides the answer, what to try first, and how to keep the
+        customer. These tickets are held out: Aito has never seen them, and each step is checked against what really
+        happened.
       </div>
 
       <div className="ev-grid">
         <div className="ev-queue">
-          <div className="ev-ql">Incoming queue</div>
+          <div className="ev-ql">Incoming queue · newest {queue.length} of {queued}</div>
           {queue.map((t) => (
             <button key={t.ticket_id} className={t.ticket_id === sel ? "on" : ""} onClick={() => setSel(t.ticket_id)}>
               <span className="ev-qt">{t.text}</span>
@@ -87,7 +88,7 @@ export function EnvelopeView() {
               </div>
               <div className="ev-sum">
                 <span><b>{env.aito_calls}</b> Aito calls</span>
-                <span><b>{env.aito_ms.toLocaleString()} ms</b> in total</span>
+                <span><b>{env.aito_ms.toLocaleString()} ms</b> in total, seen from this server</span>
                 <span className={`ev-gate ${env.gate}`}>{GATE[env.gate]}</span>
                 <span><b>{right} of {scored.length}</b> steps match what happened</span>
               </div>
@@ -97,10 +98,13 @@ export function EnvelopeView() {
                     <div className="ev-sh"><span className="ev-n">{i + 1}</span>{s.title}<span className="ev-op">{s.op}</span></div>
                     {s.cases ? (
                       <div className="ev-cases">
+                        {s.cases.length === 0 && <div>no similar tickets found</div>}
                         {s.cases.map((c) => (
                           <div key={c.ticket_id}><span>{c.text}</span><i>{label(c.resolution)} · {c.nps_after}</i></div>
                         ))}
                       </div>
+                    ) : s.skipped ? (
+                      <div className="ev-val"><b>not guessed</b></div>
                     ) : (
                       <>
                         <div className="ev-val"><b>{label(s.value)}</b> <span className="ev-p">{pct(s.p)}</span></div>
@@ -114,7 +118,7 @@ export function EnvelopeView() {
                       {s.correct === true && <span className="ok">✓ matches: {label(s.truth)}</span>}
                       {s.correct === false && <span className="no">✗ it was {label(s.truth)}</span>}
                       {s.gate && <span className={`ev-gate ${s.gate}`}>{GATE[s.gate]}</span>}
-                      <span className="ev-ms">{s.ms} ms · from {s.inputs.join(", ")}</span>
+                      {!s.skipped && <span className="ev-ms">{s.ms} ms · from {s.inputs.join(", ")}</span>}
                     </div>
                     {s.note && <div className="ev-note-s">{s.note}</div>}
                   </div>
@@ -123,7 +127,7 @@ export function EnvelopeView() {
               <div className="rc-foot">
                 Synthetic data (the support fixture), labelled as such; its planted effects are measured in
                 scripts/support_fixture. Each prediction may only use the inputs listed for its target, so nothing
-                recorded after the ticket can leak into it. The LLM-only comparison is added from recorded runs.
+                recorded after the ticket can leak into it.
               </div>
             </>
           )}

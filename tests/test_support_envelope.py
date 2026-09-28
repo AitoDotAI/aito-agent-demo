@@ -51,6 +51,11 @@ def test_allowed_inputs_pass_including_linked_attributes():
                                              "ticket.customer.size": "SMB"})
     with pytest.raises(LeakError):  # a link that isn't on the list stays closed
         check_inputs(T, "category", {"kb_article.title": "x"})
+    for f in ("customer.churned", "customer.name_of_anything"):  # nor does an attribute that isn't
+        with pytest.raises(LeakError):
+            check_inputs(T, "category", {"text": "x", f: "yes"})
+    with pytest.raises(LeakError):
+        check_inputs("support_steps", "action", {"previous_action": "start", "ticket.customer.churned": "yes"})
     with pytest.raises(LeakError):  # a target nobody listed
         check_inputs(T, "channel", {"text": "x"})
 
@@ -82,21 +87,51 @@ class _Fake:
         return {"schema": {"support_tickets": {}, "support_steps": {}, "customers": {}}}
 
 
+# Never an input to any prediction in the envelope. (`ticket.issue` is allowed for a
+# step once the issue is diagnosed, but the envelope's first step doesn't use it.)
 TRUTH_ONLY = {"resolution", "kb_article", "issue", "nps_after", "csat_band", "first_response",
-              "recovery", "upsell_accepted", "ticket.resolution", "ticket.kb_article"}
+              "recovery", "upsell_accepted", "ticket.resolution", "ticket.kb_article", "ticket.issue",
+              "customer.churned"}
 
 
 def test_a_full_run_never_feeds_a_prediction_a_truth_only_field():
     q = env.load_incoming()
-    for tid in q["order"][:25]:
-        fake = _Fake()
-        out = env.envelope(fake, q["tickets"][tid], q["steps"].get(tid, []))
-        for kind, table, where, _ in fake.calls:
-            if kind != "query":
-                assert not TRUTH_ONLY & set(where), (tid, kind, where)
-        assert [s["key"] for s in out["steps"]] == [
+    for tid in q["order"]:
+        t, fake = q["tickets"][tid], _Fake()
+        out = env.envelope(fake, t, q["steps"].get(tid, []))
+        for kind, table, where, target in fake.calls:
+            if kind == "query":
+                continue
+            assert not TRUTH_ONLY & set(where), (tid, kind, where)
+            # triage feeds the PREDICTED category and priority on ("v1" from the fake), never the truth
+            for f in ("category", "priority"):
+                if f in where and target != f:
+                    assert where[f] == "v1", (tid, target, f, where[f])
+        steps = {s["key"]: s for s in out["steps"]}
+        assert list(steps) == [
             "customer", "category", "priority", "resolution", "kb", "similar", "first_step", "risk", "recovery", "upsell"]
+        # truth is attached to its own step
+        assert steps["category"]["truth"] == t["category"] and steps["resolution"]["truth"] == t["resolution"]
+        assert steps["risk"]["truth"] == t["nps_after"] and steps["priority"]["truth"] == t["priority"]
         assert out["gate"] == "auto"  # the fake is 0.9 sure; AUTO is 0.85
+
+
+def test_a_freemail_ticket_is_not_guessed():
+    q = env.load_incoming()
+    tid = next(i for i in q["order"] if q["tickets"][i]["sender_domain"] in env.FREEMAIL)
+    fake = _Fake()
+    out = env.envelope(fake, q["tickets"][tid], q["steps"].get(tid, []))
+    assert not any(target == "customer" for _, _, _, target in fake.calls)
+    first = out["steps"][0]
+    assert first["skipped"] and first["correct"] is None and out["aito_calls"] == 9
+
+
+def test_the_first_step_is_scored_on_the_first_real_action_not_a_detour():
+    q = env.load_incoming()
+    tid = next(i for i in q["order"] if q["steps"].get(i) and q["steps"][i][0]["action"] in env.DETOURS)
+    out = env.envelope(_Fake(), q["tickets"][tid], q["steps"][tid])
+    truth = next(s for s in out["steps"] if s["key"] == "first_step")["truth"]
+    assert truth not in env.DETOURS and truth == next(s["action"] for s in q["steps"][tid] if s["action"] not in env.DETOURS)
 
 
 def test_routes_say_not_loaded_and_unknown(monkeypatch):
@@ -109,4 +144,11 @@ def test_routes_say_not_loaded_and_unknown(monkeypatch):
     monkeypatch.setitem(app_module._support_state, "loaded", True)
     monkeypatch.setattr(app_module, "_support_aito", _Fake())
     r = c.get("/api/support/envelope", params={"ticket_id": tid})
-    assert r.status_code == 200 and r.json()["aito_calls"] == 10
+    assert r.status_code == 200 and r.json()["aito_calls"] in (9, 10)
+    assert c.get("/api/support/status").json()["loaded"] is True
+
+    class _Down(_Fake):
+        def predict(self, *a, **k):
+            raise app_module.AitoError("503 overloaded")
+    monkeypatch.setattr(app_module, "_support_aito", _Down())
+    assert c.get("/api/support/envelope", params={"ticket_id": tid}).status_code == 502
