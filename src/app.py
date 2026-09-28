@@ -444,7 +444,8 @@ def opportunity(industry: str = "SaaS", client_size: str = "Mid-market", service
                 competitive: str = "Competitive", target_role: str = "Head of Data"):
     """One deal sheet from the firm's history: win-likelihood (+ drivers), an
     effort/cost estimate, reference projects to cite, and the outreach most likely
-    to land — gated for auto-send by its predicted meeting probability."""
+    to land, with its meeting rate against the baseline for the same target. The
+    outreach is always a draft for the rep; nothing here sends."""
     eng_where = {"client_industry": industry, "client_size": client_size, "service_line": service_line,
                  "deal_size_band": deal_size_band, "complexity": complexity, "team_seniority": team_seniority,
                  "lead_source": lead_source, "relationship": relationship, "competitive": competitive, "region": region}
@@ -471,6 +472,7 @@ def opportunity(industry: str = "SaaS", client_size: str = "Mid-market", service
                                         "channel": top_ch, "angle": top_ang, "personalization": "High",
                                         "subject_style": "Name-drop", "send_day": "Tue"}, "meeting", limit=2)
         meeting_p = next((float(h["$p"]) for h in (mr.get("hits") or []) if h.get("feature") == "yes"), 0.0)
+        baseline_p = _meeting_p(out_where)
     except AitoError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
@@ -491,7 +493,7 @@ def opportunity(industry: str = "SaaS", client_size: str = "Mid-market", service
             "angles": [{"v": h["feature"], "p": float(h["$p"])} for h in ang],
             "recommended": {"channel": top_ch, "angle": top_ang, "personalization": "High"},
             "meeting_p": meeting_p,
-            "auto_send": meeting_p >= 0.32,
+            "baseline_meeting_p": baseline_p,
         },
         "business_case": {"value_eur": value, "day_rate": _DAY_RATE, "cost_eur": cost,
                           "margin_eur": margin, "margin_pct": round(margin / value * 100) if value else 0},
@@ -578,8 +580,7 @@ def _tool_recommend_outreach(args: dict) -> dict:
     return {"channel": top_ch, "angle": top_ang, "personalization": "High",
             "meeting_probability": round(rec_p, 2),
             "baseline_meeting_probability": round(base_p, 2),
-            "outcome_lift": lift,  # e.g. 3.7 → 3.7× more meetings than the unoptimised default
-            "clears_auto_send_gate": rec_p >= 0.32}
+            "outcome_lift": lift}  # rec / baseline: how many times more meetings than not optimising
 
 
 def _tool_propose_send_email(args: dict) -> dict:

@@ -38,7 +38,7 @@ _ROLE = ["CTO", "Head of Data", "COO", "CEO", "Procurement"]
 
 
 def _enum(desc: str, values: list[str]) -> dict:
-    return {"type": "string", "description": desc, "enum": values}
+    return {"type": "string", "description": f"{desc}. Omit unless the rep said it.", "enum": values}
 
 
 # ── the toolbox ────────────────────────────────────────────────────────────
@@ -51,6 +51,7 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "win_odds",
         "aito": True,
+        "grounded_args": True,  # agent_core drops enum values the rep never said
         "op": "_predict",
         "summary": "Probability this opportunity is won, with the drivers behind it.",
         "parameters": {
@@ -72,6 +73,7 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "estimate_effort",
         "aito": True,
+        "grounded_args": True,  # agent_core drops enum values the rep never said
         "op": "_estimate",
         "summary": "Estimated effort in person-days from similar past engagements.",
         "parameters": {
@@ -89,6 +91,7 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "find_references",
         "aito": True,
+        "grounded_args": True,  # agent_core drops enum values the rep never said
         "op": "_query",
         "summary": "Past *won* engagements in this segment, to cite as references.",
         "parameters": {
@@ -103,6 +106,7 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "recommend_outreach",
         "aito": True,
+        "grounded_args": True,  # agent_core drops enum values the rep never said
         "op": "_recommend",
         "summary": "The channel + angle most likely to land a meeting, and the predicted meeting rate.",
         "parameters": {
@@ -117,6 +121,7 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "propose_send_email",
         "aito": False,
+        "grounded_figures": True,  # agent_core rejects a % or multiplier no tool returned
         "op": "action",
         "summary": "Queue an outreach email as a DRAFT for the rep to approve — never sends on its own.",
         "parameters": {
@@ -147,16 +152,25 @@ _SYSTEM = (
     "You help a sales rep decide whether to pursue an opportunity and how to approach it, in a short chat.\n\n"
     "You have tools that read Northlight's OWN history and return real, calibrated numbers: win odds (with the "
     "drivers behind them), an effort estimate, reference projects, and the outreach most likely to land. "
-    "Whenever a claim depends on such a number, CALL THE TOOL rather than guessing — map what you know from the "
-    "conversation into the tool's fields (leave a field out if the rep hasn't said). You may call several tools.\n\n"
+    "Whenever a claim depends on such a number, CALL THE TOOL rather than guessing. You may call several tools.\n\n"
+    "Pass a tool ONLY the fields the rep actually stated (or that an earlier tool returned). Never fill a field "
+    "with a plausible guess to make a call work: leave it out, and the tool answers from the fields it has. For "
+    "example, 'existing Banking client wants an integration project' gives industry=Banking, "
+    "relationship=Existing client and service_line=Integration; it says nothing about competitive, client_size "
+    "or target_role, so leave those out. If a missing field would change the answer a lot, say which one and "
+    "ask the rep. If a tool result lists ignored_unstated_fields, those were your guesses and were not used: "
+    "do not present them as facts.\n\n"
     "If a tool you need is NOT in your toolbox, do not pretend: give your best rough estimate but clearly label it "
     "an unverified guess (e.g. 'rough guess, not from our data') and say which tool you'd want.\n\n"
-    "These tools don't just inform — they OPTIMISE the outcome. recommend_outreach picks the approach that books "
-    "the most meetings and returns the lift over the unoptimised baseline; when you recommend it, quote BOTH the "
-    "expected meeting rate and that lift (e.g. '~59% vs ~16% baseline — about 3.7x more meetings'). Likewise, frame "
-    "win odds + effort as a pursue/scope decision (chase winners, protect margin), not just a number.\n\n"
-    "Be concise and concrete. When you draft an outreach email, call propose_send_email — it only queues a DRAFT "
-    "for the rep to approve; never claim an email was actually sent. Quote the figures the tools returned."
+    "recommend_outreach picks the approach that books the most meetings and returns its meeting rate, the "
+    "baseline rate for the same target, and the lift between them. When you recommend it, quote all three exactly "
+    "as the tool returned them. Frame win odds and effort as a pursue/scope decision (chase winners, protect "
+    "margin), not just a number.\n\n"
+    "When you draft an outreach email, call propose_send_email. It only queues a DRAFT for the rep to approve; "
+    "never claim an email was sent. The email is for the prospect, so keep Northlight's internal numbers (win "
+    "odds, meeting rates, lift) out of it; they are for the rep. Any figure you do put in it must be one a tool "
+    "returned in this conversation.\n\n"
+    "Be concise and concrete. Use plain punctuation: commas, colons and full stops, no em-dashes."
 )
 
 

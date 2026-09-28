@@ -15,7 +15,7 @@ type Sheet = {
   win: { p: number; drivers: Driver[] };
   effort_days: number;
   references: Ref[];
-  outreach: { channels: Ranked[]; angles: Ranked[]; recommended: { channel: string; angle: string; personalization: string }; meeting_p: number; auto_send: boolean };
+  outreach: { channels: Ranked[]; angles: Ranked[]; recommended: { channel: string; angle: string; personalization: string }; meeting_p: number; baseline_meeting_p: number };
   business_case: { value_eur: number; day_rate: number; cost_eur: number; margin_eur: number; margin_pct: number };
 };
 
@@ -127,7 +127,8 @@ export function SalesView({ onMeta }: { onMeta?: (m: SalesMeta) => void }) {
               </div>
               <div className="meet">
                 predicted meeting rate <b>{Math.round(sheet.outreach.meeting_p * 100)}%</b>
-                <span className={`gate ${sheet.outreach.auto_send ? "go" : "rev"}`}>{sheet.outreach.auto_send ? "⚡ clears auto-send gate" : "→ human review"}</span>
+                {sheet.outreach.baseline_meeting_p > 0 && <> vs <b>{Math.round(sheet.outreach.baseline_meeting_p * 100)}%</b> baseline</>}
+                <span className="gate rev">draft for rep review</span>
               </div>
               <div className="ranks">
                 <div className="rk"><div className="rkl">channels</div>{sheet.outreach.channels.map((c, i) => <div className="rkrow" key={i}><span>{c.v}</span><div className="rkbar"><i style={{ width: `${Math.min(100, c.p * 220)}%` }} /></div></div>)}</div>
