@@ -845,10 +845,53 @@ def _tool_customer_360(args: dict) -> dict:
     for tbl, sel in _360_SELECT.items():
         r = aito.query(tbl, where={"customer": cid}, select=sel, limit=4)
         domains[tbl] = {"count": r.get("total", 0), "examples": r.get("hits") or []}
-    return {"profile": {k: profile.get(k) for k in
-                        ("customer_id", "name", "industry", "size", "plan", "health", "nps_band",
-                         "csm_motion", "mrr_eur", "churned")},
-            "domains": domains}
+    out = {"profile": {k: profile.get(k) for k in
+                       ("customer_id", "name", "industry", "size", "plan", "health", "nps_band",
+                        "csm_motion", "mrr_eur", "churned")},
+           "domains": domains}
+    if aito._ver == "v2":
+        out["graph"] = _customer_neighbourhood(cid)
+    return out
+
+
+#: The customer's whole linked neighbourhood in ONE v2 _query: `$refs.<table>.customer.<field>`
+#: walks each link backwards (every ticket, deal, ... pointing at this customer) and
+#: `$distinctLength` counts independent sources (4 ticket channels, not 6 tickets).
+_NEIGHBOURHOOD_SELECT = [
+    {"tickets": "$refs.tickets.customer.csat_band"},
+    {"ticket_channels": {"$distinctLength": "$refs.tickets.customer.channel"}},
+    {"usage_active": "$refs.usage.customer.active"},
+    {"distinct_products": {"$distinctLength": "$refs.usage.customer.product"}},
+    {"deals": "$refs.deals.customer.converted"},
+    {"invoices": "$refs.invoices.customer.status"},
+    {"feedback": "$refs.feedback.customer.score_band"},
+    {"feedback_channels": {"$distinctLength": "$refs.feedback.customer.channel"}},
+]
+
+
+def _customer_neighbourhood(cid: str) -> dict | None:
+    """Retrieval and provenance only. On this dataset none of these facts moves churn
+    (docs/verification/company-graph.md), so never present them as drivers."""
+    try:  # an optional add-on: without it the spotlight still shows profile + domains
+        hits = aito.query("customers", where={"customer_id": cid},
+                          select=_NEIGHBOURHOOD_SELECT, limit=1).get("hits") or []
+    except AitoError as e:
+        print(f"customer neighbourhood unavailable for {cid}: {e}")
+        return None
+    if not hits:
+        return None
+    h = hits[0]
+    n = lambda k, v: sum(1 for x in h.get(k) or [] if x == v)  # noqa: E731
+    return {
+        "tickets": {"count": len(h.get("tickets") or []), "bad_csat": n("tickets", "bad"),
+                    "channels": h.get("ticket_channels") or 0},
+        "usage": {"products": h.get("distinct_products") or 0, "active": n("usage_active", "yes")},
+        "deals": {"count": len(h.get("deals") or []), "won": n("deals", "yes")},
+        "invoices": {"count": len(h.get("invoices") or []), "overdue": n("invoices", "overdue")},
+        "feedback": {"count": len(h.get("feedback") or []), "detractor": n("feedback", "detractor"),
+                     "channels": h.get("feedback_channels") or 0},
+        "note": "Facts retrieved through the links, not predictions: on this data they do not move churn.",
+    }
 
 
 def _tool_find_examples(args: dict) -> dict:

@@ -98,7 +98,26 @@ function LeverRow({ l, lever, current, good, top }: { l: Lever; lever: string; c
 type Customer = {
   profile: Record<string, unknown>;
   domains: Record<string, { count: number; examples: Record<string, unknown>[] }>;
+  graph?: Graph | null; // v2 only: the whole linked neighbourhood in one $refs query
 };
+type Graph = {
+  tickets: { count: number; bad_csat: number; channels: number };
+  usage: { products: number; active: number };
+  deals: { count: number; won: number };
+  invoices: { count: number; overdue: number };
+  feedback: { count: number; detractor: number; channels: number };
+  note: string;
+};
+const plural = (n: number, one: string, many = one + "s") => `${n} ${n === 1 ? one : many}`;
+// What each linked domain says about THIS customer: retrieved facts, never drivers
+// (none of them moves churn on this data, docs/verification/company-graph.md).
+const graphFacts = (g: Graph): [string, number, string][] => [
+  ["tickets", g.tickets.count, `${g.tickets.bad_csat} bad CSAT · ${plural(g.tickets.channels, "channel")}`],
+  ["products", g.usage.products, `${g.usage.active} active`],
+  ["deals", g.deals.count, `${g.deals.won} won`],
+  ["invoices", g.invoices.count, `${g.invoices.overdue} overdue`],
+  ["feedback", g.feedback.count, g.feedback.count ? `${plural(g.feedback.detractor, "detractor")} · ${plural(g.feedback.channels, "channel")}` : "none yet"],
+];
 type Sheet = { segment: Record<string, string> | string; kpis: Kpi[]; customer: Customer | null };
 
 const OPTS = {
@@ -199,7 +218,7 @@ export function CompanyDashboardView() {
 
             {c && (
               <>
-                <div className="sec">Spotlight: an at-risk customer, 360 <span className="op">_query · linked</span></div>
+                <div className="sec">Spotlight: an at-risk customer, 360 <span className="op">{c.graph ? "_query · $refs" : "_query · linked"}</span></div>
                 <div className="spot">
                   <div className="sp-head">
                     <div className="sp-name">{String(prof.name)} <span className="sp-id">{String(prof.customer_id)}</span></div>
@@ -213,11 +232,19 @@ export function CompanyDashboardView() {
                     </div>
                   </div>
                   <div className="sp-domains">
-                    {Object.entries(c.domains).map(([d, v]) => (
-                      <div className="dom" key={d}><div className="dn">{v.count}</div><div className="dl">{d}</div></div>
-                    ))}
+                    {c.graph
+                      ? graphFacts(c.graph).map(([d, n, sub]) => (
+                          <div className="dom" key={d}><div className="dn">{n}</div><div className="dl">{d}</div><div className="ds">{sub}</div></div>
+                        ))
+                      : Object.entries(c.domains).map(([d, v]) => (
+                          <div className="dom" key={d}><div className="dn">{v.count}</div><div className="dl">{d}</div></div>
+                        ))}
                   </div>
-                  <div className="sp-foot">One customer, every domain, joined live by the Aito link. The same numbers the Company AI agent reasons over.</div>
+                  <div className="sp-foot">
+                    {c.graph
+                      ? "One customer, every domain, fetched in a single query that follows the links back to this customer. Channels count independent sources, not repeats. These are retrieved facts, not a churn prediction. The Company AI agent reads the same ones."
+                      : "One customer, every domain, joined live by the Aito link. The same numbers the Company AI agent reasons over."}
+                  </div>
                 </div>
               </>
             )}
@@ -279,6 +306,7 @@ const CSS = `
 @media(max-width:620px){.cd .sp-domains{grid-template-columns:repeat(3,1fr)}}
 .cd .dom{background:#faf9f6;border:1px solid var(--line);border-radius:9px;padding:10px;text-align:center}
 .cd .dom .dn{font-size:22px;font-weight:900;letter-spacing:-.02em}.cd .dom .dl{font-size:11px;color:var(--faint);text-transform:capitalize;margin-top:2px}
+.cd .dom .ds{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink2);margin-top:5px;line-height:1.35}
 .cd .sp-foot{font-size:11.5px;color:var(--faint);margin-top:12px;line-height:1.5}
 .cd .foot{margin-top:22px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);line-height:1.7}
 .cd .foot b{color:var(--ink2)}

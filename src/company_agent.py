@@ -61,7 +61,7 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "customer_360",
         "aito": True, "op": "_query",
-        "summary": "One customer across every domain: profile, deals, tickets, product usage, invoices, feedback.",
+        "summary": "One customer across every domain: profile, deals, tickets, product usage, invoices, feedback. Its `graph` facts are retrieved context, not churn drivers.",
         "parameters": {"type": "object", "properties": {
             "customer_id": {"type": "string", "description": "e.g. ACC-123456 (get one from find_examples)"},
         }, "required": ["customer_id"], "additionalProperties": False},
