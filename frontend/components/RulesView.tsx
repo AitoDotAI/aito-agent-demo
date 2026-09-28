@@ -4,7 +4,7 @@
    Read-only. Candidate rules are mined live with _relate over a decision log;
    a reviewer approves or rejects them here, but nothing is saved: promotion
    (aito-accounting-demo ADR 0025's POST /api/rules/promote) needs a writable
-   engine, so no rule is in force and every decision goes through _predict. */
+   engine, so no rule is in force and each log's model path decides (PATH). */
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
@@ -23,21 +23,37 @@ type Mined = {
 type Active = { rules: Rule[]; writable: boolean; note: string };
 type Verdict = "approve" | "reject";
 
+// What decides each log's decisions while no rule is in force (see app.py /api/resolve,
+// /api/handoff and /api/route).
+const PATH: Record<string, React.ReactNode> = {
+  resolutions: <><code>_predict</code> reads the intent; its <code>$p</code> gate decides auto, assist or handoff</>,
+  tool_calls: <><code>_predict</code> shortlists the tools; the LLM picks one</>,
+};
+
 const pct = (x: number) => `${Math.round(x * 100)}%`;
-const cond = (c: Cond) => (c.op === "has" ? <>{c.field} has <b>&ldquo;{c.value}&rdquo;</b></> : <>{c.field} is <b>{c.value}</b></>);
+const cond = (c: Cond) =>
+  c.op === "has" ? <>{c.field} has <b>&ldquo;{c.value}&rdquo;</b></>
+  : c.op === "is" ? <>{c.field} is <b>{String(c.value)}</b></>
+  : <>{c.field} {c.op} <b>{String(c.value)}</b></>;
 const key = (r: Rule) => JSON.stringify(r.rule);
 
 export function RulesView() {
   const [log, setLog] = useState("resolutions");
   const [data, setData] = useState<Mined | null>(null);
-  const [active, setActive] = useState<Active | null>(null);
+  const [active, setActive] = useState<Active | null | "error">(null);
   const [err, setErr] = useState<string | null>(null);
   const [review, setReview] = useState<Record<string, Verdict>>({});
 
   useEffect(() => {
-    setData(null); setErr(null);
-    apiFetch<Mined>(`/api/governance/rules?log=${log}`).then(setData).catch((e) => setErr(String(e?.message ?? e)));
-    apiFetch<Active>(`/api/rules/active?log=${log}`).then(setActive).catch(() => {});
+    let live = true;  // a slow answer for the previous tab must not land under this one
+    setData(null); setErr(null); setActive(null);
+    apiFetch<Mined>(`/api/governance/rules?log=${log}`)
+      .then((d) => { if (live) setData(d); })
+      .catch((e) => { if (live) setErr(String(e?.message ?? e)); });
+    apiFetch<Active>(`/api/rules/active?log=${log}`)
+      .then((a) => { if (live) setActive(a); })
+      .catch(() => { if (live) setActive("error"); });
+    return () => { live = false; };
   }, [log]);
 
   // clicking the current verdict again clears it
@@ -47,6 +63,7 @@ export function RulesView() {
     return next;
   });
   const reviewed = data ? data.rules.filter((r) => review[key(r)]).length : 0;
+  const inForce = active === "error" ? "n/a" : active ? active.rules.length : "—";
 
   return (
     <div className="rc-body gv">
@@ -58,9 +75,9 @@ export function RulesView() {
         the log was written. Telling those apart is the review.
       </div>
 
-      <div className="gv-tabs">
-        {Object.entries(data?.logs ?? { resolutions: "ticket resolutions", tool_calls: "tool routing" }).map(([k, label]) => (
-          <button key={k} className={k === log ? "on" : ""} onClick={() => setLog(k)}>{label}</button>
+      <div className="gv-tabs" role="tablist" aria-label="Decision log">
+        {Object.entries({ resolutions: "ticket resolutions", tool_calls: "tool routing" }).map(([k, label]) => (
+          <button key={k} role="tab" aria-selected={k === log} className={k === log ? "on" : ""} onClick={() => setLog(k)}>{label}</button>
         ))}
       </div>
 
@@ -68,7 +85,7 @@ export function RulesView() {
         <div className="rc-kpi"><div className="kl">Decisions logged</div><div className="kv">{data ? data.decisions.toLocaleString() : "—"}</div><div className="ks">{data ? `${data.decision_values} distinct ${data.target} values` : "reading the log…"}</div></div>
         <div className="rc-kpi"><div className="kl">Candidate rules</div><div className="kv">{data ? data.rules.length : "—"}</div><div className="ks">{data ? `right ≥ ${pct(data.thresholds.min_precision)} of the time they fire` : "_relate per decision"}</div></div>
         <div className="rc-kpi"><div className="kl">Strong enough to promote</div><div className="kv t">{data ? data.strong : "—"}</div><div className="ks">{data ? `≥ ${pct(data.thresholds.strong_precision)} right, on ≥ ${data.thresholds.strong_match} decisions` : ""}</div></div>
-        <div className="rc-kpi"><div className="kl">Rules in force</div><div className="kv p">{active ? active.rules.length : "—"}</div><div className="ks">every decision goes through <code>_predict</code></div></div>
+        <div className="rc-kpi"><div className="kl">Rules in force</div><div className="kv p">{inForce}</div><div className="ks">no decision is made by a rule yet</div></div>
       </div>
 
       {err && <div className="gv-note warn">Could not mine the log: {err}</div>}
@@ -76,21 +93,21 @@ export function RulesView() {
 
       {data && (
         <>
-          {data.log === "resolutions" && (
+          {log === "resolutions" && (
             <div className="gv-note">
               This ticket log is synthetic and generated from templates, so many single words decide the intent perfectly,
               including ones no reviewer would accept (&ldquo;for&rdquo; → refund). A real log gives fewer, noisier rules.
             </div>
           )}
-          {data.log === "tool_calls" && data.strong === 0 && (
+          {log === "tool_calls" && data.strong === 0 && (
             <div className="gv-note">
-              No rule here is strong enough to promote: 300 logged calls, and the words overlap between tools. These
-              decisions need <code>_predict</code> with its <code>$p</code> gate, not a rule.
+              No rule here is strong enough to promote: {data.decisions.toLocaleString()} logged calls, and the words
+              overlap between tools. These decisions need a model, not a rule: {PATH.tool_calls}.
             </div>
           )}
           <div className="gv-table">
             <div className="gv-row gv-head">
-              <span>Rule</span><span>Fires on</span><span>Right</span><span>Explains</span><span>Review</span>
+              <span>Rule <i>(text: word stems)</i></span><span>Fires on</span><span>Right</span><span>Explains</span><span>Review</span>
             </div>
             {data.rules.map((r) => {
               const v = review[key(r)];
@@ -105,17 +122,17 @@ export function RulesView() {
                   <span className="gv-num"><em className="gv-ml">right </em>{pct(r.precision)} <i>{r.support.match}/{r.support.total}</i></span>
                   <span className="gv-num"><em className="gv-ml">explains </em>{pct(r.coverage)} <i>of {r.rule.target.value}</i></span>
                   <span className="gv-act">
-                    <button className={v === "approve" ? "on ok" : ""} onClick={() => mark(r, "approve")}>Approve</button>
-                    <button className={v === "reject" ? "on no" : ""} onClick={() => mark(r, "reject")}>Reject</button>
+                    <button aria-pressed={v === "approve"} className={v === "approve" ? "on ok" : ""} onClick={() => mark(r, "approve")}>Approve</button>
+                    <button aria-pressed={v === "reject"} className={v === "reject" ? "on no" : ""} onClick={() => mark(r, "reject")}>Reject</button>
                   </span>
                 </div>
               );
             })}
           </div>
           <div className="rc-foot">
-            {reviewed > 0 ? `${reviewed} reviewed in this tab. ` : ""}Your review is not saved (demo: read-only). Promoting an
-            approved rule would put it in force ahead of <code>_predict</code>. That needs a writable engine, so no rule
-            is in force here and every decision goes through <code>_predict</code> and its <code>$p</code> gate.
+            {reviewed > 0 ? `${reviewed} reviewed so far. ` : ""}Your review is not saved (demo: read-only). Promoting an
+            approved rule would put it in force ahead of the model. That needs a writable engine, so no rule is in force
+            here: {PATH[log]}.
           </div>
         </>
       )}
@@ -134,6 +151,7 @@ const CSS = `
 .gv .gv-table{background:var(--rc-card);border:1px solid var(--rc-line);border-radius:13px;overflow:hidden}
 .gv .gv-row{display:grid;grid-template-columns:minmax(0,2.6fr) .8fr 1.1fr 1.1fr 1.3fr;gap:10px;align-items:center;padding:10px 16px;border-bottom:1px solid #f1efe8;font-size:13px}
 .gv .gv-row:last-child{border-bottom:none}
+.gv .gv-head i{font-style:normal;text-transform:none;letter-spacing:0}
 .gv .gv-head{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--rc-faint);background:#faf9f6}
 .gv .gv-row.approve{background:#f1f9f4}.gv .gv-row.reject{background:#fdf3ef;color:var(--rc-faint)}
 .gv .gv-rule{line-height:1.45}.gv .gv-arrow{margin:0 7px;color:var(--rc-faint)}

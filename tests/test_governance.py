@@ -67,3 +67,38 @@ def test_routes_validate_the_log_and_say_nothing_is_in_force(monkeypatch):
     active = c.get("/api/rules/active").json()
     assert active["rules"] == [] and active["writable"] is False
     app_module._GOV_CACHE.clear()
+
+
+def test_shapes_a_reviewer_cannot_read_are_dropped_not_half_parsed():
+    ok = {"fs": {"fOnCondition": 5.0, "f": 5.0, "fCondition": 10.0}}
+    for related in ({"$and": [{"text": {"$has": "a"}}, {"customer": "x"}]},   # a conjunction
+                    {"customer": ["acme", "globex"]},                          # a list value
+                    {"amount": {"$gte": {"$numeric": 5}}},                     # a nested value
+                    {}):
+        assert gov.rule_from_hit({**ok, "related": related}, "intent", "refund") is None, related
+    assert gov.rule_from_hit({"related": {"customer": "acme"}}, "intent", "refund") is None  # no fs
+
+
+class _Capped(_FakeAito):
+    def query(self, table, where=None, select=None, order_by=None, limit=5):
+        return {"total": 25000, "hits": [{"intent": "refund"}] * 5}
+
+
+def test_the_decision_count_is_the_log_total_not_the_rows_read():
+    assert gov.mine_rules(_Capped(), "resolutions")["decisions"] == 25000
+
+
+class _Down(_FakeAito):
+    def relate(self, table, where, fields, limit=None):
+        raise app_module.AitoError("503 overloaded")
+
+
+def test_a_failed_mine_is_a_502_and_is_not_cached(monkeypatch):
+    app_module._GOV_CACHE.clear()
+    c = TestClient(app_module.app)
+    monkeypatch.setattr(app_module, "aito", _Down())
+    assert c.get("/api/governance/rules").status_code == 502
+    assert app_module._GOV_CACHE == {}
+    monkeypatch.setattr(app_module, "aito", _FakeAito())
+    assert c.get("/api/governance/rules").status_code == 200
+    app_module._GOV_CACHE.clear()

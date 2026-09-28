@@ -450,9 +450,9 @@ const PANEL: Record<Exclude<View, "resolve">, {
     pdb: "_relate · rule mining",
     stats: [["_relate", "per decision"], ["rules", "not rows"], ["0", "in force"]],
     chip: "govern · review",
-    desc: "Review the <b>rules</b> an agent's decisions follow, not the decisions one by one. <code>_relate</code> finds, for each decision, the conditions that go with it, with how often each is right when it fires. A reviewer approves the real ones and rejects the accidents. Promotion is read-only here: it mirrors the accounting demo's promote API.",
+    desc: "Review the <b>rules</b> an agent's decisions follow, not the decisions one by one. <code>_relate</code> finds, for each decision, the conditions that go with it, with how often each is right when it fires. A reviewer approves the real ones and rejects the accidents. Read-only here: the rules follow the shape of the accounting demo's promote API, and none is in force.",
     codeLabel: "Live query",
-    code: "POST /api/v2/_relate\n{\n  \"from\": \"resolutions\",\n  \"where\": { \"intent\": \"refund\" },\n  \"relate\": [\"text\", \"sender_domain\"]\n}\n// → text has \"refund\": 532 of 532",
+    code: "POST /api/v2/_relate\n{\n  \"from\": \"resolutions\",\n  \"where\": { \"intent\": \"refund\" },\n  \"relate\": [\"text\", \"sender_domain\",\n             \"customer\"]\n}\n// → text has \"refund\": 532 of 532",
   },
   sales: {
     pdb: "estimate · recommend · query",

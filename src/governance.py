@@ -1,9 +1,10 @@
 """Governance: the rules the agent's logged decisions follow (use case #15).
 
 Mines candidate rules from a decision log with `_relate`, one call per decision
-value, and ranks them for a reviewer. Each rule is in the shape of the
-accounting demo's promote API (aito-accounting-demo ADR 0025), so promoting one
-later is a write of this same object:
+value, and ranks them for a reviewer. Each rule follows the rule object of the
+accounting demo's promote API (aito-accounting-demo ADR 0025), with one
+addition: a condition carries its `op` ("has" for a word stem in a Text field,
+"is" for a value), because ADR 0025's conditions are equality only:
 
     {"rule": {"conditions": [{"field", "op", "value"}], "target": {"field", "value"}},
      "support": {"match", "total"}, "precision", "coverage", "strength"}
@@ -34,19 +35,30 @@ MIN_PRECISION = 0.8
 #: Strong enough to promote: right at least this often, on at least this many decisions.
 STRONG_PRECISION = 0.95
 STRONG_MATCH = 20
+_VALUE_SCAN = 10000
 
 
-def _conditions(related: dict) -> list[dict]:
+_SCALAR = (str, int, float, bool)
+
+
+def _conditions(related: dict) -> list[dict] | None:
     """{"text": {"$has": "refund"}} (v1 and v2 for Text) or {"customer": "acme"} (v2 bare)
-    -> [{"field", "op", "value"}]."""
+    -> [{"field", "op", "value"}]. None for any shape a reviewer can't read as a
+    rule (a conjunction list, a nested value), rather than a half-parsed rule."""
     out = []
     for field, cond in related.items():
+        if field.startswith("$"):
+            return None
         if isinstance(cond, dict):
             for op, value in cond.items():
+                if not isinstance(value, _SCALAR):
+                    return None
                 out.append({"field": field, "op": op.lstrip("$"), "value": value})
-        else:
+        elif isinstance(cond, _SCALAR):
             out.append({"field": field, "op": "is", "value": cond})
-    return out
+        else:
+            return None
+    return out or None
 
 
 def rule_from_hit(hit: dict, target_field: str, target_value) -> dict | None:
@@ -70,8 +82,10 @@ def mine_rules(aito: AitoClient, log: str, per_value: int = 20) -> dict:
     """Candidate rules over one decision log, strongest first (precision x coverage)."""
     cfg = LOGS[log]
     target = cfg["target"]
-    rows = aito.query(log, select=[target], limit=10000).get("hits") or []
-    values = sorted({r.get(target) for r in rows} - {None})
+    scan = aito.query(log, select=[target], limit=_VALUE_SCAN)
+    rows = scan.get("hits") or []
+    # the decision values come from the first _VALUE_SCAN rows; the logs here are far smaller
+    values = sorted({row.get(target) for row in rows} - {None})
     rules = []
     for v in values:
         hits = aito.relate(log, {target: v}, cfg["inputs"], limit=per_value).get("hits") or []
@@ -81,7 +95,7 @@ def mine_rules(aito: AitoClient, log: str, per_value: int = 20) -> dict:
                 rules.append(r)
     rules.sort(key=lambda r: -(r["precision"] * r["coverage"]))
     return {
-        "log": log, "label": cfg["label"], "target": target, "decisions": len(rows),
+        "log": log, "label": cfg["label"], "target": target, "decisions": int(scan.get("total", len(rows))),
         "decision_values": len(values), "rules": rules,
         "strong": sum(r["strength"] == "strong" for r in rules),
         "thresholds": {"min_precision": MIN_PRECISION, "strong_precision": STRONG_PRECISION,
