@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Aito — the predictive layer for your LLMs &amp; agents</title>
+<title>Aito, the predictive layer for your LLMs &amp; agents</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -130,8 +130,8 @@
 <div class="hero"><div class="wrap">
   <div class="eyebrow">For teams building with LLMs &amp; agents</div>
   <h1>Make the model you already have <span class="hl">faster, cheaper, and sure of itself.</span></h1>
-  <p class="lede">Your agents work — until the tool list gets long, the token bill climbs, the vector search grabs the <b>wrong</b> record, and the model states a made-up number with total confidence. That isn&apos;t a flaw in your platform. It&apos;s the part of the job LLMs are simply bad at: <b>structured, numeric, high-volume recall over your own data.</b></p>
-  <p class="oneliner">Aito does that part. It&apos;s <b>RAG&apos;s calibrated cousin</b> — a predictive primitive your agents call to get instant, grounded, explainable answers. Keep your platform. Keep your model. Just stop making it do the boring parts badly.</p>
+  <p class="lede">Your agents work, until the tool list gets long, the token bill climbs, the vector search grabs the <b>wrong</b> record, and the model states a made-up number with total confidence. That isn&apos;t a flaw in your platform. It&apos;s the part of the job LLMs are simply bad at: <b>structured, numeric, high-volume recall over your own data.</b></p>
+  <p class="oneliner">Aito does that part. It&apos;s <b>RAG&apos;s calibrated cousin</b>: a predictive primitive your agents call to get instant, grounded, explainable answers. Keep your platform. Keep your model. Just stop making it do the boring parts badly.</p>
   <div class="hbtns"><a class="btn p" href="#live">See the live demo</a><a class="btn s" href="#trio">Tour the use cases</a></div>
   <div class="reassure"><span><b>one HTTP query</b>, not a platform</span><span>no model training · <b>no MLOps</b></span><span>calibrated <b>$p</b> + <b>$why</b></span><span>learns every row, instantly</span></div>
 </div></div>
@@ -144,9 +144,9 @@
   <div class="pains">
     <div class="pain"><div class="ph"><span class="x">✕</span>Tool / option sprawl</div><div class="pd">Hundreds of tools or SKUs in context → selection degrades, prompts bloat.</div><div class="fix"><b>_predict</b> shortlists the handful that actually apply.</div></div>
     <div class="pain"><div class="ph"><span class="x">✕</span>An LLM call on every step</div><div class="pd">Multi-step workflows take seconds and burn tokens, per ticket, at scale.</div><div class="fix"><b>_predict</b> answers the routine steps in one round-trip instead of a chain of calls.</div></div>
-    <div class="pain"><div class="ph"><span class="x">✕</span>Vector search misfires</div><div class="pd">Embeddings dilute identifiers — the nearest neighbour is the wrong customer.</div><div class="fix"><b>_match / _similarity</b> conditions on structure, aimed at what matters.</div></div>
-    <div class="pain"><div class="ph"><span class="x">✕</span>Bad with numbers</div><div class="pd">Aggregation, drivers, estimates — the model guesses, often confidently wrong.</div><div class="fix"><b>_relate / _estimate</b> compute it from your data.</div></div>
-    <div class="pain"><div class="ph"><span class="x">✕</span>No sense of "how sure"</div><div class="pd">Overconfident output gives no signal for when to act vs ask a human.</div><div class="fix"><b>$p</b> is a calibrated gate — auto when sure, escalate when not.</div></div>
+    <div class="pain"><div class="ph"><span class="x">✕</span>Vector search misfires</div><div class="pd">Embeddings dilute identifiers, so the nearest neighbour is the wrong customer.</div><div class="fix"><b>_match / _similarity</b> conditions on structure, aimed at what matters.</div></div>
+    <div class="pain"><div class="ph"><span class="x">✕</span>Bad with numbers</div><div class="pd">Aggregation, drivers, estimates: the model guesses, often confidently wrong.</div><div class="fix"><b>_relate / _estimate</b> compute it from your data.</div></div>
+    <div class="pain"><div class="ph"><span class="x">✕</span>No sense of "how sure"</div><div class="pd">Overconfident output gives no signal for when to act vs ask a human.</div><div class="fix"><b>$p</b> is a calibrated gate, auto when sure, escalate when not.</div></div>
     <div class="pain"><div class="ph"><span class="x">✕</span>Memory without relevance</div><div class="pd">Dump everything and blow the context, or miss the one case that matters now.</div><div class="fix"><b>_match</b> surfaces the memory that fits the current context.</div></div>
   </div>
 </div></section>
@@ -155,24 +155,24 @@
 <section id="trio" style="background:linear-gradient(180deg,#fff,var(--paper))"><div class="wrap">
   <div class="kicker">The tour</div>
   <h2>Analyze · Assist · Automate</h2>
-  <p class="lead">The same predictive index, three ways to plug into an agent stack — give it the facts it&apos;s missing (<b>analyze</b>), narrow and ground its choices (<b>assist</b>), or let it act when it&apos;s sure (<b>automate</b>). Every example below is a real Aito op, drawn from the ecommerce, ERP and accounting demos.</p>
+  <p class="lead">The same predictive index, three ways to plug into an agent stack: give it the facts it&apos;s missing (<b>analyze</b>), narrow and ground its choices (<b>assist</b>), or let it act when it&apos;s sure (<b>automate</b>). Every example below is a real Aito op, drawn from the ecommerce, ERP and accounting demos.</p>
   <div class="trio">
     <div class="lane analyze">
       <div class="lh"><div class="lt"><span class="dot"></span>Analyze</div><div class="ls">Give the agent the numbers and structure it can&apos;t compute.</div></div>
       <div class="uc"><div class="ut">Find the drivers <span class="op">_relate</span></div><div class="ud"><em>Why</em> are these customers churning, invoices late, projects at risk? Statistical relationships an LLM can&apos;t aggregate.</div></div>
-      <div class="uc"><div class="ut">Estimate the number <span class="op">_estimate</span></div><div class="ud">Price, demand, effort, lead time — a grounded estimate instead of a confident guess.</div></div>
-      <div class="uc"><div class="ut">Explain the flag <span class="op">_predict + $why</span></div><div class="ud">Anomaly detection <em>with the evidence</em> behind it — the agent cites, doesn&apos;t hallucinate.</div></div>
+      <div class="uc"><div class="ut">Estimate the number <span class="op">_estimate</span></div><div class="ud">Price, demand, effort, lead time: a grounded estimate instead of a confident guess.</div></div>
+      <div class="uc"><div class="ut">Explain the flag <span class="op">_predict + $why</span></div><div class="ud">Anomaly detection <em>with the evidence</em> behind it: the agent cites, doesn&apos;t hallucinate.</div></div>
     </div>
     <div class="lane assist">
-      <div class="lh"><div class="lt"><span class="dot"></span>Assist</div><div class="ls">Augment the model in the loop — narrow, ground, recommend.</div></div>
+      <div class="lh"><div class="lt"><span class="dot"></span>Assist</div><div class="ls">Augment the model in the loop: narrow, ground, recommend.</div></div>
       <div class="uc"><div class="ut">Shortlist the haystack <span class="op">_predict</span></div><div class="ud">300 tools · 1,800 SKUs · 255 GL codes → the few that apply. <em>~17× smaller prompts</em>.</div></div>
-      <div class="uc"><div class="ut">Aim the memory <span class="op">_match / _similarity</span></div><div class="ud">Surface the past case that fits <em>this</em> context — targeted recall, not a fuzzy global hit.</div></div>
-      <div class="uc"><div class="ut">Next best action <span class="op">_recommend</span></div><div class="ud">The upsell, product, or resolution that maximizes your KPI — learned from history.</div></div>
+      <div class="uc"><div class="ut">Aim the memory <span class="op">_match / _similarity</span></div><div class="ud">Surface the past case that fits <em>this</em> context: targeted recall, not a fuzzy global hit.</div></div>
+      <div class="uc"><div class="ut">Next best action <span class="op">_recommend</span></div><div class="ud">The upsell, product, or resolution that maximizes your KPI, learned from history.</div></div>
     </div>
     <div class="lane automate">
       <div class="lh"><div class="lt"><span class="dot"></span>Automate</div><div class="ls">Let it act outright when the prediction is confident.</div></div>
-      <div class="uc"><div class="ut">Fill the fields <span class="op">_predict</span></div><div class="ud">GL code, approver, cost center, assignee, category — the data entry, automatic and confidence-scored.</div></div>
-      <div class="uc"><div class="ut">Match the answer <span class="op">_match</span></div><div class="ud">Answer the routine ticket, FAQ, or payment <em>outright</em> — no LLM call at all.</div></div>
+      <div class="uc"><div class="ut">Fill the fields <span class="op">_predict</span></div><div class="ud">GL code, approver, cost center, assignee, category: the data entry, automatic and confidence-scored.</div></div>
+      <div class="uc"><div class="ut">Match the answer <span class="op">_match</span></div><div class="ud">Answer the routine ticket, FAQ, or payment <em>outright</em>, no LLM call at all.</div></div>
       <div class="uc"><div class="ut">Gate &amp; route <span class="op">_predict + $p</span></div><div class="ud">Auto-handle the confident, escalate the rest. Governance and audit built in.</div></div>
     </div>
   </div>
@@ -181,13 +181,13 @@
 <!-- not a platform -->
 <section id="platform"><div class="wrap"><div class="band">
   <div class="kicker" style="color:var(--turq)">Why it fits, instead of competing</div>
-  <h2>It&apos;s a primitive your agents call — not another platform to adopt.</h2>
+  <h2>It&apos;s a primitive your agents call, not another platform to adopt.</h2>
   <p class="lead">Aito has no agents, no orchestrator, no UI to defend. It&apos;s a query you call like a tool or MCP endpoint. Your platform stays the brain; Aito is the instant, calibrated memory underneath it.</p>
   <div class="pillars">
     <div class="pillar"><div class="pt">One <span class="em">query</span></div><div class="pp">_predict · _match · _relate · _estimate · _recommend. Call it from any agent, any language.</div></div>
     <div class="pillar"><div class="pt">Zero <span class="em">MLOps</span></div><div class="pp">No model files, no retrain, no drift. A row added today is in the next prediction.</div></div>
     <div class="pillar"><div class="pt">Calibrated &amp; <span class="em">explainable</span></div><div class="pp">Every answer has a $p and a $why that traces straight to your data. Auditable by design.</div></div>
-    <div class="pillar"><div class="pt">Multi-tenant by a <span class="em">where-clause</span></div><div class="pp">One instance, isolated per customer — 255 tenants, zero per-tenant models.</div></div>
+    <div class="pillar"><div class="pt">Multi-tenant by a <span class="em">where-clause</span></div><div class="pp">One instance, isolated per customer: 255 tenants, zero per-tenant models.</div></div>
   </div>
 </div></div></section>
 
@@ -195,16 +195,16 @@
 <section id="live" style="background:linear-gradient(180deg,#fff,var(--paper))"><div class="wrap">
   <div class="kicker">See it live</div>
   <h2>Real predictions, real latency, real cost</h2>
-  <p class="lead">Not mocks — these run a live Aito index and a live gpt-5-mini, side by side, on synthetic-but-realistic telco support data.</p>
+  <p class="lead">Not mocks: these run a live Aito index and a live gpt-5-mini, side by side, on synthetic-but-realistic telco support data.</p>
   <div class="demos">
-    <a class="demo" href="/"><div class="dt">Resolution console</div><div class="dd">A ticket resolved instantly by _predict (with $why) beside the same gpt-5-mini call — the response-rate gap, live.</div><div class="go">open →</div></a>
+    <a class="demo" href="/"><div class="dt">Resolution console</div><div class="dd">A ticket resolved instantly by _predict (with $why) beside the same gpt-5-mini call, showing the response-rate gap live.</div><div class="go">open →</div></a>
     <a class="demo" href="/?view=augment"><div class="dt">LLM + Aito · short-list</div><div class="dd">Aito narrows 240 tools → 5; the same LLM then picks with ~17× fewer input tokens. Augment, not compete.</div><div class="go">open →</div></a>
-    <a class="demo" href="https://ecommerce.aito.ai"><div class="dt">Industry demos</div><div class="dd">Ecommerce, ERP and accounting — recommend, relate, estimate, GL-coding, anomaly detection, all from one index.</div><div class="go">ecommerce · erp · accounting →</div></a>
+    <a class="demo" href="https://ecommerce.aito.ai"><div class="dt">Industry demos</div><div class="dd">Ecommerce, ERP and accounting: recommend, relate, estimate, GL-coding, anomaly detection, all from one index.</div><div class="go">ecommerce · erp · accounting →</div></a>
   </div>
   <div class="foot-cta" style="margin-top:30px"><a class="btn p" href="#" style="display:inline-block">Start free trial →</a></div>
 </div></section>
 
-<footer><div class="wrap">Aito — the predictive database. Predictions come straight from the index: no model file, no retrain step, every answer verifiable.</div></footer>
+<footer><div class="wrap">Aito, the predictive database. Predictions come straight from the index: no model file, no retrain step, every answer verifiable.</div></footer>
 
 </body>
 </html>

@@ -4,7 +4,7 @@
 
    Lists every tool the sales agent can call. Four are Aito ops over the firm's
    history; one is a plain (gated) action. Flip the Aito tools off and the SAME
-   chat agent has to reason without the firm's data — grounded numbers vs a
+   chat agent has to reason without the firm's data, grounded numbers vs a
    flagged guess. The toggle state lives in AppShell and is shared with the chat
    view, so changes here take effect on the next message. */
 
@@ -33,7 +33,7 @@ export function ToolboxView({ tools, toolOn, onToggle, onAllAito, agentLabel, le
         <div className={`master ${aitoAllOn ? "on" : "off"}`}>
           <div>
             <div className="mt">Aito tools <span className="badge">{aitoAllOn ? "ON" : "OFF"}</span></div>
-            <div className="ms">{aitoAllOn ? "The agent reads real data for grounded, calibrated answers." : "The agent is on its own — grounded numbers replaced by flagged guesses."}</div>
+            <div className="ms">{aitoAllOn ? "The agent reads real data for grounded, calibrated answers." : "The agent is on its own, grounded numbers replaced by flagged guesses."}</div>
           </div>
           <button className="switch" onClick={() => onAllAito(!aitoAllOn)} role="switch" aria-checked={aitoAllOn}>
             <span className="knob" />
@@ -53,14 +53,14 @@ export function ToolboxView({ tools, toolOn, onToggle, onAllAito, agentLabel, le
                 <div className="sum">{t.summary}</div>
                 <div className="ex">{examples[t.name] ?? ""}</div>
                 <div className="pr">{t.params.map((p) => <span key={p}>{p}</span>)}</div>
-                {!t.aito && <div className="note">🔒 gated — drafts only, never auto-sends</div>}
+                {!t.aito && <div className="note">🔒 gated: drafts only, never auto-sends</div>}
               </div>
             );
           })}
           {tools.length === 0 && <div className="empty">loading toolbox…</div>}
         </div>
 
-        <div className="foot">Toggling a tool changes which functions are handed to the model on your next message in <b>{agentLabel}</b>. Everything else about the agent stays identical — same prompt, same model — so the difference you see is exactly what Aito adds.</div>
+        <div className="foot">Toggling a tool changes which functions are handed to the model on your next message in <b>{agentLabel}</b>. Everything else about the agent stays identical (same prompt, same model), so the difference you see is exactly what Aito adds.</div>
       </div>
     </div>
   );

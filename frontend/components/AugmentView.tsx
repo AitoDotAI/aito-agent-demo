@@ -54,11 +54,11 @@ export function AugmentView({ onAito }: { onAito?: (ms: number | null) => void }
         <div className="rc-kpi"><div className="kl">Tool catalog</div><div className="kv">{r?.catalog_size ?? 240}</div><div className="ks">backend tools the LLM must consider</div></div>
         <div className="rc-kpi"><div className="kl">Prompt tokens</div><div className="kv t">{tokFactor ? `${tokFactor}× less` : "—"}</div><div className="ks">{full && coop ? `${full.tokens.toLocaleString()} → ${coop.tokens}` : "after Aito shortlists"}</div></div>
         <div className="rc-kpi"><div className="kl">Latency</div><div className="kv t">{speedFactor ? `${speedFactor.toFixed(1)}×` : "—"}</div><div className="ks">faster on the shortlist</div></div>
-        <div className="rc-kpi"><div className="kl">Aito top confidence</div><div className="kv">{top != null ? `${Math.round(Math.min(top, 0.99) * 100)}%` : "—"}</div><div className="ks">{top != null && top >= 0.9 ? "above gate — LLM optional" : "→ hand the shortlist to the LLM"}</div></div>
+        <div className="rc-kpi"><div className="kl">Aito top confidence</div><div className="kv">{top != null ? `${Math.round(Math.min(top, 0.99) * 100)}%` : "—"}</div><div className="ks">{top != null && top >= 0.9 ? "above gate, LLM optional" : "→ hand the shortlist to the LLM"}</div></div>
       </div>
 
-      <div className="rc-h">Aito augments the LLM — it doesn&apos;t replace it</div>
-      <div className="rc-sub">The same model, two ways. <b>Alone</b>, the LLM weighs all {r?.catalog_size ?? 240} tools every time. <b>With Aito</b>, <code>_predict</code> short-lists the handful history says are relevant — the LLM then decides over just those, so it&apos;s faster, far cheaper, and grounded. When Aito is confident enough, the LLM isn&apos;t needed at all.</div>
+      <div className="rc-h">Aito augments the LLM, it doesn&apos;t replace it</div>
+      <div className="rc-sub">The same model, two ways. <b>Alone</b>, the LLM weighs all {r?.catalog_size ?? 240} tools every time. <b>With Aito</b>, <code>_predict</code> short-lists the handful history says are relevant; the LLM then decides over just those, so it&apos;s faster, far cheaper, and grounded. When Aito is confident enough, the LLM isn&apos;t needed at all.</div>
 
       <div className="rc-ctl">
         {SAMPLES.map((s, i) => <button key={i} className={`rc-chip ${active === i ? "on" : ""}`} onClick={() => pick(i)}>{s.length > 30 ? s.slice(0, 30) + "…" : s}</button>)}
@@ -79,7 +79,7 @@ export function AugmentView({ onAito }: { onAito?: (ms: number | null) => void }
               <div style={{ flex: 1, maxWidth: 220 }}><ConfidenceBar value={s.p} /></div>
             </div>
           ))}
-          <div className="rc-meta">history says these are the relevant tools — the other {(r?.catalog_size ?? 240) - (r?.shortlist.length ?? 5)} never apply here</div>
+          <div className="rc-meta">history says these are the relevant tools, the other {(r?.catalog_size ?? 240) - (r?.shortlist.length ?? 5)} never apply here</div>
         </div>
       </div>
 
@@ -104,14 +104,14 @@ export function AugmentView({ onAito }: { onAito?: (ms: number | null) => void }
               <div className="rc-act">{coop.tool}() {full && coop.tool === full.tool && <span style={{ color: "var(--rc-green-ink)", fontSize: 12 }}>· same answer ✓</span>}</div>
               <div className="rc-meta">{coop.n_tools} tools in prompt · <b style={{ color: "var(--turq)" }}>{coop.tokens} tokens</b> · ${coop.cost_usd.toFixed(5)} · {coop.latency_ms.toFixed(0)}ms</div>
               <div style={{ marginTop: 12, fontSize: 11.5, color: "var(--rc-faint)", lineHeight: 1.5, borderTop: "1px dashed var(--rc-line)", paddingTop: 10 }}>
-                Same LLM, same answer — but {tokFactor ?? "many"}× fewer tokens and grounded in Aito&apos;s calibrated shortlist. {top != null && top >= 0.9 ? "Here Aito's top confidence clears the gate, so you could skip this call entirely." : ""}
+                Same LLM, same answer, but {tokFactor ?? "many"}× fewer tokens and grounded in Aito&apos;s calibrated shortlist. {top != null && top >= 0.9 ? "Here Aito's top confidence clears the gate, so you could skip this call entirely." : ""}
               </div>
             </>)}
           </div>
         </div>
       </div>
 
-      <div className="rc-foot">All live: Aito `_predict` over learned tool history + two real gpt-5-mini calls. Augmentation, not competition — Aito shrinks the LLM&apos;s job; the LLM keeps the judgment.</div>
+      <div className="rc-foot">All live: Aito `_predict` over learned tool history + two real gpt-5-mini calls. Augmentation, not competition: Aito shrinks the LLM&apos;s job; the LLM keeps the judgment.</div>
     </div>
   );
 }

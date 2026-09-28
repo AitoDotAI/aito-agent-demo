@@ -167,7 +167,7 @@ export default function AitoPanel({ config, lastQuery, lastResponseMs }: AitoPan
             <div className="aito-section-title">Verify yourself</div>
             <div style={{ fontSize: 11.5, color: "rgba(240,240,240,0.85)", lineHeight: 1.55, marginBottom: 10 }}>
               Every claim on this page traces back to an Aito query. No separate
-              model file — Aito predicts directly from its index.
+              model file, Aito predicts directly from its index.
             </div>
             <div className="aito-links">
               <a className="aito-link" href="/api/schema" target="_blank" rel="noreferrer">

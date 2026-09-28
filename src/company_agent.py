@@ -61,7 +61,7 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "customer_360",
         "aito": True, "op": "_query",
-        "summary": "One customer across every domain — profile, deals, tickets, product usage, invoices, feedback.",
+        "summary": "One customer across every domain: profile, deals, tickets, product usage, invoices, feedback.",
         "parameters": {"type": "object", "properties": {
             "customer_id": {"type": "string", "description": "e.g. ACC-123456 (get one from find_examples)"},
         }, "required": ["customer_id"], "additionalProperties": False},
@@ -85,7 +85,7 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "launch_play",
         "aito": False, "op": "action",
-        "summary": "Draft a play to move a KPI (e.g. switch a segment to a CSM motion) — for a human to approve; never runs on its own.",
+        "summary": "Draft a play to move a KPI (e.g. switch a segment to a CSM motion) for a human to approve; never runs on its own.",
         "parameters": {"type": "object", "properties": {
             "kpi": _enum("KPI the play targets", _KPI),
             "segment": {"type": "string", "description": "Who it applies to"},
@@ -108,15 +108,15 @@ _SYSTEM = (
     "a single customers master linked to deals (sales), tickets (support), usage (product), invoices (finance) and "
     "feedback (CX). You help staff understand AND IMPROVE the KPIs: conversion, churn, NPS, CSAT, adoption, on-time "
     "revenue.\n\n"
-    "You can't run arbitrary SQL — lean into what you CAN do, via tools that read the real data: kpi_snapshot (the "
+    "You can't run arbitrary SQL, so lean into what you CAN do, via tools that read the real data: kpi_snapshot (the "
     "360 card for a segment), optimize_kpi (a KPI's drivers + the lever that moves it most + the projected lift), "
     "customer_360 (one customer across every domain), find_examples (ground with real rows / get customer_ids), "
-    "estimate_mrr. Whenever a claim depends on a number, CALL THE TOOL — don't guess. Map what the user described "
+    "estimate_mrr. Whenever a claim depends on a number, CALL THE TOOL, don't guess. Map what the user described "
     "into the segment fields. If a needed tool isn't available, say so and label any guess as unverified.\n\n"
     "Frame answers as an operator who optimises outcomes: quote the current KPI, the driver, the recommended lever "
     "change and its projected lift (e.g. 'churn 84% → 74% if moved to a Dedicated CSM'). When you propose acting, "
-    "call launch_play — it only DRAFTS a play for a human to approve; never claim anything ran. And note the loop: "
-    "Aito has no training step, so once a play's outcome is logged it sharpens the next prediction — optimise, act, "
+    "call launch_play. It only DRAFTS a play for a human to approve; never claim anything ran. And note the loop: "
+    "Aito has no training step, so once a play's outcome is logged it sharpens the next prediction: optimise, act, "
     "learn, with no retrain.\n\n"
     "Be concise and concrete, like a sharp RevOps analyst. Use plain punctuation: commas, colons and full stops, "
     "no em-dashes."

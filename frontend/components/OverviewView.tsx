@@ -123,8 +123,8 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
       <div className="hero"><div className="wrap">
         <div className="eyebrow">The faculty your agent is missing</div>
         <h1><span className="dim">LLMs gave your agent reasoning. RAG gave it memory.</span> <span className="hl">Aito gives it intuition.</span></h1>
-        <p className="lede">A neural network turns experience into instant answers — but that intuition is <b>frozen at training time</b>, and it&apos;s about the whole internet, not your business. LLMs are brilliant <b>amnesiacs</b>: they don&apos;t know your customers, and training one on your data isn&apos;t feasible. Aito does the same thing — pattern into answer — <b>live, over your own data, with no training.</b></p>
-        <p className="oneliner">Ask it about your customers, orders, tickets, codes — and it just <b>knows</b>, with a calibrated sense of how sure it is. The <b>known and the unknown</b>, through one door.</p>
+        <p className="lede">A neural network turns experience into instant answers, but that intuition is <b>frozen at training time</b>, and it&apos;s about the whole internet, not your business. LLMs are brilliant <b>amnesiacs</b>: they don&apos;t know your customers, and training one on your data isn&apos;t feasible. Aito does the same thing (pattern into answer), <b>live, over your own data, with no training.</b></p>
+        <p className="oneliner">Ask it about your customers, orders, tickets, codes, and it just <b>knows</b>, with a calibrated sense of how sure it is. The <b>known and the unknown</b>, through one door.</p>
         <div className="hbtns"><button className="btn p" onClick={() => onNavigate("agent")}>Meet the agent</button><a className="btn s" href="#faculties">How it fits</a></div>
         <div className="reassure"><span>same act as the <b>neural net</b></span><span>but <b>live</b> · no training · no MLOps</span><span>over <b>your</b> data, not the world&apos;s</span><span>calibrated <b>$p</b> + <b>$why</b></span></div>
       </div></div>
@@ -132,11 +132,11 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
       <section id="faculties"><div className="wrap">
         <div className="kicker">What it is</div>
         <h2>Reasoning · Memory · Intuition</h2>
-        <p className="lead">An agent needs all three. You already have two. Aito is the third — the <b>same kind of pattern-machine as the model</b>, specialized to your data: it turns what you&apos;ve seen into an instant, calibrated answer, with no training and nothing to forget.</p>
+        <p className="lead">An agent needs all three. You already have two. Aito is the third, the <b>same kind of pattern-machine as the model</b>, specialized to your data: it turns what you&apos;ve seen into an instant, calibrated answer, with no training and nothing to forget.</p>
         <div className="faculties">
-          <div className="fac"><div className="fl">The LLM</div><div className="ft">Reasoning</div><div className="fd">General, deliberate thinking. A frozen intuition about the whole internet — powerful, but it can&apos;t feasibly be trained on <b>your</b> data, and it forgets the moment the context window scrolls.</div><span className="plus">+</span></div>
-          <div className="fac"><div className="fl">RAG / vector store</div><div className="ft">Memory</div><div className="fd">Recall of what was stored — facts copied <b>into</b> the prompt for the model to re-read and re-reason every time. Bolted on beside the intuition, never part of it.</div><span className="plus">+</span></div>
-          <div className="fac hot"><div className="fl">Aito</div><div className="ft">Intuition</div><div className="fd">The same act as the neural net — turn what you&apos;ve seen into an instant answer — but <b>live</b>, <b>memory-native</b>, and over <b>your</b> data. No training, nothing to forget. It answers <b>from</b> the data directly, and tells you how sure it is.</div></div>
+          <div className="fac"><div className="fl">The LLM</div><div className="ft">Reasoning</div><div className="fd">General, deliberate thinking. A frozen intuition about the whole internet, powerful, but it can&apos;t feasibly be trained on <b>your</b> data, and it forgets the moment the context window scrolls.</div><span className="plus">+</span></div>
+          <div className="fac"><div className="fl">RAG / vector store</div><div className="ft">Memory</div><div className="fd">Recall of what was stored: facts copied <b>into</b> the prompt for the model to re-read and re-reason every time. Bolted on beside the intuition, never part of it.</div><span className="plus">+</span></div>
+          <div className="fac hot"><div className="fl">Aito</div><div className="ft">Intuition</div><div className="fd">The same act as the neural net (turn what you&apos;ve seen into an instant answer), but <b>live</b>, <b>memory-native</b>, and over <b>your</b> data. No training, nothing to forget. It answers <b>from</b> the data directly, and tells you how sure it is.</div></div>
         </div>
       </div></section>
 
@@ -148,9 +148,9 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
           {[
             ["Tool / option sprawl", "Hundreds of tools or SKUs in context → selection degrades, prompts bloat.", "_predict shortlists the handful that actually apply."],
             ["An LLM call on every step", "Multi-step workflows take seconds and burn tokens, per ticket, at scale.", "_predict answers the routine steps in one round-trip instead of a chain of calls."],
-            ["Vector search misfires", "Embeddings dilute identifiers — the nearest neighbour is the wrong customer.", "_match / _similarity conditions on structure, aimed at what matters."],
-            ["Bad with numbers", "Aggregation, drivers, estimates — the model guesses, often confidently wrong.", "_relate / _estimate compute it from your data."],
-            ["No sense of “how sure”", "Overconfident output gives no signal for when to act vs ask a human.", "$p is a calibrated gate — auto when sure, escalate when not."],
+            ["Vector search misfires", "Embeddings dilute identifiers, so the nearest neighbour is the wrong customer.", "_match / _similarity conditions on structure, aimed at what matters."],
+            ["Bad with numbers", "Aggregation, drivers, estimates: the model guesses, often confidently wrong.", "_relate / _estimate compute it from your data."],
+            ["No sense of “how sure”", "Overconfident output gives no signal for when to act vs ask a human.", "$p is a calibrated gate: auto when sure, escalate when not."],
             ["Memory without relevance", "Dump everything and blow the context, or miss the one case that matters now.", "_match surfaces the memory that fits the current context."],
           ].map(([h, d, f], i) => (
             <div className="pain" key={i}><div className="ph"><span className="x">✕</span>{h}</div><div className="pd">{d}</div><div className="fix" dangerouslySetInnerHTML={{ __html: (f as string).replace(/(_\w+|\$\w+)/g, "<b>$1</b>") }} /></div>
@@ -161,22 +161,22 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
       <section id="trio" style={{ background: "linear-gradient(180deg,#fff,var(--paper))" }}><div className="wrap">
         <div className="kicker">The tour</div>
         <h2>Analyze · Assist · Automate</h2>
-        <p className="lead">The same predictive index, three ways to plug into an agent stack — give it the facts it&apos;s missing (<b>analyze</b>), narrow and ground its choices (<b>assist</b>), or let it act when it&apos;s sure (<b>automate</b>). Every example is a real Aito op, drawn from the ecommerce, ERP and accounting demos.</p>
+        <p className="lead">The same predictive index, three ways to plug into an agent stack: give it the facts it&apos;s missing (<b>analyze</b>), narrow and ground its choices (<b>assist</b>), or let it act when it&apos;s sure (<b>automate</b>). Every example is a real Aito op, drawn from the ecommerce, ERP and accounting demos.</p>
         <div className="trio">
           {[
             ["analyze", "Analyze", "Give the agent the numbers and structure it can’t compute.", [
               ["Find the drivers", "_relate", "<em>Why</em> are these customers churning, invoices late, projects at risk? Statistical relationships an LLM can’t aggregate."],
-              ["Estimate the number", "_estimate", "Price, demand, effort, lead time — a grounded estimate instead of a confident guess."],
-              ["Explain the flag", "_predict + $why", "Anomaly detection <em>with the evidence</em> behind it — the agent cites, doesn’t hallucinate."],
+              ["Estimate the number", "_estimate", "Price, demand, effort, lead time: a grounded estimate instead of a confident guess."],
+              ["Explain the flag", "_predict + $why", "Anomaly detection <em>with the evidence</em> behind it: the agent cites, doesn’t hallucinate."],
             ]],
-            ["assist", "Assist", "Augment the model in the loop — narrow, ground, recommend.", [
+            ["assist", "Assist", "Augment the model in the loop: narrow, ground, recommend.", [
               ["Shortlist the haystack", "_predict", "300 tools · 1,800 SKUs · 255 GL codes → the few that apply. <em>~17× smaller prompts</em>."],
-              ["Aim the memory", "_match / _similarity", "Surface the past case that fits <em>this</em> context — targeted recall, not a fuzzy global hit."],
-              ["Next best action", "_recommend", "The upsell, product, or resolution that maximizes your KPI — learned from history."],
+              ["Aim the memory", "_match / _similarity", "Surface the past case that fits <em>this</em> context: targeted recall, not a fuzzy global hit."],
+              ["Next best action", "_recommend", "The upsell, product, or resolution that maximizes your KPI, learned from history."],
             ]],
             ["automate", "Automate", "Let it act outright when the prediction is confident.", [
-              ["Fill the fields", "_predict", "GL code, approver, cost center, assignee, category — the data entry, automatic and confidence-scored."],
-              ["Match the answer", "_match", "Answer the routine ticket, FAQ, or payment <em>outright</em> — no LLM call at all."],
+              ["Fill the fields", "_predict", "GL code, approver, cost center, assignee, category: the data entry, automatic and confidence-scored."],
+              ["Match the answer", "_match", "Answer the routine ticket, FAQ, or payment <em>outright</em>, no LLM call at all."],
               ["Gate &amp; route", "_predict + $p", "Auto-handle the confident, escalate the rest. Governance and audit built in."],
             ]],
           ].map(([cls, title, sub, ucs]) => (
@@ -221,14 +221,14 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
 
       <section id="platform"><div className="wrap"><div className="band">
         <div className="kicker" style={{ color: "var(--turq)" }}>Why it fits, instead of competing</div>
-        <h2>It&apos;s a primitive your agents call — not another platform to adopt.</h2>
+        <h2>It&apos;s a primitive your agents call, not another platform to adopt.</h2>
         <p className="lead">Aito has no agents, no orchestrator, no UI to defend. It&apos;s a query you call like a tool or MCP endpoint. Your platform stays the brain; Aito is the instant, calibrated memory underneath it.</p>
         <div className="pillars">
           {[
             ["One query", "_predict · _match · _relate · _estimate · _recommend. Call it from any agent, any language."],
             ["Zero MLOps", "No model files, no retrain, no drift. A row added today is in the next prediction."],
             ["Calibrated & explainable", "Every answer has a $p and a $why that traces straight to your data. Auditable by design."],
-            ["Multi-tenant by a where-clause", "One instance, isolated per customer — 255 tenants, zero per-tenant models."],
+            ["Multi-tenant by a where-clause", "One instance, isolated per customer: 255 tenants, zero per-tenant models."],
           ].map(([t, p], i) => {
             const parts = (t as string).split(" ");
             return <div className="pillar" key={i}><div className="pt">{parts.slice(0, -1).join(" ")} <span className="em">{parts.slice(-1)}</span></div><div className="pp">{p}</div></div>;
@@ -239,16 +239,16 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
       <section id="live" style={{ background: "linear-gradient(180deg,#fff,var(--paper))" }}><div className="wrap">
         <div className="kicker">See it live</div>
         <h2>Real predictions, real latency, real cost</h2>
-        <p className="lead">Not mocks — these run a live Aito index and a live gpt-5-mini, side by side, on synthetic-but-realistic data. Open any of them from the left.</p>
+        <p className="lead">Not mocks: these run a live Aito index and a live gpt-5-mini, side by side, on synthetic-but-realistic data. Open any of them from the left.</p>
         <div className="demos">
-          <button className="demo" onClick={() => onNavigate("agent")}><div className="dt">Sales agent</div><div className="dd">A live gpt-5-mini agent that calls Aito ops as <b>tools</b> — win-odds, effort, references, and the outreach that books the most meetings, with its lift over the baseline.</div><div className="go">open →</div></button>
-          <button className="demo" onClick={() => onNavigate("company")}><div className="dt">Company AI agent + 360 dashboard</div><div className="dd">Ask the company&apos;s own numbers, or open the <b>360 dashboard</b>: every KPI with its <b>root causes</b> (_relate), the <b>lever that moves it</b> (_recommend), and a <b>$why</b> on each — optimize, act, and learn with no retrain.</div><div className="go">open →</div></button>
-          <button className="demo" onClick={() => onNavigate("resolve")}><div className="dt">Resolution console</div><div className="dd">A ticket resolved instantly by _predict (with $why) beside the same gpt-5-mini call — the response-rate gap, live.</div><div className="go">open →</div></button>
-          <a className="demo" href="https://ecommerce.aito.ai"><div className="dt">Industry demos</div><div className="dd">Ecommerce, ERP and accounting — recommend, relate, estimate, GL-coding, anomaly detection, from one index.</div><div className="go">ecommerce · erp · accounting →</div></a>
+          <button className="demo" onClick={() => onNavigate("agent")}><div className="dt">Sales agent</div><div className="dd">A live gpt-5-mini agent that calls Aito ops as <b>tools</b>: win-odds, effort, references, and the outreach that books the most meetings, with its lift over the baseline.</div><div className="go">open →</div></button>
+          <button className="demo" onClick={() => onNavigate("company")}><div className="dt">Company AI agent + 360 dashboard</div><div className="dd">Ask the company&apos;s own numbers, or open the <b>360 dashboard</b>: every KPI with its <b>root causes</b> (_relate), the <b>lever that moves it</b> (_recommend), and a <b>$why</b> on each, optimize, act, and learn with no retrain.</div><div className="go">open →</div></button>
+          <button className="demo" onClick={() => onNavigate("resolve")}><div className="dt">Resolution console</div><div className="dd">A ticket resolved instantly by _predict (with $why) beside the same gpt-5-mini call, showing the response-rate gap live.</div><div className="go">open →</div></button>
+          <a className="demo" href="https://ecommerce.aito.ai"><div className="dt">Industry demos</div><div className="dd">Ecommerce, ERP and accounting: recommend, relate, estimate, GL-coding, anomaly detection, from one index.</div><div className="go">ecommerce · erp · accounting →</div></a>
         </div>
       </div></section>
 
-      <footer><div className="wrap">Aito — the predictive database. Predictions come straight from the index: no model file, no retrain step, every answer verifiable.</div></footer>
+      <footer><div className="wrap">Aito, the predictive database. Predictions come straight from the index: no model file, no retrain step, every answer verifiable.</div></footer>
     </div>
   );
 }

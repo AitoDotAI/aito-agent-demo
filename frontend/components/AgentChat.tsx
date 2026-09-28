@@ -5,7 +5,7 @@
    A real gpt-5-mini chat loop. The model reasons and talks; when it needs a
    number it can't invent it CALLS AN AITO OP, rendered inline so you watch Aito
    work inside the agent. Which tools it may call is controlled by the Toolbox
-   (shared state) — turn the Aito tools off and the same agent has to guess.
+   (shared state), turn the Aito tools off and the same agent has to guess.
 
    Used by both the sales agent and the company agent; they differ only in the
    endpoint, samples, result summaries, and the action verb (props below). */
@@ -37,10 +37,10 @@ function SendGate({ label }: { label: string }) {
   return (
     <div className="gate">
       {approved ? (
-        <span className="ok">✓ Approved by a human — would hand off to your system (demo: nothing was done)</span>
+        <span className="ok">✓ Approved by a human, would hand off to your system (demo: nothing was done)</span>
       ) : (
         <>
-          <span className="lock">🔒 Draft only — never acts automatically</span>
+          <span className="lock">🔒 Draft only, never acts automatically</span>
           <button onClick={() => setApproved(true)}>{label}</button>
         </>
       )}
@@ -125,7 +125,7 @@ export function AgentChat({ endpoint, tools, toolOn, samples, title, blurb, summ
         {msgs.length === 0 && (
           <div className="ag-empty">
             <h3>{title}</h3>
-            <p>{blurb} {aitoOff && <b>Aito tools are off — it&apos;ll have to guess.</b>}</p>
+            <p>{blurb} {aitoOff && <b>Aito tools are off, it&apos;ll have to guess.</b>}</p>
             <div className="samples">{samples.map((s, i) => <button key={i} onClick={() => send(s)}>{s}</button>)}</div>
           </div>
         )}
@@ -138,7 +138,7 @@ export function AgentChat({ endpoint, tools, toolOn, samples, title, blurb, summ
               <div className="asst">
                 {m.trace && m.trace.length > 0 && (
                   <div className="trace">
-                    <div className="tlbl">{m.trace.some((t) => t.aito) ? "called the toolbox" : "no Aito tools available — reasoning only"}</div>
+                    <div className="tlbl">{m.trace.some((t) => t.aito) ? "called the toolbox" : "no Aito tools available, reasoning only"}</div>
                     {m.trace.map((t, j) => <ToolCard key={j} t={t} summarize={summarize} actionLabel={actionLabel} />)}
                   </div>
                 )}

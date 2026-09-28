@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Predictive Agent — by Aito</title>
+<title>Predictive Agent, by Aito</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -237,7 +237,7 @@
       <div class="pstat"><div class="pv">4</div><div class="pl">candidates</div></div>
     </div>
     <div class="pchip">_predict</div>
-    <div class="pdesc">Each ticket is scored with <b>aito._predict</b> over historical tool-call resolutions. The model ranks the few relevant tools out of the whole catalog, with a calibrated confidence. <b>High confidence fires the tool directly</b>, no LLM call. <b>Low confidence escalates</b> to a human — and the routing desk is itself a prediction.</div>
+    <div class="pdesc">Each ticket is scored with <b>aito._predict</b> over historical tool-call resolutions. The model ranks the few relevant tools out of the whole catalog, with a calibrated confidence. <b>High confidence fires the tool directly</b>, no LLM call. <b>Low confidence escalates</b> to a human, and the routing desk is itself a prediction.</div>
 
     <div class="plabel">Example query</div>
     <div class="code"><span class="m">POST</span> /api/v1/_predict
@@ -253,7 +253,7 @@
 <span class="c">// below gate → escalate to a human</span></div>
 
     <div class="plabel">Verify yourself</div>
-    <div class="verify">Every routed call traces back to an Aito query. No separate model file, no retrain step — predictions come straight from the index, so a row added today is in the next prediction.</div>
+    <div class="verify">Every routed call traces back to an Aito query. No separate model file, no retrain step, predictions come straight from the index, so a row added today is in the next prediction.</div>
 
     <div class="plabel">Learn more</div>
     <div class="plinks">
@@ -372,15 +372,15 @@ async function play(){
     await sleep(360);
   }
   // finalize KPI subtitles
-  $('k_auto_s').innerHTML=`<span class="vs">vs 0% baseline</span> — every step hit the model`;
-  $('k_ok_s').innerHTML=`<span class="vs">baseline ${bok}/10</span> — it guessed instead of escalating`;
-  $('k_calls_s').innerHTML=`<span class="vs">baseline ${bcalls}</span> — ${Math.round((1-calls/Math.max(bcalls,1))*100)}% fewer`;
+  $('k_auto_s').innerHTML=`<span class="vs">vs 0% baseline</span>, every step hit the model`;
+  $('k_ok_s').innerHTML=`<span class="vs">baseline ${bok}/10</span>, it guessed instead of escalating`;
+  $('k_calls_s').innerHTML=`<span class="vs">baseline ${bcalls}</span>, ${Math.round((1-calls/Math.max(bcalls,1))*100)}% fewer`;
   $('k_esc_s').innerHTML=escWrong>0?`<span class="bad">${escWrong} mis-routed</span> · ${esc-escWrong} correct desk`:`all routed correctly`;
   $('crumbcnt').textContent=`10 tickets · ${Math.round(auto/10*100)}% auto-fired`;
 
   const tokCut=Math.round((1-sim.a.tok/Math.max(sim.b.tok,1))*100);
   const msCut=Math.round((1-sim.a.ms/Math.max(sim.b.ms,1))*100);
-  $('verdict').innerHTML=`At <b>${tc} tools</b>, the predictive layer skipped the model on the ${auto} confident steps and ran the queue in <b>${calls} LLM calls</b> against the baseline's <b>${bcalls}</b> — about <b>${tokCut}% fewer tokens</b> and <b>${msCut}% less latency</b>. It handled <b>${ok}/10</b> correctly versus the baseline's <b>${bok}/10</b>, because on the genuinely ambiguous tickets it escalated instead of guessing. It is not magic: it <span class="rw">mis-routed ${escWrong}</span> of its ${esc} escalations. The win is not perfection — it is knowing which steps it has no business deciding alone.`;
+  $('verdict').innerHTML=`At <b>${tc} tools</b>, the predictive layer skipped the model on the ${auto} confident steps and ran the queue in <b>${calls} LLM calls</b> against the baseline's <b>${bcalls}</b>, about <b>${tokCut}% fewer tokens</b> and <b>${msCut}% less latency</b>. It handled <b>${ok}/10</b> correctly versus the baseline's <b>${bok}/10</b>, because on the genuinely ambiguous tickets it escalated instead of guessing. It is not magic: it <span class="rw">mis-routed ${escWrong}</span> of its ${esc} escalations. The win is not perfection, it is knowing which steps it has no business deciding alone.`;
   $('verdict').classList.add('show');
   playing=false;$('run').disabled=false;$('tools').disabled=false;
 }

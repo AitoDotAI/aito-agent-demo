@@ -9,7 +9,7 @@ import type { ToolMeta } from "@/components/ToolboxView";
 const SAMPLES = [
   "Warm referral into an Enterprise SaaS company that wants a data platform build, sole-source. Should we pursue it, and how big is the job?",
   "Cold outbound to a Public-sector custom-dev project, competitive. Is it worth it, and how should I approach the head of procurement?",
-  "Existing Banking client wants an integration project. What's the win likelihood and effort — and draft an intro email to their CTO.",
+  "Existing Banking client wants an integration project. What's the win likelihood and effort, and draft an intro email to their CTO.",
 ];
 
 function summarize(t: TraceItem): string {
@@ -33,7 +33,7 @@ export function SalesAgentView({ tools, toolOn }: { tools: ToolMeta[]; toolOn: R
       endpoint="/api/sales-agent/chat"
       tools={tools} toolOn={toolOn} samples={SAMPLES}
       title="Northlight · Opportunity Assistant"
-      blurb={<>A live gpt-5-mini agent. Ask it about a deal — it reasons, and calls Aito ops (<code>_predict</code>, <code>_estimate</code>, <code>_query</code>, <code>_recommend</code>) for the numbers it can&apos;t invent.</>}
+      blurb={<>A live gpt-5-mini agent. Ask it about a deal: it reasons, and calls Aito ops (<code>_predict</code>, <code>_estimate</code>, <code>_query</code>, <code>_recommend</code>) for the numbers it can&apos;t invent.</>}
       summarize={summarize}
       actionLabel="Approve & send"
     />

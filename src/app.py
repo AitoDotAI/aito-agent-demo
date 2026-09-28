@@ -89,7 +89,7 @@ async def rate_limit_llm(request: Request, call_next):
         if len(recent) >= _RL_MAX:
             from fastapi.responses import JSONResponse
             return JSONResponse(
-                {"detail": "Too many AI requests from your network — give it a few seconds."},
+                {"detail": "Too many AI requests from your network. Give it a few seconds."},
                 status_code=429,
             )
         recent.append(now)
@@ -321,7 +321,7 @@ _HANDOFF_QUEUE = [
     "I am not sure, can someone just call me back",
     "I have a few different problems with my account and nobody is helping me",
     "Please cancel my home internet, I'm moving abroad.",
-    "Hi — please refund the €45 charge on my roaming pack.",
+    "Hi, please refund the €45 charge on my roaming pack.",
 ]
 _TEAM = {
     "refund": "Billing", "check_balance": "Billing", "check_outage": "Network Ops",
@@ -342,9 +342,9 @@ def handoff():
         for text in _HANDOFF_QUEUE:
             intent, p, alts = _top_and_alts(aito.predict("resolutions", {"text": text}, "intent", limit=3, select=["$p", "feature"]))
             if p < _ASSIST_GATE:  # unsure first — Aito won't guess, regardless of intent
-                band, reason = "handoff", f"low confidence ({p*100:.0f}%) — Aito won't guess on this"
+                band, reason = "handoff", f"low confidence ({p*100:.0f}%), Aito won't guess on this"
             elif intent in _SENSITIVE:  # confident, but money/state-change → verify with a human
-                band, reason = "handoff", f"sensitive action ({intent.replace('_', ' ')}) — needs human verification"
+                band, reason = "handoff", f"sensitive action ({intent.replace('_', ' ')}), needs human verification"
             elif p >= _AUTO_GATE:
                 band, reason = "auto", None
             else:
@@ -587,7 +587,7 @@ def _tool_propose_send_email(args: dict) -> dict:
     # Never sends. Always returns a draft-queued status for human approval.
     return {"status": "draft_queued_for_approval", "sent": False,
             "to": args.get("to", "(unspecified)"), "subject": args.get("subject", ""),
-            "note": "Draft saved for the rep to review and send — nothing was sent automatically."}
+            "note": "Draft saved for the rep to review and send. Nothing was sent automatically."}
 
 
 _SALES_TOOL_IMPLS = {
@@ -820,7 +820,7 @@ def _tool_optimize_kpi(args: dict) -> dict:
         "recommended_play": {"lever": cfg["lever_label"], "change_to": best},
         "projected": projected,
         "lift_pp": round(abs(then - now) * 100),
-        "note": "Aito has no training step — log this play's outcome and it sharpens the next prediction.",
+        "note": "Aito has no training step: log this play's outcome and it sharpens the next prediction.",
     }
 
 
@@ -879,7 +879,7 @@ def _tool_launch_play(args: dict) -> dict:
     return {"status": "draft_created_for_approval", "acted": False,
             "kpi": args.get("kpi"), "segment": args.get("segment", "(unspecified)"),
             "play": args.get("play", ""), "expected_impact": args.get("expected_impact", ""),
-            "note": "Play drafted for a human to approve — nothing was run automatically."}
+            "note": "Play drafted for a human to approve. Nothing was run automatically."}
 
 
 _COMPANY_TOOL_IMPLS = {

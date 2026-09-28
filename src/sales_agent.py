@@ -123,7 +123,7 @@ TOOLS: list[dict[str, Any]] = [
         "aito": False,
         "grounded_figures": True,  # agent_core rejects a % or multiplier no tool returned
         "op": "action",
-        "summary": "Queue an outreach email as a DRAFT for the rep to approve — never sends on its own.",
+        "summary": "Queue an outreach email as a DRAFT for the rep to approve; never sends on its own.",
         "parameters": {
             "type": "object",
             "properties": {
