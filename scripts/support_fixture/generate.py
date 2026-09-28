@@ -55,6 +55,9 @@ N_TICKETS = 4000
 START, END = date(2026, 3, 2), date(2026, 9, 27)
 DRIFT_DATE = date(2026, 7, 1)
 OUT = HERE / "data"
+#: the held-out incoming queue ships with the app (src/data), since data/ is not committed
+INCOMING = HERE.parent.parent / "src" / "data" / "support_incoming.json"
+HOLDOUT = 150
 
 
 def northwind():
@@ -273,15 +276,30 @@ def build_tickets(rng, customers, usage, kb, control_leak: float = 0.0):
     return tickets, steps
 
 
-def main(out: Path = OUT) -> None:
+def split_incoming(tickets, steps):
+    """Hold out the newest HOLDOUT tickets (and their steps) as the incoming queue.
+    They are never loaded into Aito, so the envelope view predicts on tickets Aito
+    has not seen, and can compare against their recorded truth honestly."""
+    # by the exact stamp: tickets are generated in day order, but with random times in a day
+    held = {t["ticket_id"] for t in sorted(tickets, key=lambda t: (t["created_at"], t["ticket_id"]))[-HOLDOUT:]}
+    return ([t for t in tickets if t["ticket_id"] not in held], [s for s in steps if s["ticket"] not in held],
+            {"tickets": [t for t in tickets if t["ticket_id"] in held],
+             "steps": [s for s in steps if s["ticket"] in held]})
+
+
+def main(out: Path = OUT, incoming: Path = INCOMING) -> None:
     customers, usage = northwind()
     rng = random.Random(SEED)
     kb = build_kb()
     tickets, steps = build_tickets(rng, customers, usage, kb)
+    tickets, steps, held = split_incoming(tickets, steps)
     out.mkdir(exist_ok=True)
     for name, rows in (("kb_articles", kb), ("support_tickets", tickets), ("support_steps", steps)):
         (out / f"{name}.json").write_text(json.dumps(rows, indent=0, sort_keys=True) + "\n")
         print(f"{name}: {len(rows)} rows")
+    incoming.parent.mkdir(exist_ok=True)
+    incoming.write_text(json.dumps(held, indent=0, sort_keys=True) + "\n")
+    print(f"incoming (held out, not loaded): {len(held['tickets'])} tickets -> {incoming}")
 
 
 if __name__ == "__main__":

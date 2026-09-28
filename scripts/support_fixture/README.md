@@ -14,8 +14,14 @@ what is on shared exactly (1500/1500 customers and 3531/3531 usage rows, checked
 | collection | rows | links |
 |---|---|---|
 | `kb_articles` | 15 | |
-| `support_tickets` | 4,000 | `customer → customers`, `product → products`, `kb_article → kb_articles` (nullable) |
-| `support_steps` | 19,530 | `ticket → support_tickets` |
+| `support_tickets` | 3,850 | `customer → customers`, `product → products`, `kb_article → kb_articles` (nullable) |
+| `support_steps` | 18,810 | `ticket → support_tickets` |
+
+The **newest 150 tickets** (and their steps) are held out as the **incoming queue**:
+never loaded, and committed at `src/data/support_incoming.json` for the app. The
+envelope view predicts on those, so Aito has not seen the tickets it is judged on, and
+their recorded truth is what the view compares against. The measurements below are
+over all 4,000.
 
 Tickets run from 2026-03-02 to 2026-09-27. `month` (YYYY-MM) is the time axis for
 drift; `created_at` is the exact stamp.
@@ -70,7 +76,7 @@ Also true of this data, and worth saying in any view built on it:
 ## Use
 
 ```bash
-python3 scripts/support_fixture/generate.py            # writes data/ (byte-identical every run)
+python3 scripts/support_fixture/generate.py            # writes data/ and src/data/support_incoming.json (byte-identical every run)
 python3 scripts/support_fixture/lifts.py               # measure the planted effects
 uv run --with 'aitoai>=1.0' python scripts/support_fixture/load.py           # dry run: prints the plan
 uv run --with 'aitoai>=1.0' python scripts/support_fixture/load.py --apply   # writes (Antti runs it)

@@ -23,22 +23,40 @@ import lifts  # noqa: E402
 #: the "identical to shared" replay, then update the hashes on purpose.
 PINNED = {
     "kb_articles.json": "bf591f2023f950b8caa2d37f0827d1404abcc15a3a48e1b3f2958e3c59249271",
-    "support_tickets.json": "e050cb05051b6f7ccc4a2c912ddc6b5ebf57849a2e549be08c226ee585ea504c",
-    "support_steps.json": "9fc655e4fd3339b81a510c8374c04be7964063de5398ba267958bb6645016588",
+    "support_tickets.json": "681870d898a298bf8ce10606031c72db9414711033d24fe2f643f8b51c71c059",
+    "support_steps.json": "3dd13303f80cfbbeeaeef4cba9f8b1203ab6baaed787a1ac1a8c931d51300a38",
+    "incoming.json": "82aab6d05af0320fc4e90f8d006227f80a8fd2c265cf97c66977b123d0286b4e",
 }
 
 
 @pytest.fixture(scope="module")
 def measured(tmp_path_factory):
     d = tmp_path_factory.mktemp("support")
-    generate.main(d)
-    return d, lifts.main(d)
+    generate.main(d, d / "incoming.json")  # never the committed src/data copy
+    return d, lifts.main(d, d / "incoming.json")
 
 
 def test_the_generated_files_are_the_pinned_ones(measured):
     d, _ = measured
     for name, digest in PINNED.items():
         assert hashlib.sha256((d / name).read_bytes()).hexdigest() == digest, name
+
+
+def test_the_committed_incoming_queue_is_the_generated_one(measured):
+    d, _ = measured
+    committed = HERE.parent / "src" / "data" / "support_incoming.json"
+    assert committed.read_bytes() == (d / "incoming.json").read_bytes()
+
+
+def test_the_incoming_queue_is_never_loaded(measured):
+    d, _ = measured
+    loaded = {t["ticket_id"] for t in json.loads((d / "support_tickets.json").read_text())}
+    held = json.loads((d / "incoming.json").read_text())
+    ids = {t["ticket_id"] for t in held["tickets"]}
+    assert len(ids) == generate.HOLDOUT and not ids & loaded
+    assert {s["ticket"] for s in held["steps"]} <= ids
+    newest_loaded = max(t["created_at"] for t in json.loads((d / "support_tickets.json").read_text()))
+    assert min(t["created_at"] for t in held["tickets"]) >= newest_loaded  # the queue is the newest tickets
 
 
 def test_the_control_is_null(measured):

@@ -19,7 +19,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from generate import DRIFT_DATE, northwind  # noqa: E402
+from generate import DRIFT_DATE, INCOMING, northwind  # noqa: E402
 
 DATA = HERE / "data"
 
@@ -51,9 +51,13 @@ def rate(rows, pred, outcome) -> dict:
     return {"n": len(sel), "p": round(k / len(sel), 3) if sel else None, "ci95": wilson(k, len(sel))}
 
 
-def main(data: Path = DATA) -> dict:
+def main(data: Path = DATA, incoming: Path | None = None) -> dict:
+    # the full fixture: what is loaded plus the held-out incoming queue
     tickets = json.loads((data / "support_tickets.json").read_text())
     steps = json.loads((data / "support_steps.json").read_text())
+    if incoming is not None and incoming.exists():
+        held = json.loads(incoming.read_text())
+        tickets, steps = tickets + held["tickets"], steps + held["steps"]
     customers, usage = northwind()
     cust = {c["customer_id"]: c for c in customers}
     for t in tickets:
@@ -163,4 +167,4 @@ def main(data: Path = DATA) -> dict:
 
 
 if __name__ == "__main__":
-    print(json.dumps(main(), indent=1))
+    print(json.dumps(main(DATA, INCOMING), indent=1))
