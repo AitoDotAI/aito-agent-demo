@@ -197,11 +197,13 @@ class AitoClient:
                              {"from": table, "where": where, "recommend": field, "goal": goal, "limit": limit},
                              op="_recommend")
 
-    def relate(self, table: str, where: dict, fields: list[str]) -> dict:
+    def relate(self, table: str, where: dict, fields: list[str], limit: int | None = None) -> dict:
         """Statistical relationships ('drivers'): how each value of `fields` is
         over/under-represented under `where`. lift > 1 = a root cause of `where`."""
-        return self._request("POST", self._path("_relate"),
-                             {"from": table, "where": where, "relate": fields}, op="_relate")
+        body: dict = {"from": table, "where": where, "relate": fields}
+        if limit is not None:
+            body["limit"] = limit
+        return self._request("POST", self._path("_relate"), body, op="_relate")
 
     def relate_on(self, table: str, target: dict, on: dict) -> dict:
         """Drivers of `target` SCOPED to `on` — relate the outcome (e.g. churned=yes)

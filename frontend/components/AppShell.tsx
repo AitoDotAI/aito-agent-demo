@@ -15,6 +15,7 @@ import ConfidenceBar from "@/components/prediction/ConfidenceBar";
 import WhyCards from "@/components/prediction/WhyCards";
 import { AugmentView } from "@/components/AugmentView";
 import { HandoffView, type HandoffData } from "@/components/HandoffView";
+import { RulesView } from "@/components/RulesView";
 import { OverviewView } from "@/components/OverviewView";
 import { SalesView, type SalesMeta } from "@/components/SalesView";
 import { SalesAgentView } from "@/components/SalesAgentView";
@@ -24,7 +25,7 @@ import { ToolboxView, type ToolMeta } from "@/components/ToolboxView";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { Alternative, WhyFactor } from "@/lib/types";
 
-export type View = "home" | "resolve" | "augment" | "handoff" | "sales" | "agent" | "toolbox" | "company" | "company-data" | "company-toolbox";
+export type View = "home" | "resolve" | "augment" | "handoff" | "rules" | "sales" | "agent" | "toolbox" | "company" | "company-data" | "company-toolbox";
 
 type Aito = {
   intent: string; intent_p: number; intent_alts: Alternative[]; why: WhyFactor[];
@@ -56,7 +57,7 @@ const actionText = (intent: string, param: string | null) =>
   (ACTION[intent] ?? ((p: string | null) => `${intent}${p ? " · " + p : ""}`))(param);
 
 const isView = (v: string | null): v is View =>
-  v === "home" || v === "resolve" || v === "augment" || v === "handoff" || v === "sales" || v === "agent" ||
+  v === "home" || v === "resolve" || v === "augment" || v === "handoff" || v === "rules" || v === "sales" || v === "agent" ||
   v === "toolbox" || v === "company" || v === "company-data" || v === "company-toolbox";
 
 const SALES_EXAMPLES: Record<string, string> = {
@@ -182,7 +183,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
   const PAGE_TITLE: Record<View, string> = {
     home: "Overview", agent: "Sales agent", sales: "Opportunity Assistant", toolbox: "Sales toolbox",
     company: "Company AI agent", "company-data": "360 Dashboard", "company-toolbox": "Company toolbox",
-    resolve: "Ticket resolution", augment: "Tool routing", handoff: "Human handoff",
+    resolve: "Ticket resolution", augment: "Tool routing", handoff: "Human handoff", rules: "Decision rules",
   };
   const crumb = view === "sales"
     ? { grp: "Northlight · sales", page: "Opportunity Assistant", note: "live · _estimate · _recommend · _query" }
@@ -228,6 +229,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
           <div className={`rc-item ${view === "handoff" ? "on" : ""}`} onClick={() => go("handoff")}>
             Human handoff{handoff && handoff.counts.handoff > 0 && <span className="bdg r">{handoff.counts.handoff}</span>}
           </div>
+          <NavItem v="rules">Decision rules · review</NavItem>
         </nav>
         <div style={{ marginTop: "auto", padding: "16px 18px", fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: "var(--side-label)", lineHeight: 1.6, borderTop: "1px solid var(--side-line)" }}>
           analyze · assist · automate<br />every view is live Aito + gpt-5-mini
@@ -270,6 +272,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
 
         {view === "augment" && <AugmentView onAito={setAugMs} />}
         {view === "handoff" && <HandoffView data={handoff} loading={handoffLoading} />}
+        {view === "rules" && <RulesView />}
         {view === "sales" && <SalesView onMeta={setSales} />}
 
         {view === "resolve" && (
@@ -442,6 +445,14 @@ const PANEL: Record<Exclude<View, "resolve">, {
     desc: "Calibrated confidence is <b>governance</b>. A confident prediction auto-resolves; a borderline one is handed to a human with the tentative read attached; anything sensitive (refund, cancel) is gated regardless. The number decides who acts.",
     codeLabel: "Live query",
     code: "POST /api/v2/_predict\n{\n  \"from\": \"resolutions\",\n  \"where\": { \"text\": \"…\" },\n  \"predict\": \"intent\",\n  \"select\": [\"$p\"]\n}\n// $p ≥ .85 auto · else escalate",
+  },
+  rules: {
+    pdb: "_relate · rule mining",
+    stats: [["_relate", "per decision"], ["rules", "not rows"], ["0", "in force"]],
+    chip: "govern · review",
+    desc: "Review the <b>rules</b> an agent's decisions follow, not the decisions one by one. <code>_relate</code> finds, for each decision, the conditions that go with it, with how often each is right when it fires. A reviewer approves the real ones and rejects the accidents. Promotion is read-only here: it mirrors the accounting demo's promote API.",
+    codeLabel: "Live query",
+    code: "POST /api/v2/_relate\n{\n  \"from\": \"resolutions\",\n  \"where\": { \"intent\": \"refund\" },\n  \"relate\": [\"text\", \"sender_domain\"]\n}\n// → text has \"refund\": 532 of 532",
   },
   sales: {
     pdb: "estimate · recommend · query",
