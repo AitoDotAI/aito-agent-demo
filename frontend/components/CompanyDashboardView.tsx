@@ -22,7 +22,7 @@ type Kpi = {
 
 // the KPI rate's own $why: base × the segment attributes' lifts = the rate
 function KpiWhyBody({ w, now }: { w: KpiWhy; now: number }) {
-  if (w.base == null) return <div style={{ fontSize: 12, color: "#56524a" }}>This rate is the base — the segment&apos;s attributes don&apos;t move this KPI.</div>;
+  if (w.base == null) return <div style={{ fontSize: 12, color: "#56524a" }}>This rate is the base, the segment&apos;s attributes don&apos;t move this KPI.</div>;
   return (
     <div>
       <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 9 }}>
@@ -217,13 +217,13 @@ export function CompanyDashboardView() {
                       <div className="dom" key={d}><div className="dn">{v.count}</div><div className="dl">{d}</div></div>
                     ))}
                   </div>
-                  <div className="sp-foot">One customer, every domain — joined live by the Aito link. The same numbers the Company AI agent reasons over.</div>
+                  <div className="sp-foot">One customer, every domain, joined live by the Aito link. The same numbers the Company AI agent reasons over.</div>
                 </div>
               </>
             )}
           </>
         )}
-        <div className="foot">Every figure is a live Aito query over Northwind&apos;s linked data — KPIs &amp; levers (`_predict` + `_recommend`), the customer join (`_query`). This is the data view; the <b>Company AI agent</b> drives the same ops in a chat.</div>
+        <div className="foot">Every figure is a live Aito query over Northwind&apos;s linked data: KPIs &amp; levers (`_predict` + `_recommend`), the customer join (`_query`). This is the data view; the <b>Company AI agent</b> drives the same ops in a chat.</div>
       </div>
     </div>
   );

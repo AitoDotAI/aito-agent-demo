@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import ConfidenceBar from "@/components/prediction/ConfidenceBar";
 import PredictionBadge from "@/components/prediction/PredictionBadge";
 import type { Alternative } from "@/lib/types";
@@ -14,17 +15,18 @@ const ACTION: Record<string, string> = {
 
 export function HandoffView({ data, loading }: { data: HandoffData | null; loading: boolean }) {
   const c = data?.counts;
+  const [picked, setPicked] = useState<Set<string>>(new Set());
   return (
     <div className="rc-body">
       <div className="rc-kpis">
         <div className="rc-kpi"><div className="kl">In the queue</div><div className="kv">{data?.total ?? "—"}</div><div className="ks">incoming tickets, triaged by confidence</div></div>
-        <div className="rc-kpi"><div className="kl">Auto-resolved</div><div className="kv t">{c ? c.auto : "—"}</div><div className="ks">no human, no LLM — Aito was sure</div></div>
+        <div className="rc-kpi"><div className="kl">Auto-resolved</div><div className="kv t">{c ? c.auto : "—"}</div><div className="ks">no human, no LLM, Aito was sure</div></div>
         <div className="rc-kpi"><div className="kl">Assisted</div><div className="kv">{c ? c.assist : "—"}</div><div className="ks">Aito + LLM on the shortlist</div></div>
         <div className="rc-kpi"><div className="kl">Handed to you</div><div className="kv p">{c ? c.handoff : "—"}</div><div className="ks">unsure, or money/state-change</div></div>
       </div>
 
       <div className="rc-h">The agent knows what it doesn&apos;t know</div>
-      <div className="rc-sub">Aito triages the queue by its own <b>calibrated confidence</b>. It resolves the sure ones outright, and <b>hands you only the rest</b> — the genuinely ambiguous, and anything that touches money or state. It never guesses on those. And it doesn&apos;t hand them over blank: you get its <b>tentative read, its confidence, and why</b>, so you start informed.</div>
+      <div className="rc-sub">Aito triages the queue by its own <b>calibrated confidence</b>. It resolves the sure ones outright, and <b>hands you only the rest</b>: the genuinely ambiguous, and anything that touches money or state. It never guesses on those. And it doesn&apos;t hand them over blank: you get its <b>tentative read, its confidence, and why</b>, so you start informed.</div>
 
       {loading && !data && <div className="rc-typing" style={{ padding: "20px 0" }}><span>triaging the queue…</span></div>}
 
@@ -49,7 +51,9 @@ export function HandoffView({ data, loading }: { data: HandoffData | null; loadi
                     <span style={{ fontSize: 11.5, color: "var(--rc-faint)" }}>Aito&apos;s tentative read</span>
                     <PredictionBadge value={h.intent} confidence={h.p} alternatives={h.alts} />
                     <div style={{ width: 150 }}><ConfidenceBar value={h.p} /></div>
-                    <button style={{ marginLeft: "auto", fontWeight: 700, fontSize: 12.5, background: "var(--purple)", color: "#fff", border: "none", borderRadius: 7, padding: "7px 14px", cursor: "pointer" }}>Pick up →</button>
+                    {picked.has(h.text)
+                      ? <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--rc-faint)" }}>✓ Yours (demo: nothing was assigned)</span>
+                      : <button onClick={() => setPicked((s) => new Set(s).add(h.text))} style={{ marginLeft: "auto", fontWeight: 700, fontSize: 12.5, background: "var(--purple)", color: "#fff", border: "none", borderRadius: 7, padding: "7px 14px", cursor: "pointer" }}>Pick up →</button>}
                   </div>
                 </div>
               );
@@ -58,7 +62,7 @@ export function HandoffView({ data, loading }: { data: HandoffData | null; loadi
         </div>
       )}
 
-      <div className="rc-foot">Live: each ticket scored by a real Aito `_predict` over learned history. The split is the calibration doing governance — auto when sure, human when not, verification on anything that changes money or state.</div>
+      <div className="rc-foot">Live: each ticket scored by a real Aito `_predict` over learned history. The split is the calibration doing governance: auto when sure, human when not, verification on anything that changes money or state.</div>
     </div>
   );
 }

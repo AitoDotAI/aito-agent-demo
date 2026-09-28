@@ -15,7 +15,7 @@ type Sheet = {
   win: { p: number; drivers: Driver[] };
   effort_days: number;
   references: Ref[];
-  outreach: { channels: Ranked[]; angles: Ranked[]; recommended: { channel: string; angle: string; personalization: string }; meeting_p: number; auto_send: boolean };
+  outreach: { channels: Ranked[]; angles: Ranked[]; recommended: { channel: string; angle: string; personalization: string }; meeting_p: number; baseline_meeting_p: number };
   business_case: { value_eur: number; day_rate: number; cost_eur: number; margin_eur: number; margin_pct: number };
 };
 
@@ -91,7 +91,7 @@ export function SalesView({ onMeta }: { onMeta?: (m: SalesMeta) => void }) {
                 <div className="winpct" style={{ color: wl[1] }}>{Math.round(w!.p * 100)}<span>%</span></div>
                 <div className="winmeta"><div className="winlbl" style={{ color: wl[1] }}>{wl[0]}</div><div className="winbar"><i style={{ width: `${Math.round(w!.p * 100)}%`, background: wl[1] }} /></div></div>
               </div>
-              <div className="sub">why — top drivers from {sheet.profile.industry} history</div>
+              <div className="sub">why, top drivers from {sheet.profile.industry} history</div>
               {w!.drivers.map((d, i) => (
                 <div className="drv" key={i}><span className="df">{d.field.replace(/_/g, " ")} = <b>{d.value}</b></span><span className={`dl ${d.lift >= 1 ? "up" : "dn"}`}>×{d.lift.toFixed(2)}</span></div>
               ))}
@@ -127,7 +127,8 @@ export function SalesView({ onMeta }: { onMeta?: (m: SalesMeta) => void }) {
               </div>
               <div className="meet">
                 predicted meeting rate <b>{Math.round(sheet.outreach.meeting_p * 100)}%</b>
-                <span className={`gate ${sheet.outreach.auto_send ? "go" : "rev"}`}>{sheet.outreach.auto_send ? "⚡ clears auto-send gate" : "→ human review"}</span>
+                {sheet.outreach.baseline_meeting_p > 0 && <> vs <b>{Math.round(sheet.outreach.baseline_meeting_p * 100)}%</b> baseline</>}
+                <span className="gate rev">draft for rep review</span>
               </div>
               <div className="ranks">
                 <div className="rk"><div className="rkl">channels</div>{sheet.outreach.channels.map((c, i) => <div className="rkrow" key={i}><span>{c.v}</span><div className="rkbar"><i style={{ width: `${Math.min(100, c.p * 220)}%` }} /></div></div>)}</div>
@@ -136,7 +137,7 @@ export function SalesView({ onMeta }: { onMeta?: (m: SalesMeta) => void }) {
             </div>
           </div>
         )}
-        <div className="foot">Every figure is a live Aito query over Northlight&apos;s own history — win &amp; drivers (`_predict`+`$why`), effort (`_estimate`), references (`_query`), outreach (`_recommend`). The LLM would draft the email; Aito supplies the facts it can&apos;t invent.</div>
+        <div className="foot">Every figure is a live Aito query over Northlight&apos;s own history: win &amp; drivers (`_predict`+`$why`), effort (`_estimate`), references (`_query`), outreach (`_recommend`). The LLM would draft the email; Aito supplies the facts it can&apos;t invent.</div>
       </div>
     </div>
   );

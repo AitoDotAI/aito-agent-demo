@@ -2,7 +2,7 @@
 
 /* Company AI agent = AgentChat wired to /api/company-agent/chat. A 360° copilot
    over one linked customers master (sales/support/product/finance/CX). It doesn't
-   just report KPIs — it finds the lever that moves each one and drafts the play.
+   just report KPIs, it finds the lever that moves each one and drafts the play.
    A SQL+LLM BI bot counts rows; this predicts, explains, optimises, and learns. */
 
 import { AgentChat, pct, type TraceItem } from "@/components/AgentChat";
@@ -13,7 +13,7 @@ const eur = (v: unknown) => "€" + Number(v).toLocaleString("en-US");
 const SAMPLES = [
   "Give me the 360 KPI snapshot for our SMB Free-plan customers, then the single biggest lever to cut their churn and the projected impact.",
   "Which lever most improves conversion for Enterprise deals, and what's the lift? Draft the play.",
-  "Pull a 360 on an at-risk customer — deals, tickets, usage, invoices — and recommend what to do.",
+  "Pull a 360 on an at-risk customer (deals, tickets, usage, invoices) and recommend what to do.",
 ];
 
 function summarize(t: TraceItem): string {
@@ -48,7 +48,7 @@ export function CompanyAgentView({ tools, toolOn }: { tools: ToolMeta[]; toolOn:
       endpoint="/api/company-agent/chat"
       tools={tools} toolOn={toolOn} samples={SAMPLES}
       title="Northwind Cloud · Company AI"
-      blurb={<>A 360° copilot over one <b>linked</b> customer view — sales, support, product, finance, CX. It calls Aito to give the <b>360 KPIs</b>, find the <b>lever that moves each one</b> (<code>_predict</code> + <code>_recommend</code> + projected lift), and draft the play. See → optimise → act → learn, no retrain.</>}
+      blurb={<>A 360° copilot over one <b>linked</b> customer view: sales, support, product, finance, CX. It calls Aito to give the <b>360 KPIs</b>, find the <b>lever that moves each one</b> (<code>_predict</code> + <code>_recommend</code> + projected lift), and draft the play. See → optimise → act → learn, no retrain.</>}
       summarize={summarize}
       actionLabel="Approve play"
     />

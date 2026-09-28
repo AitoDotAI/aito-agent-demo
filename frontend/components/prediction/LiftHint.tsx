@@ -27,7 +27,7 @@ export default function LiftHint({ value, prefix = "lift " }: LiftHintProps) {
   const tooltip =
     `Lift = how many times more often this combination occurs than random.\n` +
     `> 20× very strong · 5–20× strong · 1–5× weak · < 1× anti-correlated.\n` +
-    `This is ${value.toFixed(1)}× — ${tone}.`;
+    `This is ${value.toFixed(1)}×, ${tone}.`;
   return (
     <span title={tooltip} style={{ color, fontWeight: 600, cursor: "help", borderBottom: "1px dotted currentColor" }}>
       {prefix}{value.toFixed(1)}×

@@ -204,7 +204,7 @@ export default function WhyCards({
             }}>
               <strong>× {normalizer.toFixed(2)}</strong>{" "}
               is Aito&apos;s
-              normalising constant — evidence that overlaps is not counted
+              normalising constant, evidence that overlaps is not counted
               twice, so the result is not the raw product of the lifts.
             </div>
           )}
