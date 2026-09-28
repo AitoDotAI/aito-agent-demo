@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Predictive Agent — Aito in your agent's toolbox",
     description:
-      "LLMs reason. RAG remembers. Aito knows. A live gpt-5-mini agent grounded by Aito _predict / _estimate / _recommend — better, faster, cheaper, and higher-yield.",
+      "LLMs reason. RAG remembers. Aito knows. A live gpt-5-mini agent grounded by Aito _predict / _estimate / _recommend: faster and cheaper, with its numbers read from the data, not invented.",
     url: "https://agent.aito.ai",
     siteName: "Aito",
     images: [{ url: "/teaser.png", width: 1200, height: 630, alt: "Predictive Agent — Aito in your agent's toolbox" }],

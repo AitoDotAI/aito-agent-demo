@@ -170,7 +170,7 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
               ["Explain the flag", "_predict + $why", "Anomaly detection <em>with the evidence</em> behind it — the agent cites, doesn’t hallucinate."],
             ]],
             ["assist", "Assist", "Augment the model in the loop — narrow, ground, recommend.", [
-              ["Shortlist the haystack", "_predict", "300 tools · 1,800 SKUs · 255 GL codes → the few that apply. <em>~16× smaller prompts</em>, same answer."],
+              ["Shortlist the haystack", "_predict", "300 tools · 1,800 SKUs · 255 GL codes → the few that apply. <em>~17× smaller prompts</em>."],
               ["Aim the memory", "_match / _similarity", "Surface the past case that fits <em>this</em> context — targeted recall, not a fuzzy global hit."],
               ["Next best action", "_recommend", "The upsell, product, or resolution that maximizes your KPI — learned from history."],
             ]],
@@ -193,14 +193,14 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
       <section id="proof"><div className="wrap">
         <div className="kicker">Benchmarked, not asserted</div>
         <h2>Measured against the standard solution</h2>
-        <p className="lead">Three failure modes every agent team runs into — each one we ran as a real benchmark (live Aito + live gpt-5-mini on seeded, realistic data), against the tool a good engineer would otherwise reach for.</p>
+        <p className="lead">Three failure modes every agent team runs into. We ran each one as a real benchmark on seeded, realistic data (live Aito, and live gpt-5-mini wherever an LLM is involved), against the tool a good engineer would otherwise reach for.</p>
         <div className="proof">
           <div className="pc">
             <div className="pn">01 · shortlisting</div>
             <div className="ptt">Shortlisting is a non-trivial problem</div>
-            <div className="vs"><span className="tag">Standard · embedding-retrieval shortlist</span>As the catalog grows, the right tool slides out of top-k — handled-correct fell <b>58 → 40 / 75</b> from 12 to 340 tools.</div>
-            <div className="ai"><span className="tag">Aito · calibrated shortlist</span>Holds as the catalog grows, and hands the LLM <b>~16× fewer tokens</b> for the same pick (3,842 → 237, live).</div>
-            <div className="bm">→ telco-tool-routing-bench · live &ldquo;short-list&rdquo; view</div>
+            <div className="vs"><span className="tag">Standard · embedding-retrieval shortlist</span>As the catalog grows, the right tool slides out of the top 8: tickets handled correctly fell from <b>58 to 42 of 75</b> between 12 and 340 tools.</div>
+            <div className="ai"><span className="tag">Aito · calibrated shortlist</span>Narrows 240 tools to 5 from history, so the same LLM reads <b>about 17× fewer tokens</b>: 3,829 → 225 input tokens (median of 20 live tickets).</div>
+            <div className="bm">→ telco-tool-routing-bench: sweep on the v1 engine, tokens on v2 (results/shortlist_live.json)</div>
           </div>
           <div className="pc">
             <div className="pn">02 · latency</div>
@@ -212,9 +212,9 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
           <div className="pc">
             <div className="pn">03 · context memory</div>
             <div className="ptt">Finding the right context-memory is hard</div>
-            <div className="vs"><span className="tag">Standard · vector search</span>Picks the <b>wrong customer&apos;s</b> memory <b>86%</b> of the time — symptom text matches across customers; still ~47% wrong even at scale.</div>
-            <div className="ai"><span className="tag">Aito · conditions on structure</span>Recovers the customer the text can&apos;t identify (flat <b>~65%</b> from little data) where embeddings dilute the signal.</div>
-            <div className="bm">→ ticket-assignment-bench (v3)</div>
+            <div className="vs"><span className="tag">Standard · vector search</span>Picks the <b>wrong customer</b> for <b>47% to 72%</b> of tickets, because symptom text matches across customers. It needs 4,000 tickets of history to get down to 47%.</div>
+            <div className="ai"><span className="tag">Aito · conditions on structure</span>Fuses the sender with the text and gets the customer right in <b>63% to 66%</b> of tickets, already from 250 tickets of history.</div>
+            <div className="bm">→ ticket-assignment-bench v3, run on the v1 engine (results/REPORT.md)</div>
           </div>
         </div>
       </div></section>
@@ -241,7 +241,7 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
         <h2>Real predictions, real latency, real cost</h2>
         <p className="lead">Not mocks — these run a live Aito index and a live gpt-5-mini, side by side, on synthetic-but-realistic data. Open any of them from the left.</p>
         <div className="demos">
-          <button className="demo" onClick={() => onNavigate("agent")}><div className="dt">Sales agent</div><div className="dd">A live gpt-5-mini agent that calls Aito ops as <b>tools</b> — win-odds, effort, references, and the outreach that books the most meetings (with the lift). Better, faster, cheaper — and higher-yield.</div><div className="go">open →</div></button>
+          <button className="demo" onClick={() => onNavigate("agent")}><div className="dt">Sales agent</div><div className="dd">A live gpt-5-mini agent that calls Aito ops as <b>tools</b> — win-odds, effort, references, and the outreach that books the most meetings, with its lift over the baseline.</div><div className="go">open →</div></button>
           <button className="demo" onClick={() => onNavigate("company")}><div className="dt">Company AI agent + 360 dashboard</div><div className="dd">Ask the company&apos;s own numbers, or open the <b>360 dashboard</b>: every KPI with its <b>root causes</b> (_relate), the <b>lever that moves it</b> (_recommend), and a <b>$why</b> on each — optimize, act, and learn with no retrain.</div><div className="go">open →</div></button>
           <button className="demo" onClick={() => onNavigate("resolve")}><div className="dt">Resolution console</div><div className="dd">A ticket resolved instantly by _predict (with $why) beside the same gpt-5-mini call — the response-rate gap, live.</div><div className="go">open →</div></button>
           <a className="demo" href="https://ecommerce.aito.ai"><div className="dt">Industry demos</div><div className="dd">Ecommerce, ERP and accounting — recommend, relate, estimate, GL-coding, anomaly detection, from one index.</div><div className="go">ecommerce · erp · accounting →</div></a>

@@ -429,9 +429,9 @@ const PANEL: Record<Exclude<View, "resolve">, {
   },
   augment: {
     pdb: "_predict · short-list",
-    stats: [["240→5", "tools"], ["~16×", "fewer tokens"], ["1", "LLM call"]],
+    stats: [["240→5", "tools"], ["~17×", "fewer tokens"], ["1", "LLM call"]],
     chip: "augment, not compete",
-    desc: "The agent keeps reasoning — Aito just hands it a <b>shorter menu</b>. <code>_predict</code> narrows the full tool catalog to the handful that fit this ticket, so the LLM picks from 5, not 240: smaller prompt, same answer, lower cost.",
+    desc: "The agent keeps reasoning — Aito just hands it a <b>shorter menu</b>. <code>_predict</code> narrows the full tool catalog to the handful that fit this ticket, so the LLM picks from 5, not 240. On 20 live tickets the prompt shrank from 3,829 to 225 input tokens (median), and the pick was right 20 times out of 20, against 13 with the full catalog.",
     codeLabel: "Live query",
     code: "POST /api/v2/_predict\n{\n  \"from\": \"tool_calls\",\n  \"where\": { \"ticket\": \"…\" },\n  \"predict\": \"tool\",\n  \"limit\": 5\n}\n// → 5-tool short-list",
   },
@@ -455,9 +455,9 @@ const PANEL: Record<Exclude<View, "resolve">, {
     pdb: "Aito in the toolbox",
     stats: [["assist", "→ optimize"], ["+yield", "outcome"], ["live", "gpt-5-mini"]],
     chip: "it optimizes, not just informs",
-    desc: "A plain gpt-5-mini chat loop that <b>calls Aito ops as tools</b>. It doesn't only answer — it <b>optimizes the outcome</b>: <code>_recommend</code> picks the approach that books the most meetings and quantifies the <b>lift</b> over the unoptimised baseline (live, from history). Better, faster, cheaper — and higher-yield.",
+    desc: "A plain gpt-5-mini chat loop that <b>calls Aito ops as tools</b>. It doesn't only answer — it <b>optimizes the outcome</b>: <code>_recommend</code> picks the approach that books the most meetings and quantifies the <b>lift</b> over the unoptimised baseline (live, from history). Faster and cheaper than an LLM-only agent, and it measures the yield.",
     codeLabel: "Optimize, not describe",
-    code: "recommend_outreach({industry,role})\n// ⇒ aito._recommend → meeting=yes\n//   Warm intro · Case study\n//   59% vs 16% → 3.7× more meetings",
+    code: "recommend_outreach({industry,role})\n// ⇒ aito._recommend → meeting=yes\n//   channel · angle\n//   meeting rate vs baseline → lift, live",
   },
   toolbox: {
     pdb: "the agent's tools",
