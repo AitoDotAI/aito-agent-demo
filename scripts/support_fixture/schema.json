@@ -1,0 +1,46 @@
+{
+  "kb_articles": {
+    "type": "collection",
+    "columns": {
+      "article_id": { "type": "String" },
+      "resolution": { "type": "String" },
+      "title": { "type": "Text", "analyzer": "english" },
+      "body": { "type": "Text", "analyzer": "english" }
+    }
+  },
+  "support_tickets": {
+    "type": "collection",
+    "columns": {
+      "ticket_id": { "type": "String" },
+      "created_at": { "type": "String" },
+      "text": { "type": "Text", "analyzer": "english" },
+      "sender_domain": { "type": "String" },
+      "channel": { "type": "String" },
+      "customer": { "type": "String", "link": "customers.customer_id" },
+      "product": { "type": "String", "link": "products.product_id" },
+      "category": { "type": "String" },
+      "priority": { "type": "String" },
+      "resolution": { "type": "String" },
+      "kb_article": { "type": "String", "link": "kb_articles.article_id", "nullable": true },
+      "first_response": { "type": "String" },
+      "repeat_30d": { "type": "String" },
+      "recovery": { "type": "String" },
+      "nps_after": { "type": "String" },
+      "csat_band": { "type": "String" },
+      "upsell_offered": { "type": "String" },
+      "upsell_accepted": { "type": "String", "nullable": true }
+    }
+  },
+  "support_steps": {
+    "type": "collection",
+    "columns": {
+      "step_id": { "type": "String" },
+      "ticket": { "type": "String", "link": "support_tickets.ticket_id" },
+      "step_no": { "type": "Int" },
+      "category": { "type": "String" },
+      "previous_action": { "type": "String" },
+      "action": { "type": "String" },
+      "created_at": { "type": "String" }
+    }
+  }
+}
