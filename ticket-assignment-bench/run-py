@@ -5,7 +5,11 @@ VENV="$HERE/../telco-tool-routing-bench/.venv"
 # Newest gcc libstdc++ in the store, resolved at run time like ZLIB below. A hardcoded
 # store path rots when the store is garbage-collected (it did, 2026-09-27).
 GCCLIB=$(ls /nix/store/*-gcc-*-lib/lib/libstdc++.so.6 2>/dev/null \
-  | sed 's|.*-gcc-\([0-9.]*\)-lib/.*|\1 &|' | sort -V | tail -1 | cut -d' ' -f2 | xargs -r dirname)
+  | sed 's|.*-gcc-\([0-9.]*\)-lib/.*|\1 &|' | sort -V | tail -1 | cut -d' ' -f2 | xargs -r dirname || true)
+if [ -z "$GCCLIB" ]; then
+  echo "run-py: no gcc libstdc++ in /nix/store (numpy/torch need it); run inside the repo's nix-shell" >&2
+  exit 1
+fi
 NIXLIBS=$(echo "${NIX_LDFLAGS:-}" | tr ' ' '\n' | grep '^-L' | sed 's/^-L//' | tr '\n' ':')
 ZLIB=$(dirname "$(ls /nix/store/*/lib/libz.so.1 2>/dev/null | head -1)")
 export LD_LIBRARY_PATH="$GCCLIB:$ZLIB:$NIXLIBS${LD_LIBRARY_PATH:-}"
