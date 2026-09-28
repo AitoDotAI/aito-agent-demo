@@ -2,9 +2,10 @@
 
 The support tables link to the Northwind `customers` and `products` already on
 master, so the branch KEEPS everything it inherits from master and only adds
-the three support collections. It never drops a table it didn't create, and it
-refuses master: going live on master is a separate decision
-(docs/design/support-agent.md).
+the three support collections. It only ever creates, drops or fills those three,
+refuses master (going live on master is a separate decision,
+docs/design/support-agent.md), refuses an existing environment unless --reload
+is given, and checks every linked customer and product exists before writing.
 
     python3 scripts/support_fixture/generate.py
     uv run --with 'aitoai>=1.0' python scripts/support_fixture/load.py            # dry run
@@ -37,23 +38,42 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--env", default="support")
     ap.add_argument("--apply", action="store_true", help="perform the writes (default: dry run)")
+    ap.add_argument("--reload", action="store_true",
+                    help="allow an existing environment: drop and refill its three support collections")
     args = ap.parse_args()
-    if args.env in ("", "master", "env.master"):
+    args.env = args.env.strip()
+    if args.env.lower() in ("", "master", "env.master"):
         sys.exit("refusing to load into master: use a branch environment (--env)")
 
     cfg = load_config()
     db = cfg.aito_url.split("/env/")[0]  # the database root, whatever AITO_ENV says
     schema = json.loads((HERE / "schema.json").read_text())
     data = {n: json.loads((HERE / "data" / f"{n}.json").read_text()) for n in ORDER}
-    assert list(schema) == ORDER, "schema.json and ORDER disagree"
+    if list(schema) != ORDER:
+        sys.exit("schema.json and ORDER disagree")
 
     root = Client(db, cfg.aito_key)
     envs = root.list_envs()
-    exists = args.env in {e["name"] for e in envs.get("envs", envs.get("data", []))}
-    tables = set((Client(db, cfg.aito_key, env=args.env) if exists else root).get_schema().get("schema", {}))
+    listed = envs.get("envs", envs.get("data")) if isinstance(envs, dict) else None
+    if not isinstance(listed, list):
+        sys.exit(f"cannot read the environment list (got keys {sorted(envs) if isinstance(envs, dict) else type(envs)}); stopping")
+    exists = args.env in {e.get("name") for e in listed}
+    if exists and not args.reload:
+        sys.exit(f"refusing: env '{args.env}' already exists. Pass --reload to drop and refill its three "
+                 "support collections (nothing else in it is touched), or pick a new --env.")
+    source = Client(db, cfg.aito_key, env=args.env) if exists else root
+    tables = set(source.get_schema().get("schema", {}))
     missing = [t for t in LINK_TARGETS if t not in tables]
     if missing:
         sys.exit(f"refusing: link targets {missing} are not in {'env ' + args.env if exists else 'master'}")
+    # every link must resolve: the replayed Northwind ids against what is really there
+    known = {t: {h[k] for h in source.query({"from": t, "select": [k], "limit": 10000})["hits"]}
+             for t, k in (("customers", "customer_id"), ("products", "product_id"))}
+    dangling = sorted({r[f] for r in data["support_tickets"] for f in ("customer", "product")
+                       if r[f] not in known["customers" if f == "customer" else "products"]})
+    if dangling:
+        sys.exit(f"refusing: tickets link to {len(dangling)} id(s) that don't exist, e.g. {dangling[:3]}; "
+                 "was seed_company.py changed since the fixture was generated?")
 
     plan = [] if exists else [f"branch environment '{args.env}' off master (keeps all {len(tables)} master tables)"]
     for n in ORDER:
@@ -69,7 +89,8 @@ def main() -> int:
     if not exists:
         root.branch_env(args.env)
     env = Client(db, cfg.aito_key, env=args.env)  # every write below is scoped to the branch
-    assert env.env == args.env
+    if env.env != args.env:
+        sys.exit(f"client is scoped to {env.env!r}, not {args.env!r}; stopping before any write")
     for n in reversed(ORDER):  # children first, so no link points at a dropped table
         if n in tables:
             try:
@@ -82,7 +103,9 @@ def main() -> int:
         inserted = env.upload_entries(n, data[n], batch_size=1000)
         env.optimize(n)
         total = env.query({"from": n, "limit": 0})["total"]
-        assert total == len(data[n]), f"{n}: {total} rows in Aito, {len(data[n])} generated"
+        if total != len(data[n]):
+            sys.exit(f"{n}: {total} rows in Aito, {len(data[n])} generated. The env is half-loaded; "
+                     "re-run with --reload.")
         print(f"  {n:16} {inserted} rows")
     print(f"done: {db}/env/{args.env}/api/v2/")
     return 0

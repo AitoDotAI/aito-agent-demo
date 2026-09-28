@@ -34,6 +34,17 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     return (round(c - h, 3), round(c + h, 3))
 
 
+def differs(a: dict, b: dict) -> bool:
+    """Two rates differ at 95%: their Wilson intervals don't overlap (conservative)."""
+    return a["ci95"][1] < b["ci95"][0] or b["ci95"][1] < a["ci95"][0]
+
+
+def two_prop_z(k1: int, n1: int, k2: int, n2: int) -> float:
+    p = (k1 + k2) / (n1 + n2)
+    se = math.sqrt(p * (1 - p) * (1 / n1 + 1 / n2))
+    return round((k1 / n1 - k2 / n2) / se, 2) if se else 0.0
+
+
 def rate(rows, pred, outcome) -> dict:
     sel = [r for r in rows if pred(r)]
     k = sum(1 for r in sel if outcome(r))
@@ -48,9 +59,6 @@ def main(data: Path = DATA) -> dict:
     for t in tickets:
         c = cust[t["customer"]]
         t["_size"], t["_plan"], t["_health"] = c["size"], c["plan"], c["health"]
-    adoption = defaultdict(list)
-    for u in usage:
-        adoption[u["customer"]].append(u["active"] == "yes")
     out: dict = {"tickets": len(tickets), "steps": len(steps)}
 
     # 1. category from words: how precise is the best single word?
@@ -76,14 +84,23 @@ def main(data: Path = DATA) -> dict:
         "no_urgent_words": rate(tickets, lambda t: not urgent(t), high),
         "plan_enterprise": rate(tickets, lambda t: t["_plan"] == "Enterprise", high),
         "plan_free": rate(tickets, lambda t: t["_plan"] == "Free", high),
+        "category_bug": rate(tickets, lambda t: t["category"] == "bug", high),
+        "category_how_to": rate(tickets, lambda t: t["category"] == "how_to", high),
     }
+    ph = out["priority_high"]
+    out["priority_high"]["plan_differs"] = differs(ph["plan_enterprise"], ph["plan_free"])
+    out["priority_high"]["category_differs"] = differs(ph["category_bug"], ph["category_how_to"])
 
-    # 3. drift: how login tickets are resolved, before and after the SSO rollout
-    login = lambda t: t["resolution"] in ("reset_password", "sso_reconnect")  # noqa: E731
+    # 3. drift: how login issues are resolved, before and after the SSO rollout.
+    # Selected by the `issue` input, never by the resolution being measured.
+    login = lambda t: t["issue"] == "login"  # noqa: E731
     sso = lambda t: t["resolution"] == "sso_reconnect"  # noqa: E731
+    cut = DRIFT_DATE.strftime("%Y-%m")
     out["drift_sso"] = {
-        "before": rate(tickets, lambda t: login(t) and t["created_at"][:10] < DRIFT_DATE.isoformat(), sso),
-        "after": rate(tickets, lambda t: login(t) and t["created_at"][:10] >= DRIFT_DATE.isoformat(), sso),
+        "before": rate(tickets, lambda t: login(t) and t["month"] < cut, sso),
+        "after": rate(tickets, lambda t: login(t) and t["month"] >= cut, sso),
+        "all_access_before": rate(tickets, lambda t: t["category"] == "access" and t["month"] < cut, sso),
+        "all_access_after": rate(tickets, lambda t: t["category"] == "access" and t["month"] >= cut, sso),
     }
 
     # 4. next step given the previous one (top transitions with support)
@@ -112,29 +129,34 @@ def main(data: Path = DATA) -> dict:
     }
     lever = {}
     for size in ("SMB", "Mid-market", "Enterprise"):
-        lever[size] = {r: rate(tickets, lambda t, r=r, size=size: t["_size"] == size and t["recovery"] == r, det)
-                       for r in ("none", "apology_credit", "priority_callback", "csm_outreach")}
-        lever[size]["best"] = min((k for k in lever[size] if k != "best"), key=lambda k: lever[size][k]["p"])
+        acts = {r: rate(tickets, lambda t, r=r, size=size: t["_size"] == size and t["recovery"] == r, det)
+                for r in ("none", "apology_credit", "priority_callback", "csm_outreach")}
+        best = min(acts, key=lambda k: acts[k]["p"])
+        lever[size] = {**acts, "best": best, "best_beats_none": differs(acts[best], acts["none"])}
     out["recovery_by_size"] = lever
 
     # 6. upsell acceptance
     offered = [t for t in tickets if t["upsell_offered"] == "yes"]
     acc = lambda t: t["upsell_accepted"] == "yes"  # noqa: E731
-    adopt = lambda t: sum(adoption[t["customer"]]) / max(1, len(adoption[t["customer"]]))  # noqa: E731
     out["upsell"] = {
         "base": rate(offered, lambda t: True, acc),
-        "high_adoption_>=0.67": rate(offered, lambda t: adopt(t) >= 0.67, acc),
-        "low_adoption_<0.34": rate(offered, lambda t: adopt(t) < 0.34, acc),
+        "adoption_band_high": rate(offered, lambda t: t["adoption_band"] == "high", acc),
+        "adoption_band_low": rate(offered, lambda t: t["adoption_band"] == "low", acc),
         "plan_free_or_starter": rate(offered, lambda t: t["_plan"] in ("Free", "Starter"), acc),
         "health_red": rate(offered, lambda t: t["_health"] == "Red", acc),
     }
 
-    # 7. control: channel is deliberately NOT a cause of nps_after
-    out["control_channel"] = {ch: {**rate(tickets, lambda t, ch=ch: t["channel"] == ch, det),
-                                   "lift": None} for ch in ("email", "chat", "portal", "phone")}
-    for v in out["control_channel"].values():
-        v["lift"] = round(v["p"] / base["p"], 2)
-    out["control_holds"] = all(v["ci95"][0] <= base["p"] <= v["ci95"][1] for v in out["control_channel"].values())
+    # 7. control: channel is deliberately NOT a cause of nps_after. Each channel is
+    # tested against all the OTHER channels (a two-proportion z), not against a base
+    # that includes itself.
+    out["control_channel"] = {}
+    for ch in ("email", "chat", "portal", "phone"):
+        mine = [t for t in tickets if t["channel"] == ch]
+        rest = [t for t in tickets if t["channel"] != ch]
+        k1, k2 = sum(map(det, mine)), sum(map(det, rest))
+        out["control_channel"][ch] = {**rate(mine, lambda t: True, det), "lift": round((k1 / len(mine)) / base["p"], 2),
+                                      "z_vs_rest": two_prop_z(k1, len(mine), k2, len(rest))}
+    out["control_holds"] = all(abs(v["z_vs_rest"]) < 1.96 for v in out["control_channel"].values())
 
     (data / "lifts.json").write_text(json.dumps(out, indent=1) + "\n")
     return out

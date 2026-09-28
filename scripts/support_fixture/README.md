@@ -15,30 +15,57 @@ what is on shared exactly (1500/1500 customers and 3531/3531 usage rows, checked
 |---|---|---|
 | `kb_articles` | 15 | |
 | `support_tickets` | 4,000 | `customer → customers`, `product → products`, `kb_article → kb_articles` (nullable) |
-| `support_steps` | 15,576 | `ticket → support_tickets` |
+| `support_steps` | 19,530 | `ticket → support_tickets` |
 
-Tickets run from 2026-03-02 to 2026-09-27, each with a `created_at`, so drift has a
-time axis.
+Tickets run from 2026-03-02 to 2026-09-27. `month` (YYYY-MM) is the time axis for
+drift; `created_at` is the exact stamp.
 
 ## Planted causes, and what they measure
 
 `python3 lifts.py` measures each effect from the written files only (plus the
 replayed Northwind rows), never from the generator's internals. Numbers for the
-default seed, with 95% Wilson intervals where a rate is compared:
+default seed; "differs" means the 95% Wilson intervals don't overlap.
 
 | story | planted | measured |
 |---|---|---|
-| category from words | topic phrases share vocabulary; 12% of tickets mix two topics | 0 of 172 common words is a perfect rule; "invoice" 0.80, "sync" 0.90, "report" 0.35 |
-| priority | urgency words, category, plan and size | high priority 0.61 with urgency words vs 0.16 without (base 0.24) |
-| drift | from 2026-07-01, login tickets are fixed by `sso_reconnect`, not `reset_password` | `sso_reconnect` share 0.00 before (n=143), 0.78 after (n=143) |
-| next step | each resolution is a step sequence with 15% detours | e.g. performance `reproduce → profile_query` 0.85; bug `check_pipeline → rerun_sync` 0.87 |
-| detractor risk | repeat ticket in 30 days, first response >24h, Red account | base 0.20; repeat 0.32, >24h 0.30, Red 0.31 (Green 0.16) |
-| recovery lever | randomly assigned, so its effect is causal; the best action depends on size | detractor rate with the best vs none: SMB credit 0.13 vs 0.23; Mid-market callback 0.17 vs 0.25; Enterprise CSM outreach 0.06 vs 0.27 |
-| upsell | offered at random on 30%; accepted by adoption and plan, not by Red accounts | accepted 0.34 at high adoption vs 0.11 at low; Red 0.02 (base 0.21) |
-| **control** | the ticket `channel` has **no** effect on `nps_after` | lift 0.96-1.04 across email, chat, portal, phone; every interval covers the base |
+| category from words | topic phrases share vocabulary; 12% of tickets mix two topics | 0 of 172 common words is a perfect rule; "invoice" 0.79, "sync" 0.85, "report" 0.32 |
+| priority | mostly urgency words; a little category, plan and size | high 0.62 with urgency words vs 0.17 without; Enterprise plan 0.33 vs Free 0.23; bug 0.32 vs how-to 0.21 (all differ) |
+| drift | from 2026-07, 80% of `login` issues are fixed by `sso_reconnect`, not `reset_password` | `sso_reconnect` on login issues: 0.00 before, 0.82 after; on all access tickets: 0.00 before, 0.39 after |
+| next step | each resolution is a step sequence ending in `done`, with 15% detours | e.g. bug `check_pipeline → rerun_sync` 0.83; every path's last step → `done` 1.00. After `reproduce`, a bug splits 0.43 / 0.57 by its `issue` (crash or wrong data) |
+| detractor risk | repeat ticket in 30 days, first response >24h, Red account | base 0.20; repeat 0.31, >24h 0.32, Red 0.31 (Green 0.16); each differs from the base |
+| recovery lever | assigned at random, so its effect is causal; the best action depends on size | detractor rate, best vs none: SMB credit 0.11 vs 0.30; Mid-market callback 0.11 vs 0.26; Enterprise CSM outreach 0.08 vs 0.28 (each differs) |
+| upsell | offered at random on 30% of tickets from accounts that haven't churned | accepted 0.36 at `adoption_band` high vs 0.11 at low; Red accounts 0.02 (base 0.23) |
+| **control** | the ticket `channel` has **no** effect on `nps_after` | each channel against the rest: \|z\| < 1.96 (email −1.72, chat 0.22, portal 0.64, phone 0.89); lift 0.91 to 1.05 |
 
-The control is what makes the rest believable: `tests/test_support_fixture.py`
-fails if it stops being null (checked by planting a +0.07 chat effect).
+The control is what makes the rest believable. `tests/test_support_fixture.py` fails
+if it stops being null, and it also plants a +0.07 chat effect (`control_leak`) to
+prove the check then fails. Email's −1.72 is chance at this sample size, not a
+planted effect.
+
+## Inputs and targets: what a demo may use to predict what
+
+Some columns are recorded *after* the thing a demo would predict, or give it away.
+Using them as inputs would make a prediction look better than it is:
+
+| to predict | do not use as an input | why |
+|---|---|---|
+| `category`, `resolution` | `resolution`, `kb_article`, `kb_article.resolution` | the article is the resolution's article; the resolution determines the category |
+| `priority` | `first_response` | response time follows priority |
+| `nps_after` | `csat_band` | both are recorded after the ticket; csat is derived from the NPS answer |
+| `upsell_accepted` | (filter to `upsell_offered = yes`) | `upsell_accepted` is empty when no offer was made |
+| the next step | `ticket.resolution`, `ticket.kb_article` | the resolution picks the path; use `ticket.issue` and `category` |
+
+Also true of this data, and worth saying in any view built on it:
+
+- **The text is templated.** No single word decides the category, but each opening
+  clause belongs to exactly one category, so an LLM or a nearest-neighbour match reads
+  the category off it easily. The cache story here is cost and speed, not that the
+  LLM gets category wrong.
+- **`sender_domain` identifies the customer** for the 60% of tickets from a corporate
+  address; the rest come from a freemail domain.
+- **`repeat_30d` is undercounted in March** (no tickets before 2026-03-02).
+- Tickets from customers that later churned are included; upsells are never offered
+  to them.
 
 ## Use
 
@@ -50,5 +77,7 @@ uv run --with 'aitoai>=1.0' python scripts/support_fixture/load.py --apply   # w
 ```
 
 `load.py` writes only to a branch environment (default `support`), branched off
-master so it keeps `customers` and `products` for the links, and adds only the three
-support collections. It refuses master and never drops a table it didn't create.
+master so it keeps `customers` and `products` for the links. It only ever creates,
+drops or fills the three support collections, refuses master, refuses an existing
+environment unless `--reload` is given, and checks that every linked customer and
+product exists before writing.

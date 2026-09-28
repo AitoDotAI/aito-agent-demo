@@ -15,18 +15,23 @@ Planted causes (see README.md for the measured lifts):
 
 - **category** from the ticket's words, with shared vocabulary and 12% of tickets
   mixing two topics, so no word is a perfect rule;
-- **priority** from urgency words, the category and the account's plan and size;
-- **resolution** from the category and the ticket's sub-topic, with a policy
-  **drift**: from 2026-07-01, access tickets are resolved by `sso_reconnect`
-  instead of `reset_password` (an SSO rollout);
-- **steps**: each resolution is a sequence of steps; the next step depends on
-  the previous step and the category (a Markov chain with noise);
+- **priority** mostly from urgency words, a little from the category and the
+  account's plan and size (measured: only the urgency effect is large);
+- **resolution** from the category and the ticket's `issue`, with a policy
+  **drift**: from 2026-07-01, 80% of `login` issues are resolved by
+  `sso_reconnect` instead of `reset_password` (an SSO rollout); `month` gives
+  Aito the time axis;
+- **steps**: each resolution is a sequence of steps ending in `done`; the next
+  step depends on the previous step and the category (a Markov chain with
+  detours);
 - **nps_after** (promoter / passive / detractor): detractor risk rises with a
   repeat ticket within 30 days, a slow first response and a Red-health account;
   the **recovery** action is assigned at random, so its effect is causal, and
-  the best recovery depends on the account size;
-- **upsell**: offered at random on 30% of resolved tickets; accepted more by
-  high-adoption accounts on Free/Starter plans, almost never by Red accounts;
+  the best recovery depends on the account size (credit for SMB, callback for
+  Mid-market, CSM outreach for Enterprise);
+- **upsell**: offered at random on 30% of tickets from accounts that haven't
+  churned; accepted more by high-adoption accounts (`adoption_band`, stored on
+  the ticket) on Free/Starter plans, almost never by Red accounts;
 - **control**: the ticket `channel` has **no** effect on `nps_after`. Its lift
   must come out at about 1, or the measurement is broken.
 
@@ -142,7 +147,7 @@ RECOVERY = ["none", "apology_credit", "priority_callback", "csm_outreach"]
 # a CSM call for Enterprise, a priority callback in between.
 _RECOVERY_EFFECT = {
     "SMB":        {"none": 0.0, "apology_credit": -0.14, "priority_callback": -0.06, "csm_outreach": -0.02},
-    "Mid-market": {"none": 0.0, "apology_credit": -0.05, "priority_callback": -0.12, "csm_outreach": -0.06},
+    "Mid-market": {"none": 0.0, "apology_credit": -0.03, "priority_callback": -0.18, "csm_outreach": -0.03},
     "Enterprise": {"none": 0.0, "apology_credit": -0.01, "priority_callback": -0.06, "csm_outreach": -0.16},
 }
 CHANNELS = ["email", "chat", "portal", "phone"]
@@ -164,7 +169,9 @@ def build_kb():
     return rows
 
 
-def build_tickets(rng, customers, usage, kb):
+def build_tickets(rng, customers, usage, kb, control_leak: float = 0.0):
+    """`control_leak` plants a channel effect on detractor risk. It is 0 for the
+    fixture; the test sets it to prove the control check can fail."""
     by_cust_usage: dict[str, list[dict]] = {}
     for u in usage:
         by_cust_usage.setdefault(u["customer"], []).append(u)
@@ -213,18 +220,24 @@ def build_tickets(rng, customers, usage, kb):
         # outcome: detractor risk (channel deliberately absent: the control)
         recovery = rng.choice(RECOVERY)
         d = 0.14 + (0.16 if repeat else 0) + {">24h": 0.14, "4-24h": 0.05}.get(frt, 0) \
-            + {"Red": 0.15, "Yellow": 0.05}.get(c["health"], 0) + _RECOVERY_EFFECT[c["size"]][recovery]
+            + {"Red": 0.15, "Yellow": 0.05}.get(c["health"], 0) + _RECOVERY_EFFECT[c["size"]][recovery] \
+            + (control_leak if channel == "chat" else 0.0)
         d = min(0.9, max(0.02, d))
         r = rng.random()
         nps_after = "detractor" if r < d else ("promoter" if r > d + 0.35 else "passive")
         csat = "bad" if nps_after == "detractor" and rng.random() < 0.7 else ("good" if nps_after == "promoter" or rng.random() < 0.5 else "neutral")
 
-        # upsell: offered at random; accepted by adoption and plan, not by Red accounts
-        offered = rng.random() < 0.30
+        # the account's product adoption, stored on the ticket: usage links to
+        # customers, not the other way, so a ticket could not reach it by a link
+        us = by_cust_usage.get(c["customer_id"], [])
+        adoption = sum(u["active"] == "yes" for u in us) / len(us) if us else 0.0
+        adoption_band = "high" if adoption >= 0.67 else ("low" if adoption < 0.34 else "medium")
+
+        # upsell: offered at random to accounts that haven't churned; accepted by
+        # adoption and plan, almost never by Red accounts
+        offered = c["churned"] == "no" and rng.random() < 0.30
         accepted = None
         if offered:
-            us = by_cust_usage.get(c["customer_id"], [])
-            adoption = sum(u["active"] == "yes" for u in us) / len(us) if us else 0.0
             pa = 0.05 + 0.30 * adoption + {"Free": 0.12, "Starter": 0.08}.get(c["plan"], 0)
             if c["health"] == "Red":
                 pa = 0.02
@@ -233,7 +246,8 @@ def build_tickets(rng, customers, usage, kb):
         tid = f"SUP-{i + 1:05d}"
         created = datetime.combine(day, datetime.min.time()) + timedelta(minutes=rng.randrange(8 * 60, 18 * 60))
         tickets.append({
-            "ticket_id": tid, "created_at": created.isoformat(timespec="minutes"), "text": text,
+            "ticket_id": tid, "created_at": created.isoformat(timespec="minutes"), "month": day.strftime("%Y-%m"),
+            "text": text, "issue": sub, "adoption_band": adoption_band,
             "sender_domain": sender.split("@")[1], "channel": channel,
             "customer": c["customer_id"], "product": product,
             "category": cat, "priority": priority, "resolution": res,
@@ -244,9 +258,9 @@ def build_tickets(rng, customers, usage, kb):
         })
 
         # steps: the canonical path, with detours (the Markov noise)
-        path, t, prev, n = PATHS[res], created, "start", 0
+        path, t, prev, n = PATHS[res] + ["done"], created, "start", 0
         for step in path:
-            if rng.random() < 0.15:
+            if step != "done" and rng.random() < 0.15:
                 seq = [rng.choice(DETOURS), step]
             else:
                 seq = [step]
