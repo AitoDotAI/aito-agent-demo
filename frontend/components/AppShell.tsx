@@ -16,6 +16,7 @@ import WhyCards from "@/components/prediction/WhyCards";
 import { AugmentView } from "@/components/AugmentView";
 import { HandoffView, type HandoffData } from "@/components/HandoffView";
 import { RulesView } from "@/components/RulesView";
+import { EnvelopeView } from "@/components/EnvelopeView";
 import { OverviewView } from "@/components/OverviewView";
 import { SalesView, type SalesMeta } from "@/components/SalesView";
 import { SalesAgentView } from "@/components/SalesAgentView";
@@ -25,7 +26,7 @@ import { ToolboxView, type ToolMeta } from "@/components/ToolboxView";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { Alternative, WhyFactor } from "@/lib/types";
 
-export type View = "home" | "resolve" | "augment" | "handoff" | "rules" | "sales" | "agent" | "toolbox" | "company" | "company-data" | "company-toolbox";
+export type View = "home" | "resolve" | "augment" | "handoff" | "rules" | "support" | "sales" | "agent" | "toolbox" | "company" | "company-data" | "company-toolbox";
 
 type Aito = {
   intent: string; intent_p: number; intent_alts: Alternative[]; why: WhyFactor[];
@@ -57,7 +58,7 @@ const actionText = (intent: string, param: string | null) =>
   (ACTION[intent] ?? ((p: string | null) => `${intent}${p ? " · " + p : ""}`))(param);
 
 const isView = (v: string | null): v is View =>
-  v === "home" || v === "resolve" || v === "augment" || v === "handoff" || v === "rules" || v === "sales" || v === "agent" ||
+  v === "home" || v === "resolve" || v === "augment" || v === "handoff" || v === "rules" || v === "support" || v === "sales" || v === "agent" ||
   v === "toolbox" || v === "company" || v === "company-data" || v === "company-toolbox";
 
 const SALES_EXAMPLES: Record<string, string> = {
@@ -109,6 +110,12 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
   const [coTools, setCoTools] = useState<ToolMeta[]>([]);
   const [coToolOn, setCoToolOn] = useState<Record<string, boolean>>({});
   const timer = useRef<number | null>(null);
+
+  // the support envelope is listed only once its fixture is loaded (never a dead page)
+  const [supportReady, setSupportReady] = useState(false);
+  useEffect(() => {
+    apiFetch<{ loaded: boolean }>("/api/support/status").then((r) => setSupportReady(r.loaded)).catch(() => {});
+  }, []);
 
   // handoff queue: fetched once for the sidebar badge + the view
   useEffect(() => {
@@ -183,7 +190,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
   const PAGE_TITLE: Record<View, string> = {
     home: "Overview", agent: "Sales agent", sales: "Opportunity Assistant", toolbox: "Sales toolbox",
     company: "Company AI agent", "company-data": "360 Dashboard", "company-toolbox": "Company toolbox",
-    resolve: "Ticket resolution", augment: "Tool routing", handoff: "Human handoff", rules: "Decision rules",
+    resolve: "Ticket resolution", augment: "Tool routing", handoff: "Human handoff", rules: "Decision rules", support: "Support agent",
   };
   const crumb = view === "sales"
     ? { grp: "Northlight · sales", page: "Opportunity Assistant", note: "live · _estimate · _recommend · _query" }
@@ -222,6 +229,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
           <NavItem v="company">Company AI agent</NavItem>
           <NavItem v="company-data">360 Dashboard</NavItem>
           <NavItem v="company-toolbox">Toolbox</NavItem>
+          {supportReady && <NavItem v="support">Support agent · envelope</NavItem>}
 
           <div className="rc-grp">Sonipra Telecom · support</div>
           <NavItem v="resolve">Ticket resolution</NavItem>
@@ -273,6 +281,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
         {view === "augment" && <AugmentView onAito={setAugMs} />}
         {view === "handoff" && <HandoffView data={handoff} loading={handoffLoading} />}
         {view === "rules" && <RulesView />}
+        {view === "support" && <EnvelopeView />}
         {view === "sales" && <SalesView onMeta={setSales} />}
 
         {view === "resolve" && (
@@ -445,6 +454,14 @@ const PANEL: Record<Exclude<View, "resolve">, {
     desc: "Calibrated confidence is <b>governance</b>. A confident prediction auto-resolves; a borderline one is handed to a human with the tentative read attached; anything sensitive (refund, cancel) is gated regardless. The number decides who acts.",
     codeLabel: "Live query",
     code: "POST /api/v2/_predict\n{\n  \"from\": \"resolutions\",\n  \"where\": { \"text\": \"…\" },\n  \"predict\": \"intent\",\n  \"select\": [\"$p\"]\n}\n// $p ≥ .85 auto · else escalate",
+  },
+  support: {
+    pdb: "the predictive envelope",
+    stats: [["11", "Aito calls"], ["300", "held-out tickets"], ["checked", "inputs, per target"]],
+    chip: "cost · impact · governance",
+    desc: "The Aito side of one support agent, every step grounded by an Aito call: <b>who</b> wrote, <b>what</b> it is, <b>how urgent</b>, whether <b>history already decides</b> it (where it does, no LLM call is needed), what to try first, and how to <b>keep the customer</b>. Each step may only use inputs known at that point, enforced in code, and is checked against what really happened on tickets Aito never saw.",
+    codeLabel: "One step",
+    code: "POST /api/v2/_predict\n{\n  \"from\": \"support_tickets\",\n  \"where\": { \"text\": \"…\",\n             \"customer\": \"…\",\n             \"category\": \"billing\" },\n  \"predict\": \"resolution\"\n}\n// $p ≥ .85 → served from history",
   },
   rules: {
     pdb: "_relate · rule mining",

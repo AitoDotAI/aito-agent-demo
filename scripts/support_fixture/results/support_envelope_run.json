@@ -1,0 +1,211 @@
+{
+ "caveat": "on a synthetic fixture with planted effects (scripts/support_fixture/README.md)",
+ "measured_at": "2026-09-29T10:54:48+00:00",
+ "engine": {
+  "name": "aitoai",
+  "version": "2.11.0",
+  "gitRevision": "03b4c2ed76480afd3e3d00dc2541639551400f6c",
+  "builtAt": "2026-09-29T04:50:43.457579355Z"
+ },
+ "env": "support",
+ "tickets": 300,
+ "decisions": {
+  "customer": {
+   "n": 300,
+   "right": 300,
+   "share": 1.0,
+   "ci95": [
+    0.987,
+    1.0
+   ]
+  },
+  "product": {
+   "n": 300,
+   "right": 276,
+   "share": 0.92,
+   "ci95": [
+    0.884,
+    0.946
+   ]
+  },
+  "category": {
+   "n": 300,
+   "right": 286,
+   "share": 0.953,
+   "ci95": [
+    0.923,
+    0.972
+   ]
+  },
+  "priority": {
+   "n": 300,
+   "right": 259,
+   "share": 0.863,
+   "ci95": [
+    0.82,
+    0.898
+   ]
+  },
+  "resolution": {
+   "n": 300,
+   "right": 274,
+   "share": 0.913,
+   "ci95": [
+    0.876,
+    0.94
+   ]
+  },
+  "kb": {
+   "n": 247,
+   "right": 195,
+   "share": 0.789,
+   "ci95": [
+    0.734,
+    0.836
+   ]
+  },
+  "first_step": {
+   "n": 300,
+   "right": 282,
+   "share": 0.94,
+   "ci95": [
+    0.907,
+    0.962
+   ]
+  }
+ },
+ "first_step_before_after": {
+  "category_only": {
+   "n": 300,
+   "right": 218,
+   "share": 0.727,
+   "ci95": [
+    0.674,
+    0.774
+   ]
+  },
+  "category_and_text": {
+   "n": 300,
+   "right": 282,
+   "share": 0.94,
+   "ci95": [
+    0.907,
+    0.962
+   ]
+  }
+ },
+ "resolution_gate": {
+  "auto": {
+   "n": 277,
+   "right": 260,
+   "share": 0.939,
+   "ci95": [
+    0.904,
+    0.961
+   ],
+   "share_of_queue": 0.923
+  },
+  "assist": {
+   "n": 13,
+   "right": 8,
+   "share": 0.615,
+   "ci95": [
+    0.355,
+    0.823
+   ],
+   "share_of_queue": 0.043
+  },
+  "human": {
+   "n": 10,
+   "right": 6,
+   "share": 0.6,
+   "ci95": [
+    0.313,
+    0.832
+   ],
+   "share_of_queue": 0.033
+  }
+ },
+ "risk_detractor": {
+  "auc": 0.668,
+  "n_detractors": 62,
+  "n_others": 238,
+  "mean_p_detractors": 0.289,
+  "mean_p_others": 0.206
+ },
+ "risk_upsell": {
+  "auc": 0.709,
+  "n_accepted": 18,
+  "n_declined": 51
+ },
+ "latency_ms": {
+  "calls_per_ticket": 11,
+  "sequential": {
+   "p50": 835,
+   "p95": 2315
+  },
+  "parallel": {
+   "p50": 518,
+   "p95": 1032
+  },
+  "note": "wall time per ticket from this client to shared.aito.ai, both modes interleaved per ticket"
+ },
+ "control_shuffled_text": {
+  "what": "texts permuted across the 300 tickets (seed 1512), all other fields kept",
+  "real": {
+   "product": 0.92,
+   "category": 0.953,
+   "resolution": 0.913,
+   "first_step": 0.94
+  },
+  "shuffled": {
+   "product": {
+    "n": 300,
+    "right": 251,
+    "share": 0.837,
+    "ci95": [
+     0.791,
+     0.874
+    ]
+   },
+   "category": {
+    "n": 300,
+    "right": 58,
+    "share": 0.193,
+    "ci95": [
+     0.153,
+     0.242
+    ]
+   },
+   "resolution": {
+    "n": 300,
+    "right": 39,
+    "share": 0.13,
+    "ci95": [
+     0.097,
+     0.173
+    ]
+   },
+   "first_step": {
+    "n": 300,
+    "right": 79,
+    "share": 0.263,
+    "ci95": [
+     0.217,
+     0.316
+    ]
+   }
+  },
+  "majority_base_rate": {
+   "category": 0.25,
+   "resolution": 0.18,
+   "first_step": 0.43
+  },
+  "chance_rate": {
+   "category": 0.179,
+   "resolution": 0.114,
+   "first_step": 0.256
+  },
+  "note": "a shuffled text should score at chance_rate; the first step's shuffled score also carries the shuffled category, so the clean isolation of the text's effect on the first step is first_step_before_after. chance_rate was added after the run, from the local queue alone (no Aito call)."
+ }
+}

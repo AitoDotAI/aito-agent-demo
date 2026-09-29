@@ -18,6 +18,7 @@ and /api/schema can stay verbatim across demos.
 from __future__ import annotations
 
 import logging
+import os
 import time
 from pathlib import Path
 
@@ -1035,6 +1036,68 @@ def rules_active(log: str = "resolutions"):
     so no decision is made by a rule; the model path decides (see RulesView)."""
     return {"log": log, "rules": [], "writable": False,
             "note": "Read-only demo: no rule has been promoted, so no decision is made by a rule."}
+
+
+# ── Support agent: the predictive envelope (docs/design/support-agent.md) ──
+# Read-only, over the `support` fixture. Its tables live in a branch environment
+# until they are promoted, so this is its own v2 client: AITO_SUPPORT_ENV names the
+# environment ("support" by default; empty means master, once promoted).
+
+_SUPPORT_ENV = os.environ.get("AITO_SUPPORT_ENV", "support").strip() or None
+_support_aito: AitoClient | None = None
+_support_state: dict = {"checked": 0.0, "loaded": False}
+
+
+def _support_client() -> AitoClient:
+    global _support_aito
+    if _support_aito is None:
+        from src.config import Config
+        root = config.aito_url.split("/env/")[0]
+        url = f"{root}/env/{_SUPPORT_ENV}" if _SUPPORT_ENV else root
+        _support_aito = AitoClient(Config(aito_url=url, aito_key=config.aito_key,
+                                          aito_api_version="v2", aito_env=_SUPPORT_ENV))
+    return _support_aito
+
+
+def _support_loaded() -> bool:
+    """Whether the fixture is in the support environment; re-checked at most once a minute."""
+    if time.time() - _support_state["checked"] > 60:
+        try:
+            tables = _support_client().get_schema().get("schema", {})
+            _support_state["loaded"] = {"support_tickets", "support_steps", "customers"} <= set(tables)
+            _support_state["checked"] = time.time()
+        except AitoError:  # a blip: say "not loaded" now, but look again in 10 s, not 60
+            _support_state["loaded"] = False
+            _support_state["checked"] = time.time() - 50
+    return _support_state["loaded"]
+
+
+@app.get("/api/support/status")
+def support_status():
+    return {"loaded": _support_loaded(), "env": _SUPPORT_ENV or "master"}
+
+
+@app.get("/api/support/incoming")
+def support_incoming():
+    """The held-out queue: tickets Aito has never seen (served from the app, not Aito)."""
+    from src.support_envelope import load_incoming
+    q = load_incoming()
+    return {"tickets": [{k: q["tickets"][i][k] for k in ("ticket_id", "created_at", "text", "channel")}
+                        for i in reversed(q["order"])]}
+
+
+@app.get("/api/support/envelope")
+def support_envelope(ticket_id: str):
+    from src.support_envelope import envelope, load_incoming
+    q = load_incoming()
+    if ticket_id not in q["tickets"]:
+        raise HTTPException(status_code=404, detail=f"no incoming ticket {ticket_id}")
+    if not _support_loaded():
+        raise HTTPException(status_code=503, detail="The support fixture is not loaded in this environment yet.")
+    try:
+        return envelope(_support_client(), q["tickets"][ticket_id], q["steps"].get(ticket_id, []))
+    except AitoError as e:
+        raise HTTPException(status_code=502, detail=str(e))
 
 
 # ── Static files — keep this last ─────────────────────────────────
