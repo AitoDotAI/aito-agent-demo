@@ -216,6 +216,34 @@ def run_why() -> None:
             print(f"why {i + 1}/{len(q['order'])}", flush=True)
 
 
+def mcnemar_exact(b: int, c: int) -> float:
+    """Two-sided exact McNemar: under no difference, the b + c discordant tickets
+    split 50/50, so the p-value is a binomial tail."""
+    n, k = b + c, min(b, c)
+    if n == 0:
+        return 1.0
+    tail = sum(math.comb(n, i) for i in range(k + 1)) / 2 ** n
+    return round(min(1.0, 2 * tail), 4)
+
+
+def paired(rows: list[dict], modes: dict) -> dict:
+    """Aito only vs each other arm on the SAME tickets, on "all five decisions
+    right": b = tickets only Aito got fully right, c = only the other arm did."""
+    def ok(get, r):
+        return all(get(r)[k] == r["truth"][k] for k in TARGETS if r["truth"][k] is not None)
+    base = modes["aito_only"]
+    out = {}
+    for name, get in modes.items():
+        if name == "aito_only":
+            continue
+        b = sum(ok(base, r) and not ok(get, r) for r in rows)
+        c = sum(ok(get, r) and not ok(base, r) for r in rows)
+        out[name] = {"only_aito_right": b, "only_other_right": c, "mcnemar_p": mcnemar_exact(b, c)}
+    out["note"] = (f"{len(out)} comparisons against Aito only: at a Bonferroni-corrected 0.05 / {len(out)}, "
+                   "a p above that threshold is suggestive, not conclusive, at this n")
+    return out
+
+
 def summarize() -> dict:
     from src.llm_agent import cost_usd
     rows = [json.loads(line) for line in LOG.read_text().splitlines()]
@@ -269,6 +297,7 @@ def summarize() -> dict:
     unsure = [k for r in rows for k in r["coop"]["unsure"]]
     out["handed_to_llm"] = {k: sum(u == k for u in unsure) for k in TARGETS}
     out["selective"] = selective(rows)
+    out["paired_vs_aito_only"] = paired(rows, dict(modes))
     SUMMARY.write_text(json.dumps(out, indent=1) + "\n")
     return out
 

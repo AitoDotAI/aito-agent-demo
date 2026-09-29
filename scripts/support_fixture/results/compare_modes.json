@@ -394,5 +394,28 @@
     }
    }
   }
+ },
+ "paired_vs_aito_only": {
+  "aito_plus_llm": {
+   "only_aito_right": 42,
+   "only_other_right": 18,
+   "mcnemar_p": 0.0027
+  },
+  "llm_only": {
+   "only_aito_right": 156,
+   "only_other_right": 17,
+   "mcnemar_p": 0.0
+  },
+  "rag_llm": {
+   "only_aito_right": 57,
+   "only_other_right": 34,
+   "mcnemar_p": 0.0206
+  },
+  "aito_shortlist_why_llm": {
+   "only_aito_right": 37,
+   "only_other_right": 21,
+   "mcnemar_p": 0.0479
+  },
+  "note": "4 comparisons against Aito only: at a Bonferroni-corrected 0.05 / 4, a p above that threshold is suggestive, not conclusive, at this n"
  }
 }
