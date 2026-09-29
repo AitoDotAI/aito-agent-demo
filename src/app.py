@@ -393,8 +393,6 @@ def handoff():
 
 import json as _json
 
-from pydantic import BaseModel as _BaseModel
-
 _CATALOG = _json.loads((Path(__file__).resolve().parent / "tools_catalog.json").read_text())
 _CATALOG_BY_NAME = {t["name"]: t for t in _CATALOG}
 
