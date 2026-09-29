@@ -74,3 +74,44 @@ def test_customer_360_adds_the_graph_on_v2_only_and_survives_its_failure(monkeyp
     monkeypatch.setattr(app_module, "aito", _FakeAito(fail=True))
     r = app_module._tool_customer_360({"customer_id": "ACC-1"})
     assert r["graph"] is None and r["profile"]["name"] == "Acme" and "tickets" in r["domains"]
+
+
+def test_a_failed_graph_is_reported_not_just_empty(monkeypatch):
+    monkeypatch.setattr(app_module, "aito", _FakeAito(fail=True))
+    assert app_module._tool_customer_360({"customer_id": "ACC-1"})["graph_unavailable"] is True
+    monkeypatch.setattr(app_module, "aito", _FakeAito([]))  # no neighbourhood is not a failure
+    assert "graph_unavailable" not in app_module._tool_customer_360({"customer_id": "ACC-1"})
+
+
+def test_company_360_names_what_fell_back_to_empty(monkeypatch):
+    """A failing _relate reads as "no driver"; `degraded` tells the two apart (the live
+    smoke asserts it is empty)."""
+    from fastapi.testclient import TestClient
+
+    class _Relating(_FakeAito):
+        def __init__(self, relate_fails):
+            super().__init__([HIT])
+            self.relate_fails = relate_fails
+
+        def predict(self, table, where, target, limit=5, select=None):
+            return {"hits": [{"feature": "yes", "$p": 0.6}, {"feature": "no", "$p": 0.4}]}
+
+        def relate(self, *a, **k):
+            if self.relate_fails:
+                raise AitoError("500 relate")
+            return {"hits": []}
+
+        relate_on = relate
+
+        def recommend(self, *a, **k):
+            return {"hits": []}
+
+    monkeypatch.setattr(app_module, "_tool_find_examples", lambda args: {"rows": [{"customer_id": "ACC-1"}]})
+    c = TestClient(app_module.app)
+    monkeypatch.setattr(app_module, "aito", _Relating(relate_fails=False))
+    ok = c.get("/api/company-360").json()
+    assert ok["degraded"] == [] and all(not k["causes"] for k in ok["kpis"])  # no driver, and that's real
+    monkeypatch.setattr(app_module, "aito", _Relating(relate_fails=True))
+    bad = c.get("/api/company-360").json()
+    assert bad["degraded"] == [f"causes:{k['key']}" for k in bad["kpis"]] and len(bad["degraded"]) == 6
+    assert all(k["causes_unavailable"] for k in bad["kpis"])

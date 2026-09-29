@@ -727,12 +727,15 @@ def _is_cause_field(field: str, exclude: set[str]) -> bool:
 
 
 def _relate_drivers(table: str, target_field: str, bad: str, seg_props: list[dict],
-                    exclude: set[str], candidates: list[str], k: int = 3) -> list[dict]:
+                    exclude: set[str], candidates: list[str], k: int = 3,
+                    failed: list | None = None) -> list[dict]:
     """Root causes of the BAD outcome. With a segment, _relate `$on` scopes to it and
     returns each driver's WITHIN-SEGMENT outcome RATE (e.g. Red-health customers churn
     at 44% vs 28% otherwise → mode 'rate'). With no segment, relate globally and return
     the SHARE of the bad outcome carrying each value (mode 'share'). Strongest factors
-    by |lift-1| (drivers >1 and protective <1), one per field."""
+    by |lift-1| (drivers >1 and protective <1), one per field. An Aito error returns []
+    so the page still renders, and is recorded in `failed`, so "no driver" and "the
+    query failed" stay distinguishable (the live smoke asserts on it)."""
     target = {target_field: bad}
     scored: list[dict] = []
     try:
@@ -743,7 +746,10 @@ def _relate_drivers(table: str, target_field: str, bad: str, seg_props: list[dic
         else:          # global: relate the bad outcome to candidate fields → SHARES
             hits = aito.relate(table, target, [f for f in candidates if f not in exclude]).get("hits") or []
             mode, prop_key = "share", "related"
-    except AitoError:
+    except AitoError as e:
+        print(f"_relate_drivers {table}.{target_field} failed: {e}")
+        if failed is not None:
+            failed.append(str(e))
         return []
     for h in hits:
         lift = float(h.get("lift", 1.0))
@@ -821,7 +827,8 @@ def _tool_optimize_kpi(args: dict) -> dict:
     # via $on — within-segment driver RATES; two-sided (drivers >1, protective <1).
     seg_props = [{f: v} for f, v in where.items()]
     exclude = {target, cfg["lever"], "industry", "size", "plan"}
-    causes = _relate_drivers(table, target, bad, seg_props, exclude, cfg["causes"], k=3)
+    failed: list = []
+    causes = _relate_drivers(table, target, bad, seg_props, exclude, cfg["causes"], k=3, failed=failed)
     # LEVERS (prescription): _recommend ranks the lever values toward the goal (it
     # conditions properly, unlike relating the good outcome). Each is shown as a lift
     # = P(good | this lever) / the segment's current good-rate.
@@ -846,6 +853,7 @@ def _tool_optimize_kpi(args: dict) -> dict:
         "bad_label": cfg["bad_label"], "good_label": cfg["good_label"],
         "kpi_why": kpi_why,   # base × segment-attribute lifts = the rate
         "causes": causes, "drivers": causes,   # within-segment drivers ($on _relate)
+        **({"causes_unavailable": "Aito could not compute the causes just now"} if failed else {}),
         "levers": {"lever": cfg["lever_label"], "items": lever_items},  # condition = the good outcome
         "recommended_play": {"lever": cfg["lever_label"], "change_to": best},
         "projected": projected,
@@ -880,7 +888,10 @@ def _tool_customer_360(args: dict) -> dict:
                         "csm_motion", "mrr_eur", "churned")},
            "domains": domains}
     if aito._ver == "v2":
-        out["graph"] = _customer_neighbourhood(cid)
+        failed: list = []
+        out["graph"] = _customer_neighbourhood(cid, failed)
+        if failed:
+            out["graph_unavailable"] = True
     return out
 
 
@@ -899,7 +910,7 @@ _NEIGHBOURHOOD_SELECT = [
 ]
 
 
-def _customer_neighbourhood(cid: str) -> dict | None:
+def _customer_neighbourhood(cid: str, failed: list | None = None) -> dict | None:
     """Retrieval and provenance only. On this dataset none of these facts moves churn
     (docs/verification/company-graph.md), so never present them as drivers."""
     try:  # an optional add-on: without it the spotlight still shows profile + domains
@@ -907,6 +918,8 @@ def _customer_neighbourhood(cid: str) -> dict | None:
                           select=_NEIGHBOURHOOD_SELECT, limit=1).get("hits") or []
     except AitoError as e:
         print(f"customer neighbourhood unavailable for {cid}: {e}")
+        if failed is not None:
+            failed.append(str(e))
         return None
     if not hits:
         return None
@@ -1035,7 +1048,11 @@ def company_360(industry: str = "", size: str = "", plan: str = ""):
             spotlight = _tool_customer_360({"customer_id": rows[0].get("customer_id")})
     except AitoError as e:
         raise HTTPException(status_code=502, detail=str(e))
-    return {"segment": seg or "all customers", "kpis": kpis, "customer": spotlight}
+    # the parts that fell back to empty on an Aito error, so a hollow view is visible as one
+    degraded = [f"causes:{k['key']}" for k in kpis if k.get("causes_unavailable")]
+    if spotlight and spotlight.get("graph_unavailable"):
+        degraded.append("graph")
+    return {"segment": seg or "all customers", "kpis": kpis, "customer": spotlight, "degraded": degraded}
 
 
 # ── Governance: the rules the agent's decisions follow (use case #15) ──
