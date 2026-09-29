@@ -1,0 +1,29 @@
+name: Live demo smoke (agent.aito.ai)
+
+# Opens every Aito-backed view on the DEPLOYED site, read-only and free (GETs
+# only, no LLM routes), and fails if one errors OR comes back hollow.
+# _relate_drivers turns an Aito error into [], so a broken _relate would read as
+# "no driver" on every KPI: company-360 must show causes on most KPIs.
+# Board td-20260929184223822327.
+
+on:
+  schedule:
+    - cron: '0 3 * * *'            # 06:00 EEST / 05:00 EET: outside the 08-10 demo window
+  workflow_dispatch: {}
+  repository_dispatch:
+    types: [demos-deployed]         # fired after a demos deploy
+  push:
+    branches: [main]
+    paths: ['scripts/live_smoke.py', '.github/workflows/live-smoke.yml']
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Open every Aito-backed view on agent.aito.ai (read-only, stdlib only)
+        run: python scripts/live_smoke.py
