@@ -74,7 +74,7 @@ async def aito_latency_headers(request: Request, call_next):
 # light per-IP sliding-window cap as abuse insurance (nginx forwards the real
 # client IP in X-Forwarded-For). In-memory is fine — one uvicorn process, and a
 # demo doesn't need a shared store.
-_LLM_PATHS = {"/api/resolve-llm", "/api/sales-agent/chat", "/api/company-agent/chat"}
+_LLM_PATHS = {"/api/resolve-llm", "/api/route", "/api/sales-agent/chat", "/api/company-agent/chat"}
 _RL_MAX = 20          # requests
 _RL_WINDOW = 60.0     # seconds
 _rl_hits: dict[str, list[float]] = {}
