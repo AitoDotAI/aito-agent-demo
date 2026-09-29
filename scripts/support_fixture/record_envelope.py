@@ -65,7 +65,21 @@ def auc(pos: list[float], neg: list[float]) -> float | None:
 
 def pct(xs: list[float], q: float) -> int:
     s = sorted(xs)
-    return round(s[min(len(s) - 1, int(q * len(s)))])
+    return round(s[min(len(s) - 1, max(0, math.ceil(q * len(s)) - 1))])
+
+
+def chance_rates(q: dict) -> dict:
+    """What a permuted input scores by chance: the sum of squared class shares (a
+    shuffled ticket's prediction lands on class c about as often as c occurs)."""
+    out = {}
+    for key, values in (("category", [q["tickets"][t]["category"] for t in q["order"]]),
+                        ("resolution", [q["tickets"][t]["resolution"] for t in q["order"]]),
+                        ("first_step", [next((s["action"] for s in q["steps"].get(t, []) if s["action"] not in DETOURS),
+                                             None) for t in q["order"]])):
+        c = Counter(v for v in values if v is not None)
+        n = sum(c.values())
+        out[key] = round(sum((k / n) ** 2 for k in c.values()), 3)
+    return out
 
 
 def main() -> None:
@@ -143,7 +157,10 @@ def main() -> None:
         "control_shuffled_text": {"what": "texts permuted across the 300 tickets (seed 1512), all other fields kept",
                                   "real": {k: per_step[k] and share(per_step[k])["share"] for k in control},
                                   "shuffled": {k: share(v) for k, v in control.items()},
-                                  "majority_base_rate": majority},
+                                  "chance_rate": chance_rates(q), "majority_base_rate": majority,
+                                  "note": ("a shuffled text should score at chance_rate; the first step's shuffled "
+                                           "score also carries the shuffled category, so the clean isolation of the "
+                                           "text's effect on the first step is first_step_before_after")},
     }
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps(result, indent=1) + "\n")

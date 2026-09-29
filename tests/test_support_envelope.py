@@ -204,3 +204,42 @@ def test_the_first_step_reads_the_ticket_text_through_the_link():
     env.envelope(fake, t, q["steps"].get(t["ticket_id"], []))
     (where,) = [w for kind, table, w, target in fake.calls if table == "support_steps"]
     assert where["ticket.text"] == t["text"] and where["previous_action"] == "start"
+
+
+class _Tagged(_Fake):
+    """Answers each target with its own value ("category" -> "cat-v"), so a step
+    fed the wrong upstream value, or none, shows in its inputs."""
+
+    def __init__(self, fail_on=None, **kw):
+        super().__init__(**kw)
+        self.fail_on = fail_on
+
+    def predict(self, table, where, target, limit=5, select=None):
+        self.calls.append(("predict", table, dict(where), target))
+        if target == self.fail_on:
+            raise app_module.AitoError(f"503 on {target}")
+        return {"hits": [{"feature": f"{target[:3]}-v", "$p": 0.9}, {"feature": "other", "$p": 0.05}]}
+
+
+@pytest.mark.parametrize("parallel", [True, False])
+def test_each_step_gets_exactly_its_upstream_inputs(parallel):
+    q = env.load_incoming()
+    t = q["tickets"][q["order"][0]]
+    fake = _Tagged()
+    env.envelope(fake, t, q["steps"].get(t["ticket_id"], []), parallel=parallel)
+    by_target = {target: w for kind, table, w, target in fake.calls if kind == "predict" and w}
+    triage = {"text", "sender", "sender_domain", "channel", "month", "adoption_band", "repeat_30d",
+              "customer", "contact", "product", "category"} - {"sender"}
+    for target in ("priority", "resolution", "kb_article"):
+        assert set(by_target[target]) == triage, target
+        assert by_target[target]["category"] == "cat-v" and by_target[target]["product"] == "pro-v", target
+    assert by_target["nps_after"]["priority"] == "pri-v" and by_target["nps_after"]["category"] == "cat-v"
+    assert set(by_target["action"]) == {"previous_action", "ticket.text", "category"}
+    assert by_target["action"]["category"] == "cat-v"
+
+
+def test_an_error_in_a_parallel_call_surfaces():
+    q = env.load_incoming()
+    t = q["tickets"][q["order"][0]]
+    with pytest.raises(app_module.AitoError, match="503 on resolution"):
+        env.envelope(_Tagged(fail_on="resolution"), t, q["steps"].get(t["ticket_id"], []), parallel=True)

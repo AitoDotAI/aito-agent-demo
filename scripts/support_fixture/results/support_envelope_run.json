@@ -200,6 +200,12 @@
    "category": 0.25,
    "resolution": 0.18,
    "first_step": 0.43
-  }
+  },
+  "chance_rate": {
+   "category": 0.179,
+   "resolution": 0.114,
+   "first_step": 0.256
+  },
+  "note": "a shuffled text should score at chance_rate; the first step's shuffled score also carries the shuffled category, so the clean isolation of the text's effect on the first step is first_step_before_after. chance_rate was added after the run, from the local queue alone (no Aito call)."
  }
 }

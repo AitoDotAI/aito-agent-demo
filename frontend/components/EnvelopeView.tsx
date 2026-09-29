@@ -19,7 +19,7 @@ type Step = {
 };
 type Envelope = {
   ticket: { ticket_id: string; created_at: string; text: string; sender_domain: string; channel: string };
-  steps: Step[]; gate: "auto" | "assist" | "human"; aito_calls: number; aito_ms: number;
+  steps: Step[]; gate: "auto" | "assist" | "human"; aito_calls: number; aito_ms: number; wall_ms: number;
 };
 type Incoming = { ticket_id: string; created_at: string; text: string; channel: string };
 
@@ -89,7 +89,7 @@ export function EnvelopeView() {
               </div>
               <div className="ev-sum">
                 <span><b>{env.aito_calls}</b> Aito calls</span>
-                <span><b>{env.aito_ms.toLocaleString()} ms</b> in total, seen from this server</span>
+                <span><b>{env.wall_ms.toLocaleString()} ms</b> for all of them, seen from this server</span>
                 <span className={`ev-gate ${env.gate}`}>{GATE[env.gate]}</span>
                 <span><b>{right} of {scored.length}</b> decisions match what happened</span>
               </div>

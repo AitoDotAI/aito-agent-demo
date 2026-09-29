@@ -279,7 +279,9 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: b
             happened=ticket["upsell_accepted"] if ticket["upsell_offered"] == "yes" else "no offer made")
     finally:
         if pool:
-            pool.shutdown(wait=False)
+            # on success every future has been read; on an error, drop the queued calls
+            # rather than let them run on, unread, against an Aito that is already failing
+            pool.shutdown(wait=False, cancel_futures=True)
 
     steps = [entries[k] for k in ORDER]
     return {"ticket": {k: ticket[k] for k in ("ticket_id", "created_at", "text", "sender_domain", "channel")},
