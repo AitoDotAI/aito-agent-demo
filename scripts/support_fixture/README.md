@@ -1,30 +1,32 @@
 # The `support` fixture
 
-> **Synthetic data.** Every ticket, step, KB article and outcome here is generated.
-> The effects are planted on purpose and measured below; nothing here describes a
-> real company or customer.
+> **Synthetic data.** Every contact, ticket, step, KB article and outcome here is
+> generated. The effects are planted on purpose and measured below; nothing here
+> describes a real company or person.
 
-Phase 1 of [the support-agent design](../../docs/design/support-agent.md): support
-tickets with text, their resolution steps and a small KB, **linked to the Northwind
-Cloud customers and products** that the /company pages already use. The Northwind
-rows are replayed from `scripts/seed_company.py` with its own seed, which reproduces
-what is on shared exactly (1500/1500 customers and 3531/3531 usage rows, checked
-2026-09-28), so every link resolves and no existing table changes.
+Phase 1 of [the support-agent design](../../docs/design/support-agent.md): a **B2B
+support desk** for Northwind Cloud's accounts. Named contacts, their tickets, the
+resolution steps and a small KB, **linked to the Northwind customers and products**
+that the /company pages already use. The Northwind rows are replayed from
+`scripts/seed_company.py` with its own seed, which reproduces what is on shared
+exactly (1500/1500 customers and 3531/3531 usage rows, checked 2026-09-28), so every
+link resolves and no existing table changes.
+
+The desk serves 240 active accounts, larger ones more often, with about 50 tickets
+each over a year (2025-10-01 to 2026-09-27). That density is what makes an account's
+history useful: its contacts, its products and its recurring problems.
 
 | collection | rows | links |
 |---|---|---|
 | `kb_articles` | 15 | |
-| `support_tickets` | 3,850 | `customer → customers`, `product → products`, `kb_article → kb_articles` (nullable) |
-| `support_steps` | 18,810 | `ticket → support_tickets` |
+| `support_contacts` | 847 | `customer → customers` |
+| `support_tickets` | 11,700 | `customer → customers`, `product → products`, `contact → support_contacts` (nullable), `kb_article → kb_articles` (nullable) |
+| `support_steps` | 58,710 | `ticket → support_tickets` |
 
-The **newest 150 tickets** (and their steps) are held out as the **incoming queue**:
+The **newest 300 tickets** (and their steps) are held out as the **incoming queue**:
 never loaded, and committed at `src/data/support_incoming.json` for the app. The
-envelope view predicts on those, so Aito has not seen the tickets it is judged on, and
-their recorded truth is what the view compares against. The measurements below are
-over all 4,000.
-
-Tickets run from 2026-03-02 to 2026-09-27. `month` (YYYY-MM) is the time axis for
-drift; `created_at` is the exact stamp.
+envelope view predicts on those, so Aito has not seen the tickets it is judged on.
+The measurements below are over all 12,000.
 
 ## Planted causes, and what they measure
 
@@ -34,19 +36,44 @@ default seed; "differs" means the 95% Wilson intervals don't overlap.
 
 | story | planted | measured |
 |---|---|---|
-| category from words | topic phrases share vocabulary; 12% of tickets mix two topics | 0 of 172 common words is a perfect rule; "invoice" 0.79, "sync" 0.85, "report" 0.32 |
-| priority | mostly urgency words; a little category, plan and size | high 0.62 with urgency words vs 0.17 without; Enterprise plan 0.33 vs Free 0.23; bug 0.32 vs how-to 0.21 (all differ) |
-| drift | from 2026-07, 80% of `login` issues are fixed by `sso_reconnect`, not `reset_password` | `sso_reconnect` on login issues: 0.00 before, 0.82 after; on all access tickets: 0.00 before, 0.39 after |
-| next step | each resolution is a step sequence ending in `done`, with 15% detours | e.g. bug `check_pipeline → rerun_sync` 0.83; every path's last step → `done` 1.00. After `reproduce`, a bug splits 0.43 / 0.57 by its `issue` (crash or wrong data) |
-| detractor risk | repeat ticket in 30 days, first response >24h, Red account | base 0.20; repeat 0.31, >24h 0.32, Red 0.31 (Green 0.16); each differs from the base |
-| recovery lever | assigned at random, so its effect is causal; the best action depends on size | detractor rate, best vs none: SMB credit 0.11 vs 0.30; Mid-market callback 0.11 vs 0.26; Enterprise CSM outreach 0.08 vs 0.28 (each differs) |
-| upsell | offered at random on 30% of tickets from accounts that haven't churned | accepted 0.36 at `adoption_band` high vs 0.11 at low; Red accounts 0.02 (base 0.23) |
-| **control** | the ticket `channel` has **no** effect on `nps_after` | each channel against the rest: \|z\| < 1.96 (email −1.72, chat 0.22, portal 0.64, phone 0.89); lift 0.91 to 1.05 |
+| who wrote | a known contact 92% of the time; otherwise a new address at the account's own domain | every one of the 240 domains names exactly one account, so the account is a lookup |
+| category from the contact's role | finance writes about billing, developers about integrations | billing 0.34 of finance's tickets vs 0.04 of others'; integration 0.38 of developers' vs 0.15 (both differ) |
+| an account's recurring issue | 30% of an account's tickets are its own recurring problem | an account's top issue is 0.38 of its tickets, vs 0.15 for the most common issue overall |
+| product | from the account's own products, and named in the text | named in 81% of tickets |
+| category from words | topic phrases share vocabulary; 10% of tickets mix two topics | 0 of 172 common words is a perfect rule; "invoice" 0.55, "report" 0.39 |
+| priority | the desk's triage rules, followed 90% of the time: urgency words, or a bug on an Enterprise plan, are high; how-to questions are low | high 0.89 with urgency words, 0.89 for an Enterprise bug, 0.05 otherwise; how-to low 0.90 |
+| drift | from 2026-07, 80% of `login` issues are fixed by `sso_reconnect`, not `reset_password` | `sso_reconnect` on login issues: 0.00 before, 0.79 after; on all access tickets: 0.00 before, 0.35 after |
+| next step | each resolution is a step sequence ending in `done`, with 15% detours | e.g. how-to `identify_need → send_article` 0.84; every path's last step → `done` 1.00 |
+| detractor risk | the same issue back within 30 days, first response >24h, a Red account | base 0.24; same issue back 0.34, >24h 0.34, Red 0.34 (Green 0.19); each differs from the base |
+| recovery lever | assigned at random, so its effect is causal; the best action depends on size | detractor rate, best vs none: SMB credit 0.14 vs 0.24; Mid-market callback 0.11 vs 0.27; Enterprise CSM outreach 0.18 vs 0.33 (each differs) |
+| upsell | offered at random on 30% of tickets from accounts that haven't churned | accepted 0.34 at `adoption_band` high vs 0.11 at low; Red accounts 0.04 (base 0.22) |
+| **control** | the ticket `channel` has **no** effect on `nps_after` | each channel against the rest: \|z\| < 1.96 (email −1.53, chat −0.90, portal 1.60, phone 0.82); lift 0.96 to 1.04 |
 
 The control is what makes the rest believable. `tests/test_support_fixture.py` fails
 if it stops being null, and it also plants a +0.07 chat effect (`control_leak`) to
-prove the check then fails. Email's −1.72 is chance at this sample size, not a
-planted effect.
+prove the check then fails.
+
+## How learnable each step is
+
+An **offline stand-in** (a naive-Bayes classifier over the same fields, trained on the
+oldest 80% of tickets and tested on the newest 20%) shows which steps are decisions
+history can make and which are genuinely uncertain outcomes. These are **not Aito's
+numbers**; those come from a recorded run once the fixture is loaded.
+
+| step | accuracy | top 3 | majority baseline | right when p ≥ 0.85 |
+|---|---|---|---|---|
+| account (sender domain) | 1.00 | | 0.01 | |
+| product (text, account) | 0.84 | 0.95 | 0.15 | 0.93 |
+| category (text) | 0.95 | 1.00 | 0.22 | 0.96 |
+| priority (text, category, plan) | 0.77 | | 0.64 | 0.85 |
+| resolution (text, month) | 0.91 | 1.00 | 0.16 | 0.94 |
+| first step (text) | 0.95 | 1.00 | 0.40 | 0.96 |
+| detractor after the ticket | 0.45 | | 0.40 | |
+| upsell accepted | 0.78 | | 0.78 | |
+
+So a view shows the first group as decisions (right or wrong against what happened),
+and the last two as **risks**: a probability against the base rate, judged across the
+queue, never as right or wrong on one ticket.
 
 ## Inputs and targets: what a demo may use to predict what
 
@@ -55,7 +82,7 @@ Using them as inputs would make a prediction look better than it is:
 
 | to predict | do not use as an input | why |
 |---|---|---|
-| `category`, `resolution` | `resolution`, `kb_article`, `kb_article.resolution` | the article is the resolution's article; the resolution determines the category |
+| `category`, `resolution` | `resolution`, `kb_article`, `kb_article.resolution`, `issue` | the article is the resolution's article; the resolution and the issue determine the category |
 | `priority` | `first_response` | response time follows priority |
 | `nps_after` | `csat_band` | both are recorded after the ticket; csat is derived from the NPS answer |
 | `upsell_accepted` | (filter to `upsell_offered = yes`) | `upsell_accepted` is empty when no offer was made |
@@ -67,9 +94,8 @@ Also true of this data, and worth saying in any view built on it:
   clause belongs to exactly one category, so an LLM or a nearest-neighbour match reads
   the category off it easily. The cache story here is cost and speed, not that the
   LLM gets category wrong.
-- **`sender_domain` identifies the customer** for the 60% of tickets from a corporate
-  address; the rest come from a freemail domain.
-- **`repeat_30d` is undercounted in March** (no tickets before 2026-03-02).
+- **The account is a lookup**, not a prediction: the sender is a known contact, or a
+  new address at a domain that names one account.
 - Tickets from customers that later churned are included; upsells are never offered
   to them.
 
@@ -84,6 +110,6 @@ uv run --with 'aitoai>=1.0' python scripts/support_fixture/load.py --apply   # w
 
 `load.py` writes only to a branch environment (default `support`), branched off
 master so it keeps `customers` and `products` for the links. It only ever creates,
-drops or fills the three support collections, refuses master, refuses an existing
+drops or fills the four support collections, refuses master, refuses an existing
 environment unless `--reload` is given, and checks that every linked customer and
 product exists before writing.

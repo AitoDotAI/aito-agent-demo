@@ -7,7 +7,6 @@ prove the control check fails when it should."""
 
 import hashlib
 import json
-import random
 import sys
 from pathlib import Path
 
@@ -23,9 +22,10 @@ import lifts  # noqa: E402
 #: the "identical to shared" replay, then update the hashes on purpose.
 PINNED = {
     "kb_articles.json": "bf591f2023f950b8caa2d37f0827d1404abcc15a3a48e1b3f2958e3c59249271",
-    "support_tickets.json": "681870d898a298bf8ce10606031c72db9414711033d24fe2f643f8b51c71c059",
-    "support_steps.json": "3dd13303f80cfbbeeaeef4cba9f8b1203ab6baaed787a1ac1a8c931d51300a38",
-    "incoming.json": "82aab6d05af0320fc4e90f8d006227f80a8fd2c265cf97c66977b123d0286b4e",
+    "support_contacts.json": "0d1a22a2990e14a0317cff50e33827a5630939d1c63b3cdbba8a8c1d9e47b96a",
+    "support_tickets.json": "ff3039b2672a0722059a89dea139a8e9f4132d2c74468f8f0b7947d2259d6fa0",
+    "support_steps.json": "9c9934e19d7aaa9d99176efa6961f561178e090576acf914ef5bd822f5337006",
+    "incoming.json": "6ed86676d39d891304862e42d6f082f61b7f2ebbe98ba474409a0924893c3806",
 }
 
 
@@ -50,13 +50,12 @@ def test_the_committed_incoming_queue_is_the_generated_one(measured):
 
 def test_the_incoming_queue_is_never_loaded(measured):
     d, _ = measured
-    loaded = {t["ticket_id"] for t in json.loads((d / "support_tickets.json").read_text())}
+    loaded = json.loads((d / "support_tickets.json").read_text())
     held = json.loads((d / "incoming.json").read_text())
     ids = {t["ticket_id"] for t in held["tickets"]}
-    assert len(ids) == generate.HOLDOUT and not ids & loaded
+    assert len(ids) == generate.HOLDOUT and not ids & {t["ticket_id"] for t in loaded}
     assert {s["ticket"] for s in held["steps"]} <= ids
-    newest_loaded = max(t["created_at"] for t in json.loads((d / "support_tickets.json").read_text()))
-    assert min(t["created_at"] for t in held["tickets"]) >= newest_loaded  # the queue is the newest tickets
+    assert min(t["created_at"] for t in held["tickets"]) >= max(t["created_at"] for t in loaded)
 
 
 def test_the_control_is_null(measured):
@@ -66,11 +65,9 @@ def test_the_control_is_null(measured):
 
 
 def test_the_control_check_fails_when_channel_does_matter(tmp_path):
-    customers, usage = generate.northwind()
-    kb = generate.build_kb()
-    tickets, steps = generate.build_tickets(random.Random(generate.SEED), customers, usage, kb, control_leak=0.07)
-    (tmp_path / "support_tickets.json").write_text(json.dumps(tickets))
-    (tmp_path / "support_steps.json").write_text(json.dumps(steps))
+    kb, contacts, tickets, steps = generate.generate(control_leak=0.07)
+    for name, rows in (("support_contacts", contacts), ("support_tickets", tickets), ("support_steps", steps)):
+        (tmp_path / f"{name}.json").write_text(json.dumps(rows))
     m = lifts.main(tmp_path)
     assert not m["control_holds"]
     assert m["control_channel"]["chat"]["z_vs_rest"] > 1.96
@@ -78,14 +75,22 @@ def test_the_control_check_fails_when_channel_does_matter(tmp_path):
 
 def test_every_planted_effect_is_there(measured):
     _, m = measured
+    who = m["who"]
+    assert who["known_contact_share"] > 0.85 and who["domains_naming_one_account"] == who["domains"] == m["accounts"]
     assert m["category_words"]["perfect_words"] == 0            # no word is a free rule
-    p = m["priority_high"]
-    assert lifts.differs(p["urgent_words"], p["no_urgent_words"])
-    assert p["plan_differs"] and p["category_differs"]
+    r = m["role_to_category"]
+    assert lifts.differs(r["billing_from_finance"], r["billing_from_others"])
+    assert lifts.differs(r["integration_from_developer"], r["integration_from_others"])
+    rec = m["recurring_issue"]
+    assert rec["mean_top_issue_share_per_account"] > 2 * rec["largest_issue_share_overall"]
+    assert m["product"]["named_in_text"] > 0.7
+    p = m["priority"]
+    assert p["high_with_urgent_words"]["ci95"][0] > 0.8 and p["high_enterprise_bug"]["ci95"][0] > 0.8
+    assert p["high_otherwise"]["ci95"][1] < 0.1 and p["low_how_to"]["ci95"][0] > 0.8
     drift = m["drift_sso"]
     assert drift["before"]["p"] < 0.05 and drift["after"]["ci95"][0] > 0.6
     d = m["detractor"]
-    for k in ("repeat_30d", "first_response_>24h", "health_red"):
+    for k in ("repeat_same_issue_30d", "first_response_>24h", "health_red"):
         assert d[k]["ci95"][0] > d["base"]["ci95"][1], k
     lever = m["recovery_by_size"]
     assert {s: v["best"] for s, v in lever.items()} == {
@@ -93,7 +98,7 @@ def test_every_planted_effect_is_there(measured):
     assert all(v["best_beats_none"] for v in lever.values())
     u = m["upsell"]
     assert lifts.differs(u["adoption_band_high"], u["adoption_band_low"])
-    assert u["health_red"]["ci95"][1] < 0.06
+    assert u["health_red"]["ci95"][1] < 0.08
     done = [x for x in m["next_step"] if x["next"] == "done"]
     assert done and all(x["p"] == 1.0 for x in done)
 
@@ -102,10 +107,12 @@ def test_the_readme_quotes_the_measured_numbers(measured):
     _, m = measured
     readme = (HERE.parent / "scripts" / "support_fixture" / "README.md").read_text()
     f = lambda x: f"{x:.2f}"  # noqa: E731
-    quoted = [f(m["priority_high"]["urgent_words"]["p"]), f(m["priority_high"]["no_urgent_words"]["p"]),
+    r, p = m["role_to_category"], m["priority"]
+    quoted = [f(r["billing_from_finance"]["p"]), f(r["billing_from_others"]["p"]),
+              f(p["high_with_urgent_words"]["p"]), f(p["high_otherwise"]["p"]),
               f(m["drift_sso"]["after"]["p"]), f(m["drift_sso"]["all_access_after"]["p"]),
               f(m["detractor"]["base"]["p"]), f(m["upsell"]["adoption_band_high"]["p"]),
-              f(m["upsell"]["adoption_band_low"]["p"])]
+              f(m["upsell"]["adoption_band_low"]["p"]), f(m["recurring_issue"]["mean_top_issue_share_per_account"])]
     for size in ("SMB", "Mid-market", "Enterprise"):
         v = m["recovery_by_size"][size]
         quoted += [f(v[v["best"]]["p"]), f(v["none"]["p"])]

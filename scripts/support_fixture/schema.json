@@ -18,6 +18,28 @@
       }
     }
   },
+  "support_contacts": {
+    "type": "collection",
+    "columns": {
+      "contact_id": {
+        "type": "String"
+      },
+      "email": {
+        "type": "String"
+      },
+      "name": {
+        "type": "Text",
+        "analyzer": "english"
+      },
+      "role": {
+        "type": "String"
+      },
+      "customer": {
+        "type": "String",
+        "link": "customers.customer_id"
+      }
+    }
+  },
   "support_tickets": {
     "type": "collection",
     "columns": {
@@ -40,8 +62,16 @@
       "adoption_band": {
         "type": "String"
       },
+      "sender": {
+        "type": "String"
+      },
       "sender_domain": {
         "type": "String"
+      },
+      "contact": {
+        "type": "String",
+        "link": "support_contacts.contact_id",
+        "nullable": true
       },
       "channel": {
         "type": "String"

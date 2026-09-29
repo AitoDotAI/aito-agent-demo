@@ -1,9 +1,9 @@
 """Measure the planted effects in the `support` fixture from the written files.
 
-Reads only `data/*.json` and the replayed Northwind customers/usage (the same
-rows that are on shared), never the generator's internals, so a number here is
-what an analyst, or Aito, could find in the data. Writes `data/lifts.json` and
-prints the table the README quotes.
+Reads only `data/*.json`, the held-out queue and the replayed Northwind
+customers (the same rows that are on shared), never the generator's internals,
+so a number here is what an analyst, or Aito, could find in the data. Writes
+`data/lifts.json`.
 
     python3 scripts/support_fixture/lifts.py
 """
@@ -52,51 +52,72 @@ def rate(rows, pred, outcome) -> dict:
 
 
 def main(data: Path = DATA, incoming: Path | None = None) -> dict:
-    # the full fixture: what is loaded plus the held-out incoming queue
     tickets = json.loads((data / "support_tickets.json").read_text())
     steps = json.loads((data / "support_steps.json").read_text())
+    contacts = {c["contact_id"]: c for c in json.loads((data / "support_contacts.json").read_text())}
     if incoming is not None and incoming.exists():
         held = json.loads(incoming.read_text())
         tickets, steps = tickets + held["tickets"], steps + held["steps"]
-    customers, usage = northwind()
+    customers, _ = northwind()
     cust = {c["customer_id"]: c for c in customers}
     for t in tickets:
         c = cust[t["customer"]]
         t["_size"], t["_plan"], t["_health"] = c["size"], c["plan"], c["health"]
-    out: dict = {"tickets": len(tickets), "steps": len(steps)}
+        t["_role"] = contacts[t["contact"]]["role"] if t["contact"] else None
+    out: dict = {"tickets": len(tickets), "steps": len(steps), "contacts": len(contacts),
+                 "accounts": len({t["customer"] for t in tickets})}
 
-    # 1. category from words: how precise is the best single word?
+    # 1. who: a known contact is a lookup; a new address still names its account's domain
+    by_domain = defaultdict(set)
+    for t in tickets:
+        by_domain[t["sender_domain"]].add(t["customer"])
+    out["who"] = {"known_contact_share": round(sum(t["contact"] is not None for t in tickets) / len(tickets), 3),
+                  "domains": len(by_domain),
+                  "domains_naming_one_account": sum(len(v) == 1 for v in by_domain.values())}
+
+    # 2. category from words; from the contact's role; the account's recurring issue
     words = defaultdict(Counter)
     for t in tickets:
         for w in set(re.findall(r"[a-z]+", t["text"].lower())):
             words[w][t["category"]] += 1
-    common = {w: c for w, c in words.items() if sum(c.values()) >= 50}
+    common = {w: c for w, c in words.items() if sum(c.values()) >= 100}
     prec = {w: max(c.values()) / sum(c.values()) for w, c in common.items()}
-    out["category_words"] = {
-        "words_seen_50x": len(common),
-        "perfect_words": sum(p == 1.0 for p in prec.values()),
-        "at_least_95": sum(p >= 0.95 for p in prec.values()),
-        "examples": {w: round(prec[w], 3) for w in ("invoice", "sync", "password", "slow", "report", "access") if w in prec},
+    out["category_words"] = {"words_seen_100x": len(common), "perfect_words": sum(p == 1.0 for p in prec.values()),
+                             "examples": {w: round(prec[w], 3) for w in ("invoice", "sync", "password", "report")
+                                          if w in prec}}
+    billing = lambda t: t["category"] == "billing"  # noqa: E731
+    integ = lambda t: t["category"] == "integration"  # noqa: E731
+    out["role_to_category"] = {
+        "billing_from_finance": rate(tickets, lambda t: t["_role"] == "finance", billing),
+        "billing_from_others": rate(tickets, lambda t: t["_role"] not in (None, "finance"), billing),
+        "integration_from_developer": rate(tickets, lambda t: t["_role"] == "developer", integ),
+        "integration_from_others": rate(tickets, lambda t: t["_role"] not in (None, "developer"), integ),
     }
+    per_acc = defaultdict(Counter)
+    for t in tickets:
+        per_acc[t["customer"]][t["issue"]] += 1
+    top_share = [c.most_common(1)[0][1] / sum(c.values()) for c in per_acc.values()]
+    base_issue = Counter(t["issue"] for t in tickets)
+    out["recurring_issue"] = {"mean_top_issue_share_per_account": round(sum(top_share) / len(top_share), 3),
+                              "largest_issue_share_overall": round(max(base_issue.values()) / len(tickets), 3)}
 
-    # 2. priority
+    # 3. product: named in the text
+    names = {"PRD-" + n.lower(): n for n in ("dashboards", "reports", "api", "automations", "integrations",
+                                            "mobile", "forecasting", "governance")}
+    out["product"] = {"named_in_text": round(sum(names.get(t["product"], "#").lower() in t["text"].lower()
+                                                 for t in tickets) / len(tickets), 3)}
+
+    # 4. priority: the desk's triage rules
     urgent = lambda t: any(u in t["text"] for u in ("urgent", "asap", "blocking our team", "production is down", "right now"))  # noqa: E731
-    high = lambda t: t["priority"] == "high"  # noqa: E731
-    out["priority_high"] = {
-        "base": rate(tickets, lambda t: True, high),
-        "urgent_words": rate(tickets, urgent, high),
-        "no_urgent_words": rate(tickets, lambda t: not urgent(t), high),
-        "plan_enterprise": rate(tickets, lambda t: t["_plan"] == "Enterprise", high),
-        "plan_free": rate(tickets, lambda t: t["_plan"] == "Free", high),
-        "category_bug": rate(tickets, lambda t: t["category"] == "bug", high),
-        "category_how_to": rate(tickets, lambda t: t["category"] == "how_to", high),
+    ent_bug = lambda t: t["category"] == "bug" and t["_plan"] == "Enterprise"  # noqa: E731
+    out["priority"] = {
+        "high_with_urgent_words": rate(tickets, urgent, lambda t: t["priority"] == "high"),
+        "high_enterprise_bug": rate(tickets, lambda t: not urgent(t) and ent_bug(t), lambda t: t["priority"] == "high"),
+        "high_otherwise": rate(tickets, lambda t: not urgent(t) and not ent_bug(t), lambda t: t["priority"] == "high"),
+        "low_how_to": rate(tickets, lambda t: not urgent(t) and t["category"] == "how_to", lambda t: t["priority"] == "low"),
     }
-    ph = out["priority_high"]
-    out["priority_high"]["plan_differs"] = differs(ph["plan_enterprise"], ph["plan_free"])
-    out["priority_high"]["category_differs"] = differs(ph["category_bug"], ph["category_how_to"])
 
-    # 3. drift: how login issues are resolved, before and after the SSO rollout.
-    # Selected by the `issue` input, never by the resolution being measured.
+    # 5. drift: how login issues are resolved, before and after the SSO rollout
     login = lambda t: t["issue"] == "login"  # noqa: E731
     sso = lambda t: t["resolution"] == "sso_reconnect"  # noqa: E731
     cut = DRIFT_DATE.strftime("%Y-%m")
@@ -107,7 +128,7 @@ def main(data: Path = DATA, incoming: Path | None = None) -> dict:
         "all_access_after": rate(tickets, lambda t: t["category"] == "access" and t["month"] >= cut, sso),
     }
 
-    # 4. next step given the previous one (top transitions with support)
+    # 6. next step given the previous one
     trans = defaultdict(Counter)
     for s in steps:
         trans[(s["category"], s["previous_action"])][s["action"]] += 1
@@ -115,18 +136,18 @@ def main(data: Path = DATA, incoming: Path | None = None) -> dict:
     tops = []
     for (cat, prev), c in trans.items():
         n = sum(c.values())
-        if n >= 100 and prev != "start":
+        if n >= 300 and prev != "start":
             act, k = c.most_common(1)[0]
             tops.append({"category": cat, "previous": prev, "next": act, "n": n, "p": round(k / n, 3),
                          "lift": round((k / n) / (base_next[act] / len(steps)), 1)})
     out["next_step"] = sorted(tops, key=lambda x: -x["n"])[:8]
 
-    # 5. detractor risk and the recovery lever
+    # 7. detractor risk and the recovery lever
     det = lambda t: t["nps_after"] == "detractor"  # noqa: E731
     base = rate(tickets, lambda t: True, det)
     out["detractor"] = {
         "base": base,
-        "repeat_30d": rate(tickets, lambda t: t["repeat_30d"] == "yes", det),
+        "repeat_same_issue_30d": rate(tickets, lambda t: t["repeat_30d"] == "yes", det),
         "first_response_>24h": rate(tickets, lambda t: t["first_response"] == ">24h", det),
         "health_red": rate(tickets, lambda t: t["_health"] == "Red", det),
         "health_green": rate(tickets, lambda t: t["_health"] == "Green", det),
@@ -139,20 +160,18 @@ def main(data: Path = DATA, incoming: Path | None = None) -> dict:
         lever[size] = {**acts, "best": best, "best_beats_none": differs(acts[best], acts["none"])}
     out["recovery_by_size"] = lever
 
-    # 6. upsell acceptance
+    # 8. upsell acceptance
     offered = [t for t in tickets if t["upsell_offered"] == "yes"]
     acc = lambda t: t["upsell_accepted"] == "yes"  # noqa: E731
     out["upsell"] = {
         "base": rate(offered, lambda t: True, acc),
         "adoption_band_high": rate(offered, lambda t: t["adoption_band"] == "high", acc),
         "adoption_band_low": rate(offered, lambda t: t["adoption_band"] == "low", acc),
-        "plan_free_or_starter": rate(offered, lambda t: t["_plan"] in ("Free", "Starter"), acc),
         "health_red": rate(offered, lambda t: t["_health"] == "Red", acc),
     }
 
-    # 7. control: channel is deliberately NOT a cause of nps_after. Each channel is
-    # tested against all the OTHER channels (a two-proportion z), not against a base
-    # that includes itself.
+    # 9. control: channel is deliberately NOT a cause of nps_after; each channel is
+    # tested against all the OTHER channels (a two-proportion z)
     out["control_channel"] = {}
     for ch in ("email", "chat", "portal", "phone"):
         mine = [t for t in tickets if t["channel"] == ch]

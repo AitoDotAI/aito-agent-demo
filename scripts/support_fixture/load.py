@@ -2,7 +2,7 @@
 
 The support tables link to the Northwind `customers` and `products` already on
 master, so the branch KEEPS everything it inherits from master and only adds
-the three support collections. It only ever creates, drops or fills those three,
+the four support collections. It only ever creates, drops or fills those four,
 refuses master (going live on master is a separate decision,
 docs/design/support-agent.md), refuses an existing environment unless --reload
 is given, and checks every linked customer and product exists before writing.
@@ -26,8 +26,8 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent.parent))
 from src.config import load_config  # noqa: E402
 
-#: parents before children: kb_articles is a link target of support_tickets
-ORDER = ["kb_articles", "support_tickets", "support_steps"]
+#: parents before children: kb_articles and support_contacts are link targets of support_tickets
+ORDER = ["kb_articles", "support_contacts", "support_tickets", "support_steps"]
 #: must already exist in the environment (they come from master)
 LINK_TARGETS = ["customers", "products"]
 
@@ -39,7 +39,7 @@ def main() -> int:
     ap.add_argument("--env", default="support")
     ap.add_argument("--apply", action="store_true", help="perform the writes (default: dry run)")
     ap.add_argument("--reload", action="store_true",
-                    help="allow an existing environment: drop and refill its three support collections")
+                    help="allow an existing environment: drop and refill its four support collections")
     args = ap.parse_args()
     args.env = args.env.strip()
     if args.env.lower() in ("", "master", "env.master"):
@@ -59,7 +59,7 @@ def main() -> int:
         sys.exit(f"cannot read the environment list (got keys {sorted(envs) if isinstance(envs, dict) else type(envs)}); stopping")
     exists = args.env in {e.get("name") for e in listed}
     if exists and not args.reload:
-        sys.exit(f"refusing: env '{args.env}' already exists. Pass --reload to drop and refill its three "
+        sys.exit(f"refusing: env '{args.env}' already exists. Pass --reload to drop and refill its four "
                  "support collections (nothing else in it is touched), or pick a new --env.")
     source = Client(db, cfg.aito_key, env=args.env) if exists else root
     tables = set(source.get_schema().get("schema", {}))
@@ -69,7 +69,8 @@ def main() -> int:
     # every link must resolve: the replayed Northwind ids against what is really there
     known = {t: {h[k] for h in source.query({"from": t, "select": [k], "limit": 10000})["hits"]}
              for t, k in (("customers", "customer_id"), ("products", "product_id"))}
-    dangling = sorted({r[f] for r in data["support_tickets"] for f in ("customer", "product")
+    dangling = sorted({r[f] for n, fields in (("support_tickets", ("customer", "product")), ("support_contacts", ("customer",)))
+                       for r in data[n] for f in fields
                        if r[f] not in known["customers" if f == "customer" else "products"]})
     if dangling:
         sys.exit(f"refusing: tickets link to {len(dangling)} id(s) that don't exist, e.g. {dangling[:3]}; "
