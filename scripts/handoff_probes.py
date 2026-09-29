@@ -2,8 +2,10 @@
 
 The 18 probes are the handoff queue's own 10 tickets (3 written to be unsure,
 7 clear) plus 8 vague or off-topic texts. Each has the tier it should get. Prints
-a table with Aito's $p, the demo's word-coverage check and the resulting tier, so
-the same run re-measures when Aito's own coverage signal replaces the check.
+a table with Aito's $p and the resulting tier, so the same run re-measures the day
+Aito's evidence-coverage fix (td-20260929104053883876) is on shared. The fixed,
+untuned benchmark for that fix is the held-out set in
+~/.tmp/handoff-coverage-probe/heldout_probes.json.
 
     AITO_API_VERSION=v2 uv run python scripts/handoff_probes.py
 """
@@ -40,36 +42,29 @@ PROBES = [
 ]
 
 
-def tier(text: str, guard: bool) -> tuple[str, float, str, float]:
+def tier(text: str) -> tuple[str, float, str]:
     """The tier and why, in the same order as /api/handoff decides it."""
     intent, p, _ = A._top_and_alts(A.aito.predict("resolutions", {"text": text}, "intent", limit=3,
                                                    select=["$p", "feature"]))
-    cov = A._coverage(text)
-    if guard and cov < A._COVERAGE_GATE:
-        band = "handoff (unfamiliar)"
-    elif p < A._ASSIST_GATE:
+    if p < A._ASSIST_GATE:
         band = "handoff (low $p)"
     elif intent in A._SENSITIVE:
         band = "handoff (sensitive)"
     else:
         band = "auto" if p >= A._AUTO_GATE else "assist"
-    return band, p, intent, cov
+    return band, p, intent
 
 
 def main() -> None:
-    print(f"engine {A.aito._request('GET', A.aito._path('_version')).get('version')}, "
-          f"coverage gate {A._COVERAGE_GATE}")
-    print("| text | expected | $p (intent) | coverage | without the check | with it |")
-    print("|---|---|---|---|---|---|")
-    ok_before = ok_after = 0
+    print(f"engine {A.aito._request('GET', A.aito._path('_version')).get('version')}")
+    print("| text | expected | $p (intent) | tier |")
+    print("|---|---|---|---|")
+    ok = 0
     for text, want in PROBES:
-        before, p, intent, cov = tier(text, guard=False)
-        after, *_ = tier(text, guard=True)
-        ok_before += before.split()[0] == want
-        ok_after += after.split()[0] == want
-        mark = lambda b: b + ("" if b.split()[0] == want else " ✗")  # noqa: E731
-        print(f"| {text} | {want} | {p:.2f} ({intent}) | {cov:.2f} | {mark(before)} | {mark(after)} |")
-    print(f"\nright tier: {ok_before}/{len(PROBES)} without the check, {ok_after}/{len(PROBES)} with it")
+        band, p, intent = tier(text)
+        ok += band.split()[0] == want
+        print(f"| {text} | {want} | {p:.2f} ({intent}) | {band}{'' if band.split()[0] == want else ' ✗'} |")
+    print(f"\nright tier: {ok}/{len(PROBES)}")
 
 
 if __name__ == "__main__":

@@ -27,6 +27,12 @@ export function HandoffView({ data, loading }: { data: HandoffData | null; loadi
 
       <div className="rc-h">The agent knows what it doesn&apos;t know</div>
       <div className="rc-sub">Aito triages the queue by its own <b>calibrated confidence</b>. It resolves the sure ones outright, and <b>hands you only the rest</b>: the genuinely ambiguous, and anything that touches money or state. It never guesses on those. And it doesn&apos;t hand them over blank: you get its <b>tentative read, its confidence, and why</b>, so you start informed.</div>
+      <div className="rc-caveat" role="note">
+        <b>Known limit, being fixed:</b>{" "}a vague or off-topic ticket that shares a few words with past ones can still get a
+        confident answer (&ldquo;What&apos;s the weather like in Oulu tomorrow?&rdquo; reads as a cancellation at 91%), so some
+        tickets below are resolved that should come to you. Aito is adding a measure of how much of a ticket&apos;s wording it
+        has seen, which this queue will route on.
+      </div>
 
       {loading && !data && <div className="rc-typing" style={{ padding: "20px 0" }}><span>triaging the queue…</span></div>}
 
@@ -35,7 +41,7 @@ export function HandoffView({ data, loading }: { data: HandoffData | null; loadi
           <div className="rc-colh"><span className="tag" style={{ background: "rgba(124,108,255,.13)", color: "var(--plight)" }}>human handoff</span><span className="ct">Your queue · {data.handoff.length}</span></div>
           <div className="rc-cbody" style={{ minHeight: 0, padding: 0 }}>
             {data.handoff.map((h, i) => {
-              const lowconf = h.reason.startsWith("low confidence") || h.reason.startsWith("unfamiliar");
+              const lowconf = h.reason.startsWith("low confidence");
               return (
                 <div key={i} style={{ padding: "14px 16px", borderBottom: i < data.handoff.length - 1 ? "1px solid #f1efe8" : "none" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
@@ -62,7 +68,7 @@ export function HandoffView({ data, loading }: { data: HandoffData | null; loadi
         </div>
       )}
 
-      <div className="rc-foot">Live: each ticket scored by a real Aito `_predict` over learned history. The split is the calibration doing governance: auto when sure, human when not, verification on anything that changes money or state. &ldquo;Unfamiliar wording&rdquo; is this demo&apos;s own interim check (the share of a ticket&apos;s words that appear in past tickets), used until Aito reports how much of a ticket&apos;s evidence it has seen.</div>
+      <div className="rc-foot">Live: each ticket scored by a real Aito `_predict` over learned history. The split is the calibration doing governance: auto when sure, human when not, verification on anything that changes money or state.</div>
     </div>
   );
 }
