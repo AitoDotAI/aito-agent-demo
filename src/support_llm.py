@@ -45,16 +45,23 @@ class LLMDecision:
 
 
 def decide(ticket: dict, context: dict, options: dict[str, list[str]],
-           shortlists: dict[str, list[tuple[str, float]]] | None = None) -> LLMDecision:
+           shortlists: dict[str, list[tuple[str, float]]] | None = None,
+           examples: list[str] | None = None, explanations: dict[str, str] | None = None) -> LLMDecision:
     """One call deciding every key of `options`. `shortlists` (Aito's top values
     with their $p) are offered first where given; the full option list stays
-    available, so the LLM can overrule Aito."""
+    available, so the LLM can overrule Aito. `examples` (RAG) are similar past
+    tickets with how the desk decided them. `explanations` are Aito's reasons
+    for its top value per decision (from $why)."""
     agent = get_agent()
     lines = [f"Ticket: {ticket['text']}", "Context: " + ", ".join(f"{k} {v}" for k, v in context.items() if v), ""]
+    if examples:
+        lines += ["Similar past tickets, and how this desk decided them:", *examples, ""]
     for key, allowed in options.items():
         lines.append(f"- {key} ({DESCRIBE.get(key, key)}); allowed: {', '.join(allowed)}")
         if shortlists and key in shortlists:
             lines.append("  history suggests: " + ", ".join(f"{v} ({p:.2f})" for v, p in shortlists[key]))
+        if explanations and explanations.get(key):
+            lines.append(f"  because: {explanations[key]}")
     base = {"model": agent._deployment, "response_format": {"type": "json_object"},
             "messages": [{"role": "system", "content": _SYSTEM}, {"role": "user", "content": "\n".join(lines)}]}
     sets = [agent._extra] if agent._extra is not None else agent._param_sets()

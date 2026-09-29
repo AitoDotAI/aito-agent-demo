@@ -42,3 +42,12 @@ def test_the_shortlist_reaches_the_prompt_with_its_probabilities(monkeypatch):
     prompt = fake.sent["messages"][1]["content"]
     assert "history suggests: bug (0.62), billing (0.21)" in prompt
     assert "allowed: billing, bug" in prompt and fake.sent["response_format"] == {"type": "json_object"}
+
+
+def test_rag_examples_reach_the_prompt(monkeypatch):
+    fake = _FakeAgent({"category": "bug"})
+    monkeypatch.setattr(support_llm, "get_agent", lambda: fake)
+    support_llm.decide({"text": "500 error"}, {}, {"category": OPTIONS["category"]},
+                       examples=['- "page throws 500" -> category bug'])
+    prompt = fake.sent["messages"][1]["content"]
+    assert "Similar past tickets, and how this desk decided them:" in prompt and "page throws 500" in prompt

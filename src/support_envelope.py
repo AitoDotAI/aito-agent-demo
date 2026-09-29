@@ -94,14 +94,20 @@ def _ranked(hits: list[dict], where: dict, t0: float) -> dict:
             "inputs": sorted(where), "ms": round((time.perf_counter() - t0) * 1000)}
 
 
-def guarded(aito: AitoClient, table: str, where: dict, target: str, limit: int = 3) -> dict:
-    """_predict through the leak guard; returns the top value, its $p, the runners-up and the latency."""
+def guarded(aito: AitoClient, table: str, where: dict, target: str, limit: int = 3, why: bool = False) -> dict:
+    """_predict through the leak guard; returns the top value, its $p, the runners-up and the latency.
+    With `why`, also the top value's drivers from its own $why (field, value, lift)."""
     if any(v is None for v in where.values()):
         raise LeakError(f"{table}.{target}: an input is missing ({sorted(k for k, v in where.items() if v is None)})")
     check_inputs(table, target, where)
     t0 = time.perf_counter()
-    return _ranked(aito.predict(table, where, target, limit=limit, select=["$p", "feature"]).get("hits") or [],
-                   where, t0)
+    hits = aito.predict(table, where, target, limit=limit,
+                        select=["$p", "feature", "$why"] if why else ["$p", "feature"]).get("hits") or []
+    out = _ranked(hits, where, t0)
+    if why and hits:
+        from src.app import _why_of, _win_drivers  # the pages' own $why reading; imported late (app imports us)
+        out["why"] = _win_drivers(_why_of(hits, out["value"]), k=3)
+    return out
 
 
 def guarded_recommend(aito: AitoClient, table: str, where: dict, field: str, goal: dict, limit: int = 4) -> dict:
@@ -173,7 +179,8 @@ class _Now:
         return _Done(fn(*args))
 
 
-def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: bool = True) -> dict:
+def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: bool = True,
+             why: bool = False) -> dict:
     """Run every step for one incoming ticket. Truth is attached per step for the
     view to compare with, never passed to a prediction.
 
@@ -229,23 +236,23 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: b
 
         # 2. which product: a shortlist from the text and the account's own products;
         # later steps use its top pick, so a wrong pick shows up downstream too
-        prod = guarded(aito, "support_tickets", known, "product", limit=3)
+        prod = guarded(aito, "support_tickets", known, "product", 3, why)
         e = entry("product", "Which product?", "_predict product  ·  top 3", prod, ticket["product"])
         e["correct"], e["shortlist"] = ticket["product"] in [prod["value"]] + [a["value"] for a in prod["alternatives"]], True
         known = {**known, **({"product": prod["value"]} if prod["value"] else {})}
 
-        cat = guarded(aito, "support_tickets", known, "category")
+        cat = guarded(aito, "support_tickets", known, "category", 3, why)
         entry("category", "What is it about?", "_predict category", cat, ticket["category"])
         triaged = {**known, **({"category": cat["value"]} if cat["value"] is not None else {})}
 
-        f_pri = run.submit(guarded, aito, "support_tickets", triaged, "priority")
-        f_res = run.submit(guarded, aito, "support_tickets", triaged, "resolution")
+        f_pri = run.submit(guarded, aito, "support_tickets", triaged, "priority", 3, why)
+        f_res = run.submit(guarded, aito, "support_tickets", triaged, "resolution", 3, why)
         f_kb = run.submit(guarded, aito, "support_tickets", triaged, "kb_article")
         # the first step reads the ticket's own words through the link: which fix a bug
         # needs (crash or wrong data) is in the text, not in the category
         f_first = run.submit(guarded, aito, "support_steps",
                              {"previous_action": "start", "ticket.text": ticket["text"],
-                              **({"category": cat["value"]} if cat["value"] is not None else {})}, "action")
+                              **({"category": cat["value"]} if cat["value"] is not None else {})}, "action", 3, why)
 
         pri = f_pri.result()
         entry("priority", "How urgent?", "_predict priority", pri, ticket["priority"])
