@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 import time
 from dataclasses import dataclass
+from datetime import date
 
 from openai import (
     APIConnectionError,
@@ -205,6 +207,27 @@ def get_agent() -> LLMAgent:
     if _agent is None:
         _agent = LLMAgent()
     return _agent
+
+
+# ── a daily token budget for the public demo's LLM calls, all visitors together ──
+# Past it the routes answer 429 until the next UTC day: a per-IP limit stops one
+# visitor looping, this stops many. In-memory, like the rate limit: one process.
+DAILY_TOKENS = int(os.environ.get("LLM_DAILY_TOKENS", "1500000"))
+_spent = {"day": None, "tokens": 0}
+_spent_lock = threading.Lock()
+
+
+def budget_left() -> int:
+    with _spent_lock:
+        if _spent["day"] != date.today():
+            _spent.update(day=date.today(), tokens=0)
+        return DAILY_TOKENS - _spent["tokens"]
+
+
+def spend(tokens: int) -> None:
+    budget_left()  # roll the day over first
+    with _spent_lock:
+        _spent["tokens"] += tokens
 
 
 def cost_usd(in_tok: int, out_tok: int) -> float:

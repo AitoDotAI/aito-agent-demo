@@ -32,7 +32,7 @@ def main(n: int) -> None:
     client = TestClient(app)
     rows = []
     for t in tickets:
-        r = client.get("/api/route", params={"text": t["text"]})
+        r = client.post("/api/route", json={"text": t["text"]})
         r.raise_for_status()
         d = r.json()
         rows.append({"id": t["id"], "gold": t["correct_tool"],

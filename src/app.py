@@ -24,6 +24,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel as _BaseModel
 
 from src.aito_client import AitoClient, AitoError
 from src.config import load_config
@@ -74,7 +75,7 @@ async def aito_latency_headers(request: Request, call_next):
 # light per-IP sliding-window cap as abuse insurance (nginx forwards the real
 # client IP in X-Forwarded-For). In-memory is fine — one uvicorn process, and a
 # demo doesn't need a shared store.
-_LLM_PATHS = {"/api/resolve-llm", "/api/sales-agent/chat", "/api/company-agent/chat"}
+_LLM_PATHS = {"/api/resolve-llm", "/api/route", "/api/sales-agent/chat", "/api/company-agent/chat"}
 _RL_MAX = 20          # requests
 _RL_WINDOW = 60.0     # seconds
 _rl_hits: dict[str, list[float]] = {}
@@ -279,12 +280,35 @@ def resolve(text: str, sender: str = ""):
 
 # ── Live LLM agent — the side-by-side response-rate comparison ─────
 
-@app.get("/api/resolve-llm")
-def resolve_llm(text: str, sender: str = ""):
+#: longest visitor text an LLM demo route takes (the samples are under 120 characters)
+_LLM_TEXT_MAX = 400
+
+
+class LLMText(_BaseModel):
+    text: str
+    sender: str = ""
+
+
+def _llm_guard(text: str) -> None:
+    """Before any LLM call on a public route: a length cap and today's shared budget."""
+    from src.llm_agent import budget_left
+    if not text.strip() or len(text) > _LLM_TEXT_MAX:
+        raise HTTPException(status_code=422, detail=f"Write the message in 1 to {_LLM_TEXT_MAX} characters.")
+    if budget_left() <= 0:
+        raise HTTPException(status_code=429, detail="The live LLM side of this demo is paused for today "
+                                                    "(its daily budget is used up). Aito's side still works.")
+
+
+@app.post("/api/resolve-llm")
+def resolve_llm(req: LLMText):
     """Resolve the SAME ticket with a live gpt-5-mini call, so the UI can show the
     real latency/cost next to Aito's instant prediction. One structured call —
-    the generous baseline (a real tool-calling agent would chain several)."""
-    from src.llm_agent import cost_usd, get_agent
+    the generous baseline (a real tool-calling agent would chain several).
+    POST, so no crawler or link preview spends a call."""
+    from src.llm_agent import cost_usd, get_agent, spend
+
+    text = req.text
+    _llm_guard(text)
 
     try:
         agent = get_agent()
@@ -294,6 +318,7 @@ def resolve_llm(text: str, sender: str = ""):
         r = agent.resolve(text)
     except Exception as e:  # noqa: BLE001 — surface any LLM failure as 502
         raise HTTPException(status_code=502, detail=f"LLM call failed: {e}")
+    spend(r.input_tokens + r.output_tokens)
     param_field = INTENT_PARAM.get(r.intent)
     param = r.fields.get(param_field) if param_field else None
     return {
@@ -368,14 +393,17 @@ _CATALOG = _json.loads((Path(__file__).resolve().parent / "tools_catalog.json").
 _CATALOG_BY_NAME = {t["name"]: t for t in _CATALOG}
 
 
-@app.get("/api/route")
-def route(text: str):
+@app.post("/api/route")
+def route(req: LLMText):
     """Augmentation demo (short-listing). Aito `_predict` shortlists the few tools
     that history says are relevant; the SAME LLM then picks — once over the whole
     catalog (alone) and once over Aito's shortlist (cooperation) — so you can see
-    that Aito makes the model faster/cheaper/grounded rather than replacing it."""
-    from src.llm_agent import cost_usd, get_agent
+    that Aito makes the model faster/cheaper/grounded rather than replacing it.
+    POST, so no crawler or link preview spends a call."""
+    from src.llm_agent import cost_usd, get_agent, spend
 
+    text = req.text
+    _llm_guard(text)
     where = {"text": text}
     try:
         # tool-routing history lives in `tool_calls` (the company demo owns `tickets`)
@@ -393,6 +421,7 @@ def route(text: str):
 
     def _llm(tools: list[dict]) -> dict:
         r = agent.pick_tool(text, tools)
+        spend(r.input_tokens + r.output_tokens)
         return {"tool": r.tool, "latency_ms": round(r.latency_ms, 1),
                 "input_tokens": r.input_tokens, "output_tokens": r.output_tokens,
                 "tokens": r.input_tokens + r.output_tokens,

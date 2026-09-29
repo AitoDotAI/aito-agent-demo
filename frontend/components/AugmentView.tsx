@@ -32,7 +32,9 @@ export function AugmentView({ onAito }: { onAito?: (ms: number | null) => void }
     const t0 = performance.now();
     if (timer.current) window.clearInterval(timer.current);
     timer.current = window.setInterval(() => setElapsed(performance.now() - t0), 80);
-    apiFetch<Route>(`/api/route?text=${encodeURIComponent(t)}`)
+    apiFetch<Route>("/api/route", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: t }),
+    })
       .then((d) => { setR(d); onAito?.(d.aito_ms); })
       .catch((e: ApiError) => setErr(e?.detail || "route failed"))
       .finally(() => { setLoading(false); if (timer.current) window.clearInterval(timer.current); });
