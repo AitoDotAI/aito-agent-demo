@@ -49,7 +49,7 @@ ALLOWED: dict[tuple[str, str], set[str]] = {
     ("support_tickets", "nps_after"): INTAKE | {"category", "priority", "recovery", "first_response"},
     ("support_tickets", "upsell_accepted"): {"adoption_band", "customer", "product", "upsell_offered"},
     ("support_steps", "action"): {"previous_action", "category", "step_no", "ticket.issue", "ticket.category",
-                                  "ticket.priority", "ticket.customer"},
+                                  "ticket.priority", "ticket.customer", "ticket.text"},
 }
 #: filters a target must carry: an upsell is only accepted or not when it was offered
 REQUIRED: dict[tuple[str, str], dict] = {
@@ -160,94 +160,133 @@ def _gate(p: float | None) -> str:
     return "auto" if p is not None and p >= AUTO else ("assist" if p is not None and p >= ASSIST else "human")
 
 
-def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict]) -> dict:
+class _Now:
+    """A stand-in executor that runs each call at once: the sequential baseline."""
+
+    def submit(self, fn, *args):
+        class _Done:
+            def __init__(self, v):
+                self.v = v
+
+            def result(self):
+                return self.v
+        return _Done(fn(*args))
+
+
+def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: bool = True) -> dict:
     """Run every step for one incoming ticket. Truth is attached per step for the
-    view to compare with, never passed to a prediction."""
+    view to compare with, never passed to a prediction.
+
+    Steps that depend on each other run in order (account -> product -> category ->
+    the triage steps -> risk); everything else runs concurrently when `parallel`."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    t_start = time.perf_counter()
     intake = {k: ticket[k] for k in ("text", "sender_domain", "channel", "month", "adoption_band", "repeat_30d")}
-    steps = []
+    entries: dict[str, dict] = {}
 
-    def add(key, title, op, result, truth=None, note=None):
-        steps.append({"key": key, "title": title, "op": op, **result,
-                      "truth": truth, "correct": (result.get("value") == truth) if truth is not None else None,
-                      "note": note})
+    def entry(key, title, op, result, truth=None, note=None):
+        entries[key] = {"key": key, "title": title, "op": op, **result, "truth": truth,
+                        "correct": (result.get("value") == truth) if truth is not None else None, "note": note}
+        return entries[key]
 
-    # 1. who: in a B2B desk the sender is a known contact, so the account is a lookup;
-    # only a new address is inferred, from the domain it writes from
-    t0 = time.perf_counter()
-    found = aito.query("support_contacts", where={"email": ticket["sender"]},
-                       select=["contact_id", "name", "role", "customer"], limit=1).get("hits") or []
-    if found:
-        c = found[0]
-        add("customer", "Who is this?", "_query support_contacts",
-            {"value": c["customer"], "p": None, "alternatives": [], "inputs": ["sender"],
-             "ms": round((time.perf_counter() - t0) * 1000), "contact": {"name": c.get("name"), "role": c.get("role")}},
-            ticket["customer"], note=f"a known contact: {c.get('name')}, {str(c.get('role', '')).replace('_', ' ')}")
-        account, contact = c["customer"], c["contact_id"]
-    else:
-        who = guarded(aito, "support_tickets", {"sender_domain": ticket["sender_domain"]}, "customer")
-        add("customer", "Who is this?", "_predict customer", who, ticket["customer"],
-            note="a new address: the account is inferred from the domain it writes from")
-        account, contact = who["value"], None
-    known = {**intake, **({"customer": account} if account else {}), **({"contact": contact} if contact else {})}
+    def timed_query(**kw):
+        t0 = time.perf_counter()
+        hits = aito.query(**kw).get("hits") or []
+        return hits, round((time.perf_counter() - t0) * 1000)
 
-    # 2. which product: a shortlist from the text and the account's own products;
-    # later steps use its top pick, so a wrong pick shows up downstream too
-    prod = guarded(aito, "support_tickets", known, "product", limit=3)
-    add("product", "Which product?", "_predict product  ·  top 3", prod, ticket["product"])
-    steps[-1]["correct"] = ticket["product"] in [prod["value"]] + [a["value"] for a in prod["alternatives"]]
-    steps[-1]["shortlist"] = True
-    known = {**known, **({"product": prod["value"]} if prod["value"] else {})}
+    pool = ThreadPoolExecutor(max_workers=8) if parallel else None
+    run = pool if pool else _Now()
+    try:
+        # 1. who: in a B2B desk the sender is a known contact, so the account is a lookup;
+        # only a new address is inferred, from the domain it writes from
+        found, ms = timed_query(table="support_contacts", where={"email": ticket["sender"]},
+                                select=["contact_id", "name", "role", "customer"], limit=1)
+        if found:
+            c = found[0]
+            entry("customer", "Who is this?", "_query support_contacts",
+                  {"value": c["customer"], "p": None, "alternatives": [], "inputs": ["sender"], "ms": ms,
+                   "contact": {"name": c.get("name"), "role": c.get("role")}},
+                  ticket["customer"], note=f"a known contact: {c.get('name')}, {str(c.get('role', '')).replace('_', ' ')}")
+            account, contact = c["customer"], c["contact_id"]
+        else:
+            who = guarded(aito, "support_tickets", {"sender_domain": ticket["sender_domain"]}, "customer")
+            entry("customer", "Who is this?", "_predict customer", who, ticket["customer"],
+                  note="a new address: the account is inferred from the domain it writes from")
+            account, contact = who["value"], None
+        acct = {"customer": account} if account else {}
+        known = {**intake, **acct, **({"contact": contact} if contact else {})}
 
-    cat = guarded(aito, "support_tickets", known, "category")
-    add("category", "What is it about?", "_predict category", cat, ticket["category"])
-    triaged = {**known, **({"category": cat["value"]} if cat["value"] is not None else {})}
-    pri = guarded(aito, "support_tickets", triaged, "priority")
-    add("priority", "How urgent?", "_predict priority", pri, ticket["priority"])
+        # needs only the account: start these now, alongside the product -> category chain
+        f_similar = run.submit(lambda: timed_query(table="support_tickets", where=acct or None,
+                                                   select=["ticket_id", "text", "resolution", "nps_after"],
+                                                   order_by={"$similarity": {"text": ticket["text"]}}, limit=3))
+        f_rec = run.submit(guarded_recommend, aito, "support_tickets", {**acct, "repeat_30d": ticket["repeat_30d"]},
+                           "recovery", {"nps_after": "promoter"})
+        f_ups = run.submit(guarded, aito, "support_tickets", {"adoption_band": ticket["adoption_band"], **acct,
+                                                              "upsell_offered": "yes"}, "upsell_accepted", 2)
+        f_base = run.submit(base_rates, aito)
 
-    res = guarded(aito, "support_tickets", triaged, "resolution")
-    gate = _gate(res["p"])
-    add("resolution", "Does history already decide it?", "_predict resolution  ·  $p gate", res,
-        ticket["resolution"])
-    steps[-1]["gate"] = gate
+        # 2. which product: a shortlist from the text and the account's own products;
+        # later steps use its top pick, so a wrong pick shows up downstream too
+        prod = guarded(aito, "support_tickets", known, "product", limit=3)
+        e = entry("product", "Which product?", "_predict product  ·  top 3", prod, ticket["product"])
+        e["correct"], e["shortlist"] = ticket["product"] in [prod["value"]] + [a["value"] for a in prod["alternatives"]], True
+        known = {**known, **({"product": prod["value"]} if prod["value"] else {})}
 
-    kb = guarded(aito, "support_tickets", triaged, "kb_article")
-    add("kb", "Which article helps?", "_predict kb_article", kb, ticket["kb_article"])
+        cat = guarded(aito, "support_tickets", known, "category")
+        entry("category", "What is it about?", "_predict category", cat, ticket["category"])
+        triaged = {**known, **({"category": cat["value"]} if cat["value"] is not None else {})}
 
-    t0 = time.perf_counter()
-    similar = aito.query("support_tickets", where={"customer": account} if account else None,
-                         select=["ticket_id", "text", "resolution", "nps_after"],
-                         order_by={"$similarity": {"text": ticket["text"]}}, limit=3).get("hits") or []
-    add("similar", "How did this account's similar tickets end?", "_query orderBy $similarity",
-        {"value": None, "p": None, "alternatives": [], "inputs": ["text", "customer"],
-         "ms": round((time.perf_counter() - t0) * 1000), "cases": similar})
+        f_pri = run.submit(guarded, aito, "support_tickets", triaged, "priority")
+        f_res = run.submit(guarded, aito, "support_tickets", triaged, "resolution")
+        f_kb = run.submit(guarded, aito, "support_tickets", triaged, "kb_article")
+        # the first step reads the ticket's own words through the link: which fix a bug
+        # needs (crash or wrong data) is in the text, not in the category
+        f_first = run.submit(guarded, aito, "support_steps",
+                             {"previous_action": "start", "ticket.text": ticket["text"],
+                              **({"category": cat["value"]} if cat["value"] is not None else {})}, "action")
 
-    first = guarded(aito, "support_steps", {"previous_action": "start",
-                                            **({"category": cat["value"]} if cat["value"] is not None else {})}, "action")
-    # scored against the fix's first real action: asking for details or waiting is a detour, not a plan
-    real = [s["action"] for s in true_steps if s["action"] not in DETOURS]
-    add("first_step", "Where to start?", "_predict next action", first, real[0] if real else None)
+        pri = f_pri.result()
+        entry("priority", "How urgent?", "_predict priority", pri, ticket["priority"])
+        # risks, not decisions: a probability against the base rate, shown with what happened,
+        # never scored right or wrong on one ticket
+        f_risk = run.submit(guarded, aito, "support_tickets",
+                            {**triaged, **({"priority": pri["value"]} if pri["value"] is not None else {})}, "nps_after", 3)
 
-    # risks, not decisions: a probability against the base rate, shown with what happened,
-    # never scored right or wrong on one ticket
-    risk = guarded(aito, "support_tickets",
-                   {**triaged, **({"priority": pri["value"]} if pri["value"] is not None else {})}, "nps_after", limit=3)
-    risk_p = _p_of(risk, "detractor")
-    add("risk", "Will this customer turn detractor?", "_predict nps_after", risk,
-        note="recorded after the ticket; shown, never used as an input")
-    steps[-1].update(risk_of("detractor", risk_p, base_rates(aito)["detractor"]), happened=ticket["nps_after"])
-    rec = guarded_recommend(aito, "support_tickets", {**({"customer": account} if account else {}),
-                                                      "repeat_30d": ticket["repeat_30d"]},
-                            "recovery", {"nps_after": "promoter"})
-    add("recovery", "What protects the relationship?", "_recommend recovery → promoter", rec,
-        note="the recovery in the log was assigned at random, so its effect is causal")
+        res = f_res.result()
+        gate = _gate(res["p"])
+        entry("resolution", "Does history already decide it?", "_predict resolution  ·  $p gate", res,
+              ticket["resolution"])["gate"] = gate
+        entry("kb", "Which article helps?", "_predict kb_article", f_kb.result(), ticket["kb_article"])
+        similar, ms = f_similar.result()
+        entry("similar", "How did this account's similar tickets end?", "_query orderBy $similarity",
+              {"value": None, "p": None, "alternatives": [], "inputs": ["text", "customer"], "ms": ms, "cases": similar})
+        # scored against the fix's first real action: asking for details or waiting is a detour, not a plan
+        real = [s["action"] for s in true_steps if s["action"] not in DETOURS]
+        entry("first_step", "Where to start?", "_predict next action", f_first.result(), real[0] if real else None)
 
-    ups = guarded(aito, "support_tickets", {"adoption_band": ticket["adoption_band"],
-                                            **({"customer": account} if account else {}),
-                                            "upsell_offered": "yes"}, "upsell_accepted", limit=2)
-    add("upsell", "Is an upsell welcome?", "_predict upsell_accepted", ups)
-    steps[-1].update(risk_of("yes", _p_of(ups, "yes"), base_rates(aito)["upsell_yes"]),
-                     happened=ticket["upsell_accepted"] if ticket["upsell_offered"] == "yes" else "no offer made")
+        base = f_base.result()
+        risk = f_risk.result()
+        entry("risk", "Will this customer turn detractor?", "_predict nps_after", risk,
+              note="recorded after the ticket; shown, never used as an input").update(
+            risk_of("detractor", _p_of(risk, "detractor"), base["detractor"]), happened=ticket["nps_after"])
+        entry("recovery", "What protects the relationship?", "_recommend recovery → promoter", f_rec.result(),
+              note="the recovery in the log was assigned at random, so its effect is causal")
+        ups = f_ups.result()
+        entry("upsell", "Is an upsell welcome?", "_predict upsell_accepted", ups).update(
+            risk_of("yes", _p_of(ups, "yes"), base["upsell_yes"]),
+            happened=ticket["upsell_accepted"] if ticket["upsell_offered"] == "yes" else "no offer made")
+    finally:
+        if pool:
+            pool.shutdown(wait=False)
 
+    steps = [entries[k] for k in ORDER]
     return {"ticket": {k: ticket[k] for k in ("ticket_id", "created_at", "text", "sender_domain", "channel")},
-            "steps": steps, "gate": gate,
-            "aito_calls": len(steps), "aito_ms": sum(s["ms"] for s in steps)}
+            "steps": steps, "gate": gate, "aito_calls": len(steps), "aito_ms": sum(s["ms"] for s in steps),
+            "wall_ms": round((time.perf_counter() - t_start) * 1000)}
+
+
+#: the order the view shows the steps in
+ORDER = ["customer", "product", "category", "priority", "resolution", "kb", "similar", "first_step",
+         "risk", "recovery", "upsell"]

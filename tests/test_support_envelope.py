@@ -184,3 +184,23 @@ def test_routes_say_not_loaded_and_unknown(monkeypatch):
             raise app_module.AitoError("503 overloaded")
     monkeypatch.setattr(app_module, "_support_aito", _Down())
     assert c.get("/api/support/envelope", params={"ticket_id": tid}).status_code == 502
+
+
+def test_parallel_and_sequential_runs_give_the_same_steps():
+    q = env.load_incoming()
+    for tid in q["order"][:10]:
+        t = q["tickets"][tid]
+        a = env.envelope(_Fake(), t, q["steps"].get(tid, []), parallel=True)
+        b = env.envelope(_Fake(), t, q["steps"].get(tid, []), parallel=False)
+        strip = lambda s: {k: v for k, v in s.items() if k != "ms"}  # noqa: E731
+        assert [strip(s) for s in a["steps"]] == [strip(s) for s in b["steps"]]
+        assert [s["key"] for s in a["steps"]] == KEYS
+
+
+def test_the_first_step_reads_the_ticket_text_through_the_link():
+    q = env.load_incoming()
+    t = q["tickets"][q["order"][0]]
+    fake = _Fake()
+    env.envelope(fake, t, q["steps"].get(t["ticket_id"], []))
+    (where,) = [w for kind, table, w, target in fake.calls if table == "support_steps"]
+    assert where["ticket.text"] == t["text"] and where["previous_action"] == "start"
