@@ -40,6 +40,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--env", default="support")
     ap.add_argument("--apply", action="store_true", help="perform the writes (default: dry run)")
+    ap.add_argument("--data", default=str(HERE / "data"),
+                    help="the generated files (and support_vectors.json) to load; default data/")
     ap.add_argument("--reload", action="store_true",
                     help="allow an existing environment: drop and refill its four support collections")
     args = ap.parse_args()
@@ -50,14 +52,16 @@ def main() -> int:
     cfg = load_config()
     db = cfg.aito_url.split("/env/")[0]  # the database root, whatever AITO_ENV says
     schema = json.loads((HERE / "schema.json").read_text())
-    data = {n: json.loads((HERE / "data" / f"{n}.json").read_text()) for n in ORDER}
+    data_dir = Path(args.data)
+    data = {n: json.loads((data_dir / f"{n}.json").read_text()) for n in ORDER}
     if list(schema) != ORDER:
         sys.exit("schema.json and ORDER disagree")
     # the vectors: made by embed.py with the pinned model, one per ticket and article
     from embed import DIMENSIONS, MODEL, REVISION, VECTORS
-    if not VECTORS.exists():
-        sys.exit(f"no {VECTORS.name}: run embed.py first (see the docstring)")
-    vec = json.loads(VECTORS.read_text())
+    vectors = data_dir / VECTORS.name
+    if not vectors.exists():
+        sys.exit(f"no {vectors}: run embed.py first (see the docstring)")
+    vec = json.loads(vectors.read_text())
     if (vec.get("model"), vec.get("revision"), vec.get("dimensions")) != (MODEL, REVISION, DIMENSIONS):
         sys.exit(f"{VECTORS.name} was made with {vec.get('model')}@{vec.get('revision')}, "
                  f"not the pinned {MODEL}@{REVISION}: re-run embed.py")
