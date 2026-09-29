@@ -46,8 +46,28 @@ def test_handoff_counts_must_add_up():
 
 
 def test_no_llm_route_is_called():
-    paths = {s.path for s in smoke.STEPS}
-    assert not paths & {"/api/resolve-llm", "/api/route", "/api/sales-agent/chat", "/api/company-agent/chat"}
+    # the app's own list of billable LLM routes, so a new one is covered automatically;
+    # /api/route also calls the LLM and is being added to _LLM_PATHS separately
+    # read from the source: importing src.app needs Aito credentials
+    import ast
+    tree = ast.parse((Path(__file__).resolve().parents[1] / "src" / "app.py").read_text())
+    llm_paths = next(ast.literal_eval(n.value) for n in ast.walk(tree)
+                     if isinstance(n, ast.Assign) and any(getattr(t, "id", None) == "_LLM_PATHS" for t in n.targets))
+    assert "/api/resolve-llm" in llm_paths      # guards against reading the wrong assignment
+    forbidden = set(llm_paths) | {"/api/route"}
+    assert not {s.path for s in smoke.STEPS} & forbidden
+
+
+def test_a_dropped_connection_is_a_recorded_failure_not_a_crash(monkeypatch, capsys):
+    import http.client
+
+    def urlopen(req, timeout):
+        raise http.client.RemoteDisconnected("Remote end closed connection without response")
+    monkeypatch.setattr(smoke.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(smoke.sys, "argv", ["live_smoke.py", "--base", "http://x"])
+    assert smoke.main() == 1
+    out = capsys.readouterr().out
+    assert f"{len(smoke.STEPS)} of {len(smoke.STEPS)} views FAILED" in out
 
 
 def test_every_step_is_a_get(monkeypatch):
