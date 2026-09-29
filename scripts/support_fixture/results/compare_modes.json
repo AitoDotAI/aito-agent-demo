@@ -1,0 +1,280 @@
+{
+ "caveat": "on a synthetic fixture with planted effects; 300 held-out tickets; gpt-5-mini",
+ "tickets": 300,
+ "accuracy": {
+  "aito_only": {
+   "product": {
+    "share": 0.85,
+    "ci95": [
+     0.805,
+     0.886
+    ],
+    "n": 300
+   },
+   "category": {
+    "share": 0.953,
+    "ci95": [
+     0.923,
+     0.972
+    ],
+    "n": 300
+   },
+   "priority": {
+    "share": 0.863,
+    "ci95": [
+     0.82,
+     0.898
+    ],
+    "n": 300
+   },
+   "resolution": {
+    "share": 0.913,
+    "ci95": [
+     0.876,
+     0.94
+    ],
+    "n": 300
+   },
+   "first_step": {
+    "share": 0.94,
+    "ci95": [
+     0.907,
+     0.962
+    ],
+    "n": 300
+   },
+   "all_five_right": {
+    "share": 0.683,
+    "ci95": [
+     0.629,
+     0.733
+    ]
+   }
+  },
+  "aito_plus_llm": {
+   "product": {
+    "share": 0.873,
+    "ci95": [
+     0.831,
+     0.906
+    ],
+    "n": 300
+   },
+   "category": {
+    "share": 0.957,
+    "ci95": [
+     0.927,
+     0.975
+    ],
+    "n": 300
+   },
+   "priority": {
+    "share": 0.747,
+    "ci95": [
+     0.695,
+     0.793
+    ],
+    "n": 300
+   },
+   "resolution": {
+    "share": 0.91,
+    "ci95": [
+     0.872,
+     0.937
+    ],
+    "n": 300
+   },
+   "first_step": {
+    "share": 0.95,
+    "ci95": [
+     0.919,
+     0.969
+    ],
+    "n": 300
+   },
+   "all_five_right": {
+    "share": 0.603,
+    "ci95": [
+     0.547,
+     0.657
+    ]
+   }
+  },
+  "llm_only": {
+   "product": {
+    "share": 0.74,
+    "ci95": [
+     0.688,
+     0.786
+    ],
+    "n": 300
+   },
+   "category": {
+    "share": 0.86,
+    "ci95": [
+     0.816,
+     0.895
+    ],
+    "n": 300
+   },
+   "priority": {
+    "share": 0.54,
+    "ci95": [
+     0.483,
+     0.596
+    ],
+    "n": 300
+   },
+   "resolution": {
+    "share": 0.733,
+    "ci95": [
+     0.681,
+     0.78
+    ],
+    "n": 300
+   },
+   "first_step": {
+    "share": 0.847,
+    "ci95": [
+     0.802,
+     0.883
+    ],
+    "n": 300
+   },
+   "all_five_right": {
+    "share": 0.22,
+    "ci95": [
+     0.177,
+     0.27
+    ]
+   }
+  }
+ },
+ "llm": {
+  "aito_only": {
+   "calls_per_ticket": 0.0,
+   "tokens_per_ticket": 0,
+   "usd_per_1000_tickets": 0.0
+  },
+  "aito_plus_llm": {
+   "calls_per_ticket": 0.73,
+   "tokens_per_ticket": 203,
+   "usd_per_1000_tickets": 0.171
+  },
+  "llm_only": {
+   "calls_per_ticket": 1.0,
+   "tokens_per_ticket": 455,
+   "usd_per_1000_tickets": 0.402
+  }
+ },
+ "latency_ms": {
+  "aito_only": {
+   "p50": 575,
+   "p95": 993,
+   "mean": 787
+  },
+  "aito_plus_llm": {
+   "p50": 2446,
+   "p95": 7539,
+   "mean": 3227
+  },
+  "llm_only": {
+   "p50": 2673,
+   "p95": 7090,
+   "mean": 4022
+  },
+  "note": "LLM time is the successful call's own, excluding rate-limit backoff"
+ },
+ "handed_to_llm": {
+  "product": 83,
+  "category": 21,
+  "priority": 145,
+  "resolution": 23,
+  "first_step": 22
+ },
+ "selective": {
+  "policy": {
+   "product": "llm",
+   "category": "llm",
+   "priority": "aito",
+   "resolution": "aito",
+   "first_step": "llm"
+  },
+  "fit_evidence": {
+   "product": {
+    "unsure_n": 46,
+    "aito_right": 25,
+    "llm_right": 30
+   },
+   "category": {
+    "unsure_n": 10,
+    "aito_right": 6,
+    "llm_right": 9
+   },
+   "priority": {
+    "unsure_n": 71,
+    "aito_right": 60,
+    "llm_right": 42
+   },
+   "resolution": {
+    "unsure_n": 15,
+    "aito_right": 9,
+    "llm_right": 8
+   },
+   "first_step": {
+    "unsure_n": 10,
+    "aito_right": 4,
+    "llm_right": 7
+   }
+  },
+  "fit_n": 150,
+  "test_n": 150,
+  "scored_on_test": {
+   "aito_only": {
+    "all_five_right": 0.66,
+    "ci95": [
+     0.581,
+     0.731
+    ],
+    "tickets_calling_llm": 0.0,
+    "per_step": {
+     "product": 0.86,
+     "category": 0.96,
+     "priority": 0.84,
+     "resolution": 0.927,
+     "first_step": 0.947
+    }
+   },
+   "every_unsure_step": {
+    "all_five_right": 0.58,
+    "ci95": [
+     0.5,
+     0.656
+    ],
+    "tickets_calling_llm": 0.72,
+    "per_step": {
+     "product": 0.873,
+     "category": 0.947,
+     "priority": 0.727,
+     "resolution": 0.927,
+     "first_step": 0.947
+    }
+   },
+   "selective": {
+    "all_five_right": 0.68,
+    "ci95": [
+     0.602,
+     0.749
+    ],
+    "tickets_calling_llm": 0.333,
+    "per_step": {
+     "product": 0.873,
+     "category": 0.947,
+     "priority": 0.84,
+     "resolution": 0.927,
+     "first_step": 0.947
+    }
+   }
+  }
+ }
+}
