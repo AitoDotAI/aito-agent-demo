@@ -461,6 +461,7 @@ body:has(.rc-app),body:has(.app){height:100vh;overflow:hidden}
 
 .rc-h{font-size:19px;font-weight:800;letter-spacing:-.01em;margin:4px 0 4px}
 .rc-sub{font-size:13px;color:var(--rc-ink2);line-height:1.45;max-width:80ch;margin-bottom:14px}
+.rc-caveat{font-size:12.5px;color:#9a5512;background:#fff3e7;border:1px solid #f0d4b0;border-radius:10px;padding:10px 13px;margin:0 0 14px;max-width:80ch;line-height:1.45}
 .rc-sub code{font-family:'JetBrains Mono',monospace;font-size:12px;background:#ece9e0;padding:1px 5px;border-radius:4px}
 .rc-ctl{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .rc-chip{font-family:'JetBrains Mono',monospace;font-size:11.5px;padding:6px 11px;border-radius:7px;border:1px solid var(--rc-line);background:var(--surface2);color:var(--rc-ink2);cursor:pointer}

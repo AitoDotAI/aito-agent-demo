@@ -27,6 +27,12 @@ export function HandoffView({ data, loading }: { data: HandoffData | null; loadi
 
       <div className="rc-h">The agent knows what it doesn&apos;t know</div>
       <div className="rc-sub">Aito triages the queue by its own <b>calibrated confidence</b>. It resolves the sure ones outright, and <b>hands you only the rest</b>: the genuinely ambiguous, and anything that touches money or state. It never guesses on those. And it doesn&apos;t hand them over blank: you get its <b>tentative read, its confidence, and why</b>, so you start informed.</div>
+      <div className="rc-caveat" role="note">
+        <b>Known limit, being fixed:</b>{" "}a vague or off-topic ticket that shares a few words with past ones can still get a
+        confident answer (&ldquo;What&apos;s the weather like in Oulu tomorrow?&rdquo; reads as a cancellation at 91%), so some
+        tickets below are resolved that should come to you. Aito is adding a measure of how much of a ticket&apos;s wording it
+        has seen, which this queue will route on.
+      </div>
 
       {loading && !data && <div className="rc-typing" style={{ padding: "20px 0" }}><span>triaging the queue…</span></div>}
 
