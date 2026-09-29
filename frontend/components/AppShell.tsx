@@ -229,9 +229,15 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
           <NavItem v="company">Company AI agent</NavItem>
           <NavItem v="company-data">360 Dashboard</NavItem>
           <NavItem v="company-toolbox">Toolbox</NavItem>
-          {supportReady && <NavItem v="support">Support agent · envelope</NavItem>}
 
-          <div className="rc-grp">Sonipra Telecom · support</div>
+          {supportReady && (
+            <>
+              <div className="rc-grp">Northwind Cloud · support</div>
+              <NavItem v="support">Support agent</NavItem>
+            </>
+          )}
+
+          <div className="rc-grp">Techniques · telco sample</div>
           <NavItem v="resolve">Ticket resolution</NavItem>
           <NavItem v="augment">Tool routing · short-list</NavItem>
           <div className={`rc-item ${view === "handoff" ? "on" : ""}`} onClick={() => go("handoff")}>
