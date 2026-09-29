@@ -148,6 +148,104 @@
      0.27
     ]
    }
+  },
+  "rag_llm": {
+   "product": {
+    "share": 0.81,
+    "ci95": [
+     0.762,
+     0.85
+    ],
+    "n": 300
+   },
+   "category": {
+    "share": 0.963,
+    "ci95": [
+     0.936,
+     0.979
+    ],
+    "n": 300
+   },
+   "priority": {
+    "share": 0.8,
+    "ci95": [
+     0.751,
+     0.841
+    ],
+    "n": 300
+   },
+   "resolution": {
+    "share": 0.907,
+    "ci95": [
+     0.868,
+     0.935
+    ],
+    "n": 300
+   },
+   "first_step": {
+    "share": 0.963,
+    "ci95": [
+     0.936,
+     0.979
+    ],
+    "n": 300
+   },
+   "all_five_right": {
+    "share": 0.607,
+    "ci95": [
+     0.55,
+     0.66
+    ]
+   }
+  },
+  "aito_shortlist_why_llm": {
+   "product": {
+    "share": 0.843,
+    "ci95": [
+     0.798,
+     0.88
+    ],
+    "n": 300
+   },
+   "category": {
+    "share": 0.94,
+    "ci95": [
+     0.907,
+     0.962
+    ],
+    "n": 300
+   },
+   "priority": {
+    "share": 0.837,
+    "ci95": [
+     0.791,
+     0.874
+    ],
+    "n": 300
+   },
+   "resolution": {
+    "share": 0.893,
+    "ci95": [
+     0.853,
+     0.923
+    ],
+    "n": 300
+   },
+   "first_step": {
+    "share": 0.957,
+    "ci95": [
+     0.927,
+     0.975
+    ],
+    "n": 300
+   },
+   "all_five_right": {
+    "share": 0.63,
+    "ci95": [
+     0.574,
+     0.683
+    ]
+   }
   }
  },
  "llm": {
@@ -165,6 +263,16 @@
    "calls_per_ticket": 1.0,
    "tokens_per_ticket": 455,
    "usd_per_1000_tickets": 0.402
+  },
+  "rag_llm": {
+   "calls_per_ticket": 1.0,
+   "tokens_per_ticket": 804,
+   "usd_per_1000_tickets": 0.421
+  },
+  "aito_shortlist_why_llm": {
+   "calls_per_ticket": 1.0,
+   "tokens_per_ticket": 676,
+   "usd_per_1000_tickets": 0.333
   }
  },
  "latency_ms": {
@@ -182,6 +290,16 @@
    "p50": 2673,
    "p95": 7090,
    "mean": 4022
+  },
+  "rag_llm": {
+   "p50": 2503,
+   "p95": 3642,
+   "mean": 2621
+  },
+  "aito_shortlist_why_llm": {
+   "p50": 2600,
+   "p95": 3710,
+   "mean": 2756
   },
   "note": "LLM time is the successful call's own, excluding rate-limit backoff"
  },
