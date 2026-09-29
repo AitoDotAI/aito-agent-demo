@@ -67,9 +67,12 @@ def check_opportunity(body: dict) -> str:
     return f"P(win) {win['p']:.2f}, {body['effort_days']} d, {len(body['references'])} references"
 
 
-# _relate_drivers returns [] on an AitoError, so one KPI with no causes is
-# plausible (a weak lift) but all of them empty is a broken _relate.
-MIN_KPIS_WITH_CAUSES = 3
+# Since #24, company-360 names what fell back to empty on an AitoError in
+# `degraded` ("causes:<kpi>", "graph"), so a failure is reported, not inferred.
+# A build from before #24 has no such field: then fall back to the old
+# inference (one KPI with no causes is a plausible weak lift; most of them
+# empty is a broken _relate).
+MIN_KPIS_WITH_CAUSES_WITHOUT_DEGRADED = 3
 
 
 def check_company_360(body: dict) -> str:
@@ -78,11 +81,15 @@ def check_company_360(body: dict) -> str:
     missing = [k.get("key") for k in kpis if k.get("current") is None]
     assert not missing, f"KPIs with no current value: {missing}"
     with_causes = [k.get("key") for k in kpis if k.get("causes")]
-    assert len(with_causes) >= MIN_KPIS_WITH_CAUSES, (
-        f"only {len(with_causes)} of 6 KPIs have causes ({with_causes}): a failing _relate reads as "
-        "'no driver', see _relate_drivers")
     assert (body.get("customer") or {}).get("profile"), "no customer spotlight"
-    return f"6 KPIs, {len(with_causes)} with causes"
+    if "degraded" in body:
+        assert body["degraded"] == [], f"Aito failed behind: {body['degraded']}"
+        assert with_causes, "no KPI has causes (backstop)"
+        return f"6 KPIs, {len(with_causes)} with causes, nothing degraded"
+    assert len(with_causes) >= MIN_KPIS_WITH_CAUSES_WITHOUT_DEGRADED, (
+        f"only {len(with_causes)} of 6 KPIs have causes ({with_causes}): a failing _relate reads as "
+        "'no driver' on a pre-#24 build (no `degraded` field)")
+    return f"6 KPIs, {len(with_causes)} with causes (pre-#24 build: no `degraded` field)"
 
 
 def check_tools(body: dict) -> str:
