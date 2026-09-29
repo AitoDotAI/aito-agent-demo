@@ -1,0 +1,324 @@
+{
+ "caveat": "on a synthetic fixture with planted effects (scripts/support_fixture/README.md); 300 held-out tickets",
+ "measured_at": "2026-09-29T11:12:32+00:00",
+ "engine": {
+  "name": "aitoai",
+  "version": "2.11.0",
+  "gitRevision": "03b4c2ed76480afd3e3d00dc2541639551400f6c",
+  "builtAt": "2026-09-29T04:50:43.457579355Z"
+ },
+ "env": "support",
+ "decisions": {
+  "category": {
+   "n": 300,
+   "ece": 0.026,
+   "brier": 0.042,
+   "mean_stated": 0.951,
+   "observed": 0.953,
+   "bins": [
+    {
+     "bin": "0.3-0.4",
+     "n": 1,
+     "stated": 0.374,
+     "observed": 0.0
+    },
+    {
+     "bin": "0.4-0.5",
+     "n": 1,
+     "stated": 0.416,
+     "observed": 1.0
+    },
+    {
+     "bin": "0.5-0.6",
+     "n": 3,
+     "stated": 0.537,
+     "observed": 0.333
+    },
+    {
+     "bin": "0.6-0.7",
+     "n": 7,
+     "stated": 0.656,
+     "observed": 1.0
+    },
+    {
+     "bin": "0.7-0.8",
+     "n": 5,
+     "stated": 0.749,
+     "observed": 1.0
+    },
+    {
+     "bin": "0.8-0.9",
+     "n": 10,
+     "stated": 0.854,
+     "observed": 0.8
+    },
+    {
+     "bin": "0.9-1.0",
+     "n": 273,
+     "stated": 0.975,
+     "observed": 0.967
+    }
+   ]
+  },
+  "priority": {
+   "n": 300,
+   "ece": 0.097,
+   "brier": 0.132,
+   "mean_stated": 0.826,
+   "observed": 0.863,
+   "bins": [
+    {
+     "bin": "0.3-0.4",
+     "n": 1,
+     "stated": 0.397,
+     "observed": 1.0
+    },
+    {
+     "bin": "0.4-0.5",
+     "n": 6,
+     "stated": 0.471,
+     "observed": 0.667
+    },
+    {
+     "bin": "0.5-0.6",
+     "n": 16,
+     "stated": 0.55,
+     "observed": 0.812
+    },
+    {
+     "bin": "0.6-0.7",
+     "n": 30,
+     "stated": 0.651,
+     "observed": 0.9
+    },
+    {
+     "bin": "0.7-0.8",
+     "n": 56,
+     "stated": 0.762,
+     "observed": 0.839
+    },
+    {
+     "bin": "0.8-0.9",
+     "n": 78,
+     "stated": 0.854,
+     "observed": 0.885
+    },
+    {
+     "bin": "0.9-1.0",
+     "n": 113,
+     "stated": 0.946,
+     "observed": 0.867
+    }
+   ]
+  },
+  "resolution": {
+   "n": 300,
+   "ece": 0.054,
+   "brier": 0.072,
+   "mean_stated": 0.958,
+   "observed": 0.913,
+   "bins": [
+    {
+     "bin": "0.5-0.6",
+     "n": 7,
+     "stated": 0.549,
+     "observed": 0.714
+    },
+    {
+     "bin": "0.6-0.7",
+     "n": 10,
+     "stated": 0.662,
+     "observed": 0.4
+    },
+    {
+     "bin": "0.7-0.8",
+     "n": 5,
+     "stated": 0.751,
+     "observed": 0.8
+    },
+    {
+     "bin": "0.8-0.9",
+     "n": 2,
+     "stated": 0.841,
+     "observed": 0.5
+    },
+    {
+     "bin": "0.9-1.0",
+     "n": 276,
+     "stated": 0.983,
+     "observed": 0.942
+    }
+   ]
+  },
+  "kb": {
+   "n": 247,
+   "ece": 0.095,
+   "brier": 0.118,
+   "mean_stated": 0.884,
+   "observed": 0.789,
+   "bins": [
+    {
+     "bin": "0.3-0.4",
+     "n": 1,
+     "stated": 0.352,
+     "observed": 0.0
+    },
+    {
+     "bin": "0.4-0.5",
+     "n": 4,
+     "stated": 0.473,
+     "observed": 0.5
+    },
+    {
+     "bin": "0.5-0.6",
+     "n": 27,
+     "stated": 0.549,
+     "observed": 0.259
+    },
+    {
+     "bin": "0.6-0.7",
+     "n": 17,
+     "stated": 0.654,
+     "observed": 0.529
+    },
+    {
+     "bin": "0.7-0.8",
+     "n": 17,
+     "stated": 0.755,
+     "observed": 0.471
+    },
+    {
+     "bin": "0.8-0.9",
+     "n": 5,
+     "stated": 0.838,
+     "observed": 0.4
+    },
+    {
+     "bin": "0.9-1.0",
+     "n": 176,
+     "stated": 0.983,
+     "observed": 0.949
+    }
+   ]
+  },
+  "first_step": {
+   "n": 300,
+   "ece": 0.013,
+   "brier": 0.041,
+   "mean_stated": 0.944,
+   "observed": 0.94,
+   "bins": [
+    {
+     "bin": "0.4-0.5",
+     "n": 1,
+     "stated": 0.44,
+     "observed": 0.0
+    },
+    {
+     "bin": "0.5-0.6",
+     "n": 9,
+     "stated": 0.548,
+     "observed": 0.444
+    },
+    {
+     "bin": "0.6-0.7",
+     "n": 7,
+     "stated": 0.664,
+     "observed": 0.571
+    },
+    {
+     "bin": "0.7-0.8",
+     "n": 2,
+     "stated": 0.782,
+     "observed": 0.5
+    },
+    {
+     "bin": "0.8-0.9",
+     "n": 10,
+     "stated": 0.861,
+     "observed": 0.9
+    },
+    {
+     "bin": "0.9-1.0",
+     "n": 271,
+     "stated": 0.97,
+     "observed": 0.974
+    }
+   ]
+  }
+ },
+ "risks": {
+  "risk_detractor": {
+   "n": 300,
+   "ece": 0.038,
+   "brier": 0.163,
+   "mean_stated": 0.223,
+   "observed": 0.207,
+   "bins": [
+    {
+     "bin": "0.0-0.2",
+     "n": 167,
+     "stated": 0.107,
+     "observed": 0.12
+    },
+    {
+     "bin": "0.2-0.4",
+     "n": 84,
+     "stated": 0.285,
+     "observed": 0.298
+    },
+    {
+     "bin": "0.4-0.6",
+     "n": 41,
+     "stated": 0.472,
+     "observed": 0.366
+    },
+    {
+     "bin": "0.6-0.8",
+     "n": 7,
+     "stated": 0.696,
+     "observed": 0.286
+    },
+    {
+     "bin": "0.8-1.0",
+     "n": 1,
+     "stated": 0.845,
+     "observed": 0.0
+    }
+   ]
+  },
+  "risk_upsell": {
+   "n": 69,
+   "ece": 0.083,
+   "brier": 0.178,
+   "mean_stated": 0.197,
+   "observed": 0.261,
+   "bins": [
+    {
+     "bin": "0.0-0.2",
+     "n": 36,
+     "stated": 0.083,
+     "observed": 0.139
+    },
+    {
+     "bin": "0.2-0.4",
+     "n": 27,
+     "stated": 0.276,
+     "observed": 0.333
+    },
+    {
+     "bin": "0.4-0.6",
+     "n": 5,
+     "stated": 0.498,
+     "observed": 0.8
+    },
+    {
+     "bin": "0.6-0.8",
+     "n": 1,
+     "stated": 0.642,
+     "observed": 0.0
+    }
+   ]
+  }
+ }
+}
