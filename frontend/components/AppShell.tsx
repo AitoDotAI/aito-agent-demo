@@ -457,7 +457,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
   },
   support: {
     pdb: "the predictive envelope",
-    stats: [["10", "Aito calls"], ["150", "held-out tickets"], ["checked", "inputs, per target"]],
+    stats: [["11", "Aito calls"], ["300", "held-out tickets"], ["checked", "inputs, per target"]],
     chip: "cost · impact · governance",
     desc: "The Aito side of one support agent, every step grounded by an Aito call: <b>who</b> wrote, <b>what</b> it is, <b>how urgent</b>, whether <b>history already decides</b> it (where it does, no LLM call is needed), what to try first, and how to <b>keep the customer</b>. Each step may only use inputs known at that point, enforced in code, and is checked against what really happened on tickets Aito never saw.",
     codeLabel: "One step",

@@ -32,7 +32,7 @@ def test_every_readme_leak_refuses(table, target, fields):
 
 def test_outcomes_and_later_fields_never_reach_intake_predictions():
     later = ["issue", "nps_after", "csat_band", "recovery", "upsell_offered", "upsell_accepted", "first_response"]
-    for target in ("customer", "category", "resolution", "kb_article"):
+    for target in ("customer", "product", "category", "resolution", "kb_article"):
         for f in later:
             with pytest.raises(LeakError):
                 check_inputs(T, target, {"text": "x", f: "y"})
@@ -68,8 +68,11 @@ def test_recommend_checks_the_recommended_field_too():
 
 
 class _Fake:
-    def __init__(self):
-        self.calls = []
+    """Predicts "v1" at 0.9 for everything; knows the sender as a contact of ACC-FAKE
+    unless `known=False`, so tests can tell a looked-up or predicted value from the truth."""
+
+    def __init__(self, known=True):
+        self.calls, self.known = [], known
 
     def predict(self, table, where, target, limit=5, select=None):
         self.calls.append(("predict", table, dict(where), target))
@@ -81,6 +84,9 @@ class _Fake:
 
     def query(self, table, where=None, select=None, order_by=None, limit=5):
         self.calls.append(("query", table, where, order_by))
+        if table == "support_contacts":
+            return {"hits": [{"contact_id": "CON-1", "name": "Anna Laine", "role": "finance",
+                              "customer": "ACC-FAKE"}] if self.known else []}
         return {"hits": [{"ticket_id": "SUP-1", "text": "t", "resolution": "refund", "nps_after": "passive"}]}
 
     def get_schema(self):
@@ -92,9 +98,11 @@ class _Fake:
 TRUTH_ONLY = {"resolution", "kb_article", "issue", "nps_after", "csat_band", "first_response",
               "recovery", "upsell_accepted", "ticket.resolution", "ticket.kb_article", "ticket.issue",
               "customer.churned"}
+KEYS = ["customer", "product", "category", "priority", "resolution", "kb", "similar", "first_step",
+        "risk", "recovery", "upsell"]
 
 
-def test_a_full_run_never_feeds_a_prediction_a_truth_only_field():
+def test_a_full_run_feeds_only_what_the_agent_would_know():
     q = env.load_incoming()
     for tid in q["order"]:
         t, fake = q["tickets"][tid], _Fake()
@@ -103,27 +111,45 @@ def test_a_full_run_never_feeds_a_prediction_a_truth_only_field():
             if kind == "query":
                 continue
             assert not TRUTH_ONLY & set(where), (tid, kind, where)
-            # triage feeds the PREDICTED category and priority on ("v1" from the fake), never the truth
-            for f in ("category", "priority"):
+            # the looked-up account and the PREDICTED product, category and priority go
+            # downstream ("ACC-FAKE" / "v1" from the fake), never the ticket's truth
+            if "customer" in where:
+                assert where["customer"] == "ACC-FAKE", (tid, target, where["customer"])
+            for f in ("product", "category", "priority"):
                 if f in where and target != f:
                     assert where[f] == "v1", (tid, target, f, where[f])
         steps = {s["key"]: s for s in out["steps"]}
-        assert list(steps) == [
-            "customer", "category", "priority", "resolution", "kb", "similar", "first_step", "risk", "recovery", "upsell"]
-        # truth is attached to its own step
+        assert list(steps) == KEYS
+        # decisions carry their own truth; risks are never scored on one ticket
         assert steps["category"]["truth"] == t["category"] and steps["resolution"]["truth"] == t["resolution"]
-        assert steps["risk"]["truth"] == t["nps_after"] and steps["priority"]["truth"] == t["priority"]
+        assert steps["priority"]["truth"] == t["priority"] and steps["product"]["truth"] == t["product"]
+        for k in ("risk", "upsell"):
+            assert steps[k]["correct"] is None and steps[k]["truth"] is None and "happened" in steps[k]
+        assert steps["risk"]["happened"] == t["nps_after"]
         assert out["gate"] == "auto"  # the fake is 0.9 sure; AUTO is 0.85
 
 
-def test_a_freemail_ticket_is_not_guessed():
+def test_a_known_contact_is_looked_up_and_a_new_address_is_inferred_from_its_domain():
     q = env.load_incoming()
-    tid = next(i for i in q["order"] if q["tickets"][i]["sender_domain"] in env.FREEMAIL)
-    fake = _Fake()
-    out = env.envelope(fake, q["tickets"][tid], q["steps"].get(tid, []))
+    t = q["tickets"][q["order"][0]]
+    fake = _Fake(known=True)
+    out = env.envelope(fake, t, q["steps"].get(t["ticket_id"], []))
+    assert out["steps"][0]["op"] == "_query support_contacts" and out["steps"][0]["value"] == "ACC-FAKE"
     assert not any(target == "customer" for _, _, _, target in fake.calls)
-    first = out["steps"][0]
-    assert first["skipped"] and first["correct"] is None and out["aito_calls"] == 9
+    fake = _Fake(known=False)
+    out = env.envelope(fake, t, q["steps"].get(t["ticket_id"], []))
+    who = [(w, target) for kind, _, w, target in fake.calls if target == "customer"]
+    assert who == [({"sender_domain": t["sender_domain"]}, "customer")]
+    assert out["steps"][0]["value"] == "v1"
+
+
+def test_the_product_is_a_shortlist():
+    q = env.load_incoming()
+    t = q["tickets"][q["order"][0]]
+    out = env.envelope(_Fake(), t, q["steps"].get(t["ticket_id"], []))
+    prod = out["steps"][1]
+    assert prod["key"] == "product" and prod["shortlist"]
+    assert prod["correct"] == (t["product"] in ["v1", "v2"])
 
 
 def test_the_first_step_is_scored_on_the_first_real_action_not_a_detour():
@@ -132,6 +158,12 @@ def test_the_first_step_is_scored_on_the_first_real_action_not_a_detour():
     out = env.envelope(_Fake(), q["tickets"][tid], q["steps"][tid])
     truth = next(s for s in out["steps"] if s["key"] == "first_step")["truth"]
     assert truth not in env.DETOURS and truth == next(s["action"] for s in q["steps"][tid] if s["action"] not in env.DETOURS)
+
+
+def test_a_risk_reads_as_a_multiple_of_the_usual_rate():
+    r = env.risk_of("detractor", 0.48, 0.24)
+    assert r["risk"]["times"] == 2.0 and r["correct"] is None
+    assert env.risk_of("detractor", None, 0.24)["risk"]["times"] is None
 
 
 def test_routes_say_not_loaded_and_unknown(monkeypatch):
@@ -144,7 +176,7 @@ def test_routes_say_not_loaded_and_unknown(monkeypatch):
     monkeypatch.setitem(app_module._support_state, "loaded", True)
     monkeypatch.setattr(app_module, "_support_aito", _Fake())
     r = c.get("/api/support/envelope", params={"ticket_id": tid})
-    assert r.status_code == 200 and r.json()["aito_calls"] in (9, 10)
+    assert r.status_code == 200 and r.json()["aito_calls"] == len(KEYS)
     assert c.get("/api/support/status").json()["loaded"] is True
 
     class _Down(_Fake):

@@ -14,7 +14,8 @@ type Case = { ticket_id: string; text: string; resolution: string; nps_after: st
 type Step = {
   key: string; title: string; op: string; value: string | null; p: number | null; alternatives: Alt[];
   inputs: string[]; ms: number; truth: string | null; correct: boolean | null; note: string | null;
-  gate?: "auto" | "assist" | "human"; cases?: Case[]; skipped?: boolean;
+  gate?: "auto" | "assist" | "human"; cases?: Case[]; skipped?: boolean; shortlist?: boolean;
+  risk?: { of: string; p: number | null; base: number | null; times: number | null }; happened?: string | null;
 };
 type Envelope = {
   ticket: { ticket_id: string; created_at: string; text: string; sender_domain: string; channel: string };
@@ -23,7 +24,7 @@ type Envelope = {
 type Incoming = { ticket_id: string; created_at: string; text: string; channel: string };
 
 const pct = (p: number | null) => (p == null ? "" : `${Math.round(p * 100)}%`);
-const label = (v: string | null) => (v == null ? "none" : v.replace(/_/g, " "));
+const label = (v: string | null) => (v == null ? "none" : v.replace(/^PRD-/, "").replace(/_/g, " "));
 const GATE = {
   auto: "confident: answer from history",
   assist: "less sure: hand the shortlist to the LLM",
@@ -90,7 +91,7 @@ export function EnvelopeView() {
                 <span><b>{env.aito_calls}</b> Aito calls</span>
                 <span><b>{env.aito_ms.toLocaleString()} ms</b> in total, seen from this server</span>
                 <span className={`ev-gate ${env.gate}`}>{GATE[env.gate]}</span>
-                <span><b>{right} of {scored.length}</b> steps match what happened</span>
+                <span><b>{right} of {scored.length}</b> decisions match what happened</span>
               </div>
               <div className="ev-steps">
                 {env.steps.map((s, i) => (
@@ -103,8 +104,20 @@ export function EnvelopeView() {
                           <div key={c.ticket_id}><span>{c.text}</span><i>{label(c.resolution)} · {c.nps_after}</i></div>
                         ))}
                       </div>
-                    ) : s.skipped ? (
-                      <div className="ev-val"><b>not guessed</b></div>
+                    ) : s.risk ? (
+                      <>
+                        <div className="ev-val"><b>{pct(s.risk.p)}</b> <span className="ev-p">chance of {label(s.risk.of)}</span></div>
+                        <div className="ev-risk">
+                          {s.risk.times != null && <b className={s.risk.times >= 1.3 ? "hi" : s.risk.times <= 0.77 ? "lo" : ""}>{s.risk.times}×</b>}
+                          {s.risk.base != null && <> the usual {pct(s.risk.base)}</>}
+                        </div>
+                      </>
+                    ) : s.shortlist ? (
+                      <div className="ev-short">
+                        {[{ value: s.value, p: s.p }, ...s.alternatives].map((a, j) => (
+                          <span key={j} className={a.value === s.truth ? "hit" : ""}>{label(a.value)} <i>{pct(a.p)}</i></span>
+                        ))}
+                      </div>
                     ) : (
                       <>
                         <div className="ev-val"><b>{label(s.value)}</b> <span className="ev-p">{pct(s.p)}</span></div>
@@ -115,8 +128,9 @@ export function EnvelopeView() {
                       </>
                     )}
                     <div className="ev-foot">
-                      {s.correct === true && <span className="ok">✓ matches: {label(s.truth)}</span>}
+                      {s.correct === true && <span className="ok">✓ {s.shortlist ? "in the shortlist" : "matches"}: {label(s.truth)}</span>}
                       {s.correct === false && <span className="no">✗ it was {label(s.truth)}</span>}
+                      {s.happened != null && <span className="ev-hap">what happened: {label(s.happened)}</span>}
                       {s.gate && <span className={`ev-gate ${s.gate}`}>{GATE[s.gate]}</span>}
                       {!s.skipped && <span className="ev-ms">{s.ms} ms · from {s.inputs.join(", ")}</span>}
                     </div>
@@ -162,6 +176,13 @@ const CSS = `
 .ev .ev-val{margin-top:8px;font-size:15px}.ev .ev-p{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--rc-ink2)}
 .ev .ev-bar{height:5px;background:#f1eee8;border-radius:3px;margin-top:6px;overflow:hidden}.ev .ev-bar i{display:block;height:100%;background:var(--turq)}
 .ev .ev-alt{font-size:11.5px;color:var(--rc-faint);margin-top:5px}
+.ev .ev-short{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ev .ev-short span{font-size:12.5px;padding:4px 9px;border-radius:7px;background:#f1eee8}
+.ev .ev-short span.hit{background:#e7f4ec;color:var(--g);font-weight:700}
+.ev .ev-short i{font-style:normal;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--rc-faint)}
+.ev .ev-risk{font-size:12.5px;color:var(--rc-ink2);margin-top:6px}.ev .ev-risk b{font-size:15px;margin-right:4px}
+.ev .ev-risk b.hi{color:var(--r)}.ev .ev-risk b.lo{color:var(--g)}
+.ev .ev-hap{font-size:11.5px;color:var(--rc-ink2);background:#f1eee8;padding:2px 7px;border-radius:6px}
 .ev .ev-cases{display:flex;flex-direction:column;gap:6px;margin-top:8px;font-size:12px;color:var(--rc-ink2)}
 .ev .ev-cases i{font-style:normal;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--rc-faint);margin-left:6px}
 .ev .ev-foot{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-top:9px;font-size:11.5px}

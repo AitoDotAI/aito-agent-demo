@@ -24,7 +24,8 @@ from src.aito_client import AitoClient
 INCOMING = Path(__file__).resolve().parent / "data" / "support_incoming.json"
 
 #: What a ticket carries at intake, before anyone has worked on it.
-INTAKE = {"text", "sender_domain", "channel", "month", "customer", "product", "adoption_band", "repeat_30d"}
+INTAKE = {"text", "sender", "sender_domain", "contact", "channel", "month", "customer", "product",
+          "adoption_band", "repeat_30d"}
 #: The linked attributes a prediction may name, per link. An explicit list, like
 #: everything else here: `customer.churned` is an outcome recorded on the account
 #: and is not on it. (Aito can still see a linked row's columns when `customer` is
@@ -34,11 +35,13 @@ LINKED = {
     "customer": {"industry", "size", "plan", "region", "tenure_band", "seats_band", "onboarding",
                  "health", "nps_band", "csm_motion", "mrr_eur", "primary_product"},
     "product": {"category", "name", "tier"},
+    "contact": {"role"},
 }
 
 #: target (table, field) -> the inputs it may use. Anything else refuses.
 ALLOWED: dict[tuple[str, str], set[str]] = {
     ("support_tickets", "customer"): {"text", "sender_domain"},
+    ("support_tickets", "product"): INTAKE - {"product"},
     ("support_tickets", "category"): INTAKE,
     ("support_tickets", "priority"): INTAKE | {"category"},
     ("support_tickets", "resolution"): INTAKE | {"category"},
@@ -110,6 +113,34 @@ def guarded_recommend(aito: AitoClient, table: str, where: dict, field: str, goa
     return _ranked(aito.recommend(table, where, field, goal, limit=limit).get("hits") or [], where, t0)
 
 
+def _p_of(result: dict, value: str) -> float | None:
+    """The $p a prediction gave one value, whether it ranked first or not."""
+    if result.get("value") == value:
+        return result.get("p")
+    return next((a["p"] for a in result.get("alternatives", []) if a["value"] == value), None)
+
+
+def risk_of(value: str, p: float | None, base: float | None) -> dict:
+    """A risk reads as a multiple of the usual rate, which a single ticket can't
+    prove right or wrong."""
+    times = round(p / base, 1) if p is not None and base else None
+    return {"risk": {"of": value, "p": p, "base": base, "times": times}, "correct": None, "truth": None}
+
+
+_BASE: dict[int, dict] = {}
+
+
+def base_rates(aito: AitoClient) -> dict:
+    """The usual detractor and upsell-acceptance rates, from the log, once per client."""
+    if id(aito) not in _BASE:
+        det = aito.predict("support_tickets", {}, "nps_after", limit=3, select=["$p", "feature"]).get("hits") or []
+        ups = aito.predict("support_tickets", {"upsell_offered": "yes"}, "upsell_accepted", limit=2,
+                           select=["$p", "feature"]).get("hits") or []
+        pick = lambda hits, v: next((round(float(h["$p"]), 3) for h in hits if h.get("feature") == v), None)  # noqa: E731
+        _BASE[id(aito)] = {"detractor": pick(det, "detractor"), "upsell_yes": pick(ups, "yes")}
+    return _BASE[id(aito)]
+
+
 def load_incoming(path: Path = INCOMING) -> dict:
     held = json.loads(path.read_text())
     steps: dict[str, list[dict]] = {}
@@ -122,8 +153,6 @@ def load_incoming(path: Path = INCOMING) -> dict:
 
 #: $p at or above this is served from history; the demo's existing gates (app.py)
 AUTO, ASSIST = 0.85, 0.65
-#: a sender domain shared by many people identifies no account
-FREEMAIL = {"freemail.example"}
 DETOURS = {"ask_for_details", "wait_for_customer"}
 
 
@@ -142,16 +171,32 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict]) -> dict:
                       "truth": truth, "correct": (result.get("value") == truth) if truth is not None else None,
                       "note": note})
 
-    confirmed = "later steps use the account and product as confirmed on the ticket"
-    if ticket["sender_domain"] in FREEMAIL:  # no account to infer: don't guess, ask
-        add("customer", "Who is this?", "_predict customer",
-            {"value": None, "p": None, "alternatives": [], "inputs": [], "ms": 0, "skipped": True},
-            note=f"a freemail address names no account, so the agent asks the customer; {confirmed}")
+    # 1. who: in a B2B desk the sender is a known contact, so the account is a lookup;
+    # only a new address is inferred, from the domain it writes from
+    t0 = time.perf_counter()
+    found = aito.query("support_contacts", where={"email": ticket["sender"]},
+                       select=["contact_id", "name", "role", "customer"], limit=1).get("hits") or []
+    if found:
+        c = found[0]
+        add("customer", "Who is this?", "_query support_contacts",
+            {"value": c["customer"], "p": None, "alternatives": [], "inputs": ["sender"],
+             "ms": round((time.perf_counter() - t0) * 1000), "contact": {"name": c.get("name"), "role": c.get("role")}},
+            ticket["customer"], note=f"a known contact: {c.get('name')}, {str(c.get('role', '')).replace('_', ' ')}")
+        account, contact = c["customer"], c["contact_id"]
     else:
-        who = guarded(aito, "support_tickets", {"text": ticket["text"], "sender_domain": ticket["sender_domain"]},
-                      "customer")
-        add("customer", "Who is this?", "_predict customer", who, ticket["customer"], note=confirmed)
-    known = {**intake, "customer": ticket["customer"], "product": ticket["product"]}
+        who = guarded(aito, "support_tickets", {"sender_domain": ticket["sender_domain"]}, "customer")
+        add("customer", "Who is this?", "_predict customer", who, ticket["customer"],
+            note="a new address: the account is inferred from the domain it writes from")
+        account, contact = who["value"], None
+    known = {**intake, **({"customer": account} if account else {}), **({"contact": contact} if contact else {})}
+
+    # 2. which product: a shortlist from the text and the account's own products;
+    # later steps use its top pick, so a wrong pick shows up downstream too
+    prod = guarded(aito, "support_tickets", known, "product", limit=3)
+    add("product", "Which product?", "_predict product  ·  top 3", prod, ticket["product"])
+    steps[-1]["correct"] = ticket["product"] in [prod["value"]] + [a["value"] for a in prod["alternatives"]]
+    steps[-1]["shortlist"] = True
+    known = {**known, **({"product": prod["value"]} if prod["value"] else {})}
 
     cat = guarded(aito, "support_tickets", known, "category")
     add("category", "What is it about?", "_predict category", cat, ticket["category"])
@@ -169,33 +214,40 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict]) -> dict:
     add("kb", "Which article helps?", "_predict kb_article", kb, ticket["kb_article"])
 
     t0 = time.perf_counter()
-    similar = aito.query("support_tickets", select=["ticket_id", "text", "resolution", "nps_after"],
+    similar = aito.query("support_tickets", where={"customer": account} if account else None,
+                         select=["ticket_id", "text", "resolution", "nps_after"],
                          order_by={"$similarity": {"text": ticket["text"]}}, limit=3).get("hits") or []
-    add("similar", "How were tickets like this solved?", "_query orderBy $similarity",
-        {"value": None, "p": None, "alternatives": [], "inputs": ["text"], "ms": round((time.perf_counter() - t0) * 1000),
-         "cases": similar})
+    add("similar", "How did this account's similar tickets end?", "_query orderBy $similarity",
+        {"value": None, "p": None, "alternatives": [], "inputs": ["text", "customer"],
+         "ms": round((time.perf_counter() - t0) * 1000), "cases": similar})
 
-    # the first step of the fix, and what follows it, from the step log
     first = guarded(aito, "support_steps", {"previous_action": "start",
                                             **({"category": cat["value"]} if cat["value"] is not None else {})}, "action")
     # scored against the fix's first real action: asking for details or waiting is a detour, not a plan
     real = [s["action"] for s in true_steps if s["action"] not in DETOURS]
     add("first_step", "Where to start?", "_predict next action", first, real[0] if real else None)
 
+    # risks, not decisions: a probability against the base rate, shown with what happened,
+    # never scored right or wrong on one ticket
     risk = guarded(aito, "support_tickets",
-                   {**triaged, **({"priority": pri["value"]} if pri["value"] is not None else {})}, "nps_after")
-    add("risk", "Will this customer turn detractor?", "_predict nps_after", risk, ticket["nps_after"],
-        note="recorded after the ticket; compared, never used as an input")
-    rec = guarded_recommend(aito, "support_tickets", {"customer": ticket["customer"], "repeat_30d": ticket["repeat_30d"]},
+                   {**triaged, **({"priority": pri["value"]} if pri["value"] is not None else {})}, "nps_after", limit=3)
+    risk_p = _p_of(risk, "detractor")
+    add("risk", "Will this customer turn detractor?", "_predict nps_after", risk,
+        note="recorded after the ticket; shown, never used as an input")
+    steps[-1].update(risk_of("detractor", risk_p, base_rates(aito)["detractor"]), happened=ticket["nps_after"])
+    rec = guarded_recommend(aito, "support_tickets", {**({"customer": account} if account else {}),
+                                                      "repeat_30d": ticket["repeat_30d"]},
                             "recovery", {"nps_after": "promoter"})
     add("recovery", "What protects the relationship?", "_recommend recovery → promoter", rec,
         note="the recovery in the log was assigned at random, so its effect is causal")
 
-    ups = guarded(aito, "support_tickets", {"adoption_band": ticket["adoption_band"], "customer": ticket["customer"],
-                                            "upsell_offered": "yes"}, "upsell_accepted")
-    add("upsell", "Is an upsell welcome?", "_predict upsell_accepted", ups, ticket["upsell_accepted"],
-        note=None if ticket["upsell_offered"] == "yes" else "no offer was made on this ticket; nothing to compare")
+    ups = guarded(aito, "support_tickets", {"adoption_band": ticket["adoption_band"],
+                                            **({"customer": account} if account else {}),
+                                            "upsell_offered": "yes"}, "upsell_accepted", limit=2)
+    add("upsell", "Is an upsell welcome?", "_predict upsell_accepted", ups)
+    steps[-1].update(risk_of("yes", _p_of(ups, "yes"), base_rates(aito)["upsell_yes"]),
+                     happened=ticket["upsell_accepted"] if ticket["upsell_offered"] == "yes" else "no offer made")
 
     return {"ticket": {k: ticket[k] for k in ("ticket_id", "created_at", "text", "sender_domain", "channel")},
             "steps": steps, "gate": gate,
-            "aito_calls": sum(1 for s in steps if not s.get("skipped")), "aito_ms": sum(s["ms"] for s in steps)}
+            "aito_calls": len(steps), "aito_ms": sum(s["ms"] for s in steps)}
