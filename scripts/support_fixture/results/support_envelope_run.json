@@ -1,0 +1,83 @@
+{
+ "measured_at": "2026-09-29T10:38:21+00:00",
+ "engine": {
+  "name": "aitoai",
+  "version": "2.11.0",
+  "gitRevision": "03b4c2ed76480afd3e3d00dc2541639551400f6c",
+  "builtAt": "2026-09-29T04:50:43.457579355Z"
+ },
+ "env": "support",
+ "tickets": 300,
+ "decisions": {
+  "customer": {
+   "n": 300,
+   "right": 300,
+   "share": 1.0
+  },
+  "product": {
+   "n": 300,
+   "right": 276,
+   "share": 0.92
+  },
+  "category": {
+   "n": 300,
+   "right": 286,
+   "share": 0.953
+  },
+  "priority": {
+   "n": 300,
+   "right": 259,
+   "share": 0.863
+  },
+  "resolution": {
+   "n": 300,
+   "right": 274,
+   "share": 0.913
+  },
+  "kb": {
+   "n": 247,
+   "right": 195,
+   "share": 0.789
+  },
+  "first_step": {
+   "n": 300,
+   "right": 218,
+   "share": 0.727
+  }
+ },
+ "resolution_gate": {
+  "auto": {
+   "n": 277,
+   "share_of_queue": 0.923,
+   "right": 0.939
+  },
+  "assist": {
+   "n": 13,
+   "share_of_queue": 0.043,
+   "right": 0.615
+  },
+  "human": {
+   "n": 10,
+   "share_of_queue": 0.033,
+   "right": 0.6
+  }
+ },
+ "risk_detractor": {
+  "auc": 0.668,
+  "mean_p_detractors": 0.289,
+  "mean_p_others": 0.206,
+  "n_detractors": 62,
+  "n_others": 238
+ },
+ "risk_upsell": {
+  "auc": 0.709,
+  "n_accepted": 18,
+  "n_declined": 51
+ },
+ "latency_ms": {
+  "aito_p50": 888,
+  "aito_p95": 1867,
+  "wall_p50": 894,
+  "calls_per_ticket": 11
+ }
+}
