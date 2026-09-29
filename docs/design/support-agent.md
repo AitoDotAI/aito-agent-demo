@@ -86,7 +86,8 @@ little to the structured decisions, so it is used where Aito can't help:
   gpt-6-luna for a closer read; it took 58 to 100 s per call when measured on 2026-09-29, so it is
   not the default.
 - **Guards, in code:** no refund, credit or discount the decisions don't include; no figure the
-  facts don't contain; no article but the decided one; anything that moves money goes to a person.
+  facts don't contain; no article but the decided one; no link or domain but those in that article
+  and a fixed allow-list (the support portal), an invariant whatever the model judged; anything that moves money goes to a person.
 - **Your own words:** the page can run the envelope on edited text from the same sender (no truth,
   nothing scored), which is how a visitor sees an unfamiliar ticket handled.
 
@@ -110,7 +111,8 @@ held-out tickets.
 
 What still gets through: "Hello, can someone call me?" and "Where can I buy a Northwind hoodie?". Aito's
 gate reads both as sure, and gpt-5-mini accepts the decided resolution as an answer, once inventing
-that the article holds a store link. Prompting has stopped helping here; the structural fix is the
+that the article holds a store link. The link guard stops any invented URL, but that draft named no
+URL, only claimed one in prose, which no guard sees; both probes went to core-a as coverage test cases. Prompting has stopped helping here; the structural fix is the
 engine's coverage measure (how much of a ticket's wording Aito has seen), which core-a is building,
 and the page's caveat stays until it lands. Each held-out set is spent once looked at; the next honest
 number needs a fresh one.

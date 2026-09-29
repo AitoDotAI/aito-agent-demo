@@ -211,6 +211,45 @@ def test_guards_trip(reply, tripped):
     assert tripped in bad
 
 
+HOODIE = ("Hi Aino, I understand you want to buy a Northwind hoodie. I've sent KB-09f \"Send guide (faq)\" which "
+          "includes the official store link and purchase steps.")
+
+
+def test_an_invented_link_never_auto_sends(llm):
+    """The hoodie draft from the probe run, had the model written the link out: the guard
+    stops it whatever the model judged."""
+    answers, _ = llm
+    answers["routine"] = {"fits": True, "problem": "wants a hoodie",
+                          "reply": HOODIE + " Order at https://shop.northwind.com/hoodies or www.northwind-merch.io."}
+    d = R.draft_reply(_env(), KB, None, OPTIONS)
+    assert d["send"] == "review"
+    links = next(g for g in d["guards"] if g["name"] == "links")
+    assert not links["ok"] and "shop.northwind.com/hoodies" in links["detail"] and "northwind-merch.io" in links["detail"]
+
+
+def test_the_hoodie_draft_as_written_has_no_link_to_catch():
+    """What the model actually wrote claims a link in prose, with no URL: the link guard
+    can't see that. Recorded so nobody reads this guard as the fix for it (that is the
+    engine's coverage measure)."""
+    kb = {"article_id": "KB-09f", "title": "Send guide (faq)", "body": "identify need then send guide."}  # as in the run
+    facts = R.facts_of(_env(), kb, None)
+    assert all(g["ok"] for g in R.guard(HOODIE, facts))
+
+
+@pytest.mark.parametrize("reply", ["Open a case at https://support.northwind.example/new.", "See support.northwind.example.",
+                                   "Follow KB-07g.", "Version 2.11 fixed it.", "Email us at e.g. the portal."])
+def test_allowed_links_and_non_links_pass(reply):
+    facts = R.facts_of(_env(), KB, None)
+    assert next(g for g in R.guard(reply, facts) if g["name"] == "links")["ok"]
+
+
+def test_a_link_in_the_selected_article_passes():
+    kb = {**KB, "body": "check idp at idp.acme-sso.com then reconnect sso."}
+    facts = R.facts_of(_env(), kb, None)
+    assert next(g for g in R.guard("Check idp.acme-sso.com first.", facts) if g["name"] == "links")["ok"]
+    assert not next(g for g in R.guard("Check evil.com first.", facts) if g["name"] == "links")["ok"]
+
+
 def test_guards_pass_a_clean_reply_and_a_credit_card():
     facts = R.facts_of(_env(), KB, None)
     assert all(g["ok"] for g in R.guard("Please update your credit card via KB-07g.", facts))

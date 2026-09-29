@@ -109,7 +109,7 @@ export function ReplyPanel({ ticketId, text, gate }: { ticketId: string; text: s
       )}
       <div className="sr-foot">
         The guards are code, not prompt: a draft that promises money the decisions don&apos;t include, states a figure no
-        fact contains, or cites another article goes to a person, and so does anything that moves money.
+        fact contains, cites another article, or links anywhere but that article and the support portal goes to a person, and so does anything that moves money.
         {" "}<b>Known limit, being fixed:</b> a question the desk doesn&apos;t handle, worded like one it does
         (&ldquo;Where can I buy a Northwind hoodie?&rdquo;), can still be read as routine and answered. Aito is adding a
         measure of how much of a ticket&apos;s wording it has seen, which this path will route on.
