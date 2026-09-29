@@ -75,8 +75,11 @@ async def aito_latency_headers(request: Request, call_next):
 # light per-IP sliding-window cap as abuse insurance (nginx forwards the real
 # client IP in X-Forwarded-For). In-memory is fine — one uvicorn process, and a
 # demo doesn't need a shared store.
-_LLM_PATHS = {"/api/resolve-llm", "/api/route", "/api/sales-agent/chat", "/api/company-agent/chat"}
+_LLM_PATHS = {"/api/resolve-llm", "/api/route", "/api/sales-agent/chat", "/api/company-agent/chat",
+              "/api/support/reply"}
 _RL_MAX = 20          # requests
+#: tighter per-path caps: a support reply can be two LLM calls and takes free text
+_RL_MAX_BY_PATH = {"/api/support/reply": 6}
 _RL_WINDOW = 60.0     # seconds
 _rl_hits: dict[str, list[float]] = {}
 
@@ -87,15 +90,16 @@ async def rate_limit_llm(request: Request, call_next):
         fwd = request.headers.get("x-forwarded-for", "")
         ip = fwd.split(",")[0].strip() or (request.client.host if request.client else "anon")
         now = time.monotonic()
-        recent = [t for t in _rl_hits.get(ip, []) if now - t < _RL_WINDOW]
-        if len(recent) >= _RL_MAX:
+        key = f"{ip} {request.url.path}" if request.url.path in _RL_MAX_BY_PATH else ip
+        recent = [t for t in _rl_hits.get(key, []) if now - t < _RL_WINDOW]
+        if len(recent) >= _RL_MAX_BY_PATH.get(request.url.path, _RL_MAX):
             from fastapi.responses import JSONResponse
             return JSONResponse(
                 {"detail": "Too many AI requests from your network. Give it a few seconds."},
                 status_code=429,
             )
         recent.append(now)
-        _rl_hits[ip] = recent
+        _rl_hits[key] = recent
         if len(_rl_hits) > 5000:  # bound memory: drop anyone with no live hits
             for k in [k for k, v in _rl_hits.items() if not any(now - t < _RL_WINDOW for t in v)]:
                 _rl_hits.pop(k, None)
@@ -1207,6 +1211,8 @@ def support_reply(req: ReplyRequest):
     options = sorted({t["resolution"] for t in load_incoming()["tickets"].values()})
     try:
         return draft_reply(env, kb, step["customer"].get("contact"), options, stronger=req.stronger)
+    except TimeoutError as e:
+        raise HTTPException(status_code=504, detail=f"{e}. The earlier read stands.")
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=f"The LLM is not available: {e}")
 

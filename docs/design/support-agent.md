@@ -90,12 +90,30 @@ little to the structured decisions, so it is used where Aito can't help:
 - **Your own words:** the page can run the envelope on edited text from the same sender (no truth,
   nothing scored), which is how a visitor sees an unfamiliar ticket handled.
 
-Measured once, live, on 2026-09-29 (small n, a sanity check rather than a result): of 3 unfamiliar
-tickets, Aito's gate passed 2 as sure and the writer escalated both, and the third went to a person on
-Aito's gate alone; of 20 real held-out tickets (every 15th), Aito's gate passed 15 and the writer
-kept all 15 on the routine path. An earlier prompt that only asked "does it fit" let "hi, it doesn't
-work again" through to an auto-sent, specific fix; the prompt now requires the ticket to describe
-the problem.
+**Hardening for a public page:** the reply route has its own per-IP limit (6 a minute), a daily
+LLM token budget for all visitors together (past it, drafting pauses and Aito's decisions stand), a
+600-character cap on visitor text, and the ticket fenced as data. A ticket that tries to instruct the
+AI is never auto-sent, on either of two reads: a pattern in code, or the writer's own flag. The
+gpt-6-luna read has a hard 120 s limit with a visible wait and a cancel. An Aito error on one step
+blanks that step (the engine's mergeSampleFreqs 500, td-20260929182755894024) instead of failing the
+ticket; more than half the steps failing is reported as Aito being down.
+
+**The sanity set** (scripts/support_fixture/reply_probes.py, live, 2026-09-29): unfamiliar, vague and
+injection tickets that must never be auto-sent, each run from two real senders, plus 20 real
+held-out tickets.
+
+| run | tuning probes (26) | held-out probes (20) | real tickets Aito was sure of, auto-sent |
+|---|---|---|---|
+| first, before any fix | 21 ok, 3 auto-sent, 2 engine errors | not yet written | 15 of 15 |
+| after fixing on the tuning set (**the honest held-out number**) | 25 ok, 1 auto-sent | **17 ok, 3 auto-sent** | 15 of 15 |
+| after a further prompt fix (tuned on both; not an independent number) | 25 ok, 1 auto-sent | 18 ok, 2 auto-sent | 14 of 15 |
+
+What still gets through: "Hello, can someone call me?" and "Where can I buy a Northwind hoodie?". Aito's
+gate reads both as sure, and gpt-5-mini accepts the decided resolution as an answer, once inventing
+that the article holds a store link. Prompting has stopped helping here; the structural fix is the
+engine's coverage measure (how much of a ticket's wording Aito has seen), which core-a is building,
+and the page's caveat stays until it lands. Each held-out set is spent once looked at; the next honest
+number needs a fresh one.
 
 ## Phasing
 

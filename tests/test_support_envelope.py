@@ -238,11 +238,16 @@ def test_each_step_gets_exactly_its_upstream_inputs(parallel):
     assert by_target["action"]["category"] == "cat-v"
 
 
-def test_an_error_in_a_parallel_call_surfaces():
+def test_one_failing_step_degrades_and_the_rest_stand():
+    """An Aito error on one step (e.g. the engine's mergeSampleFreqs 500) blanks that
+    step and sends the ticket to a person; the other steps still show."""
     q = env.load_incoming()
     t = q["tickets"][q["order"][0]]
-    with pytest.raises(app_module.AitoError, match="503 on resolution"):
-        env.envelope(_Tagged(fail_on="resolution"), t, q["steps"].get(t["ticket_id"], []), parallel=True)
+    out = env.envelope(_Tagged(fail_on="resolution"), t, q["steps"].get(t["ticket_id"], []), parallel=True)
+    res = next(s for s in out["steps"] if s["key"] == "resolution")
+    assert out["degraded"] == ["resolution"] and out["gate"] == "human"
+    assert res["value"] is None and res["correct"] is None and "could not answer" in res["note"]
+    assert all(s.get("error") is None for s in out["steps"] if s["key"] != "resolution")
 
 
 def test_your_own_words_carry_no_truth(monkeypatch):

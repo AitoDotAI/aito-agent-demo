@@ -4,18 +4,19 @@
    written from Aito's decisions and checked by code guards before anything is sent,
    and the recorded Aito vs LLM comparison on the held-out queue. */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
 
 type Guard = { name: string; ok: boolean; detail: string | null };
 type Call = { model: string; input_tokens: number; output_tokens: number; ms: number; usd: number | null };
 type Draft = {
-  path: "routine" | "unfamiliar"; model: string; reply: string; send: "auto" | "review"; reasons: string[];
+  paused?: boolean; path: "routine" | "unfamiliar" | null; model: string | null; reply: string; send: "auto" | "review"; reasons: string[];
   fits: boolean | null; reading: string | null; resolution: string | null; note: string | null;
   guards: Guard[]; calls: Call[]; tokens: number; llm_ms: number; usd: number | null;
 };
 
 const STRONG = "gpt-6-luna";
+const STRONG_LIMIT_S = 125; // the server gives up at 120 s; this is the page's own backstop
 const lab = (v: string | null) => (v == null ? "none" : v.replace(/_/g, " "));
 const secs = (ms: number) => `${(ms / 1000).toFixed(1)} s`;
 
@@ -23,16 +24,35 @@ export function ReplyPanel({ ticketId, text, gate }: { ticketId: string; text: s
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState<null | "fast" | "strong">(null);
   const [err, setErr] = useState<string | null>(null);
+  const [waited, setWaited] = useState(0);
+  const abort = useRef<AbortController | null>(null);
+
+  useEffect(() => () => abort.current?.abort(), []); // leaving the ticket cancels its request
+  useEffect(() => {
+    if (busy !== "strong") return;
+    const t0 = Date.now();
+    const id = window.setInterval(() => setWaited(Math.round((Date.now() - t0) / 1000)), 1000);
+    return () => window.clearInterval(id);
+  }, [busy]);
 
   const run = (stronger: boolean) => {
-    setBusy(stronger ? "strong" : "fast"); setErr(null);
+    const ctl = new AbortController();
+    abort.current = ctl;
+    const limit = stronger ? window.setTimeout(() => ctl.abort("timeout"), STRONG_LIMIT_S * 1000) : null;
+    setBusy(stronger ? "strong" : "fast"); setErr(null); setWaited(0);
     apiFetch<Draft>("/api/support/reply", {
-      method: "POST", headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" }, signal: ctl.signal,
       body: JSON.stringify({ ticket_id: ticketId, text, stronger }),
     })
       .then(setDraft)
-      .catch((e) => setErr(String(e?.message ?? e)))
-      .finally(() => setBusy(null));
+      .catch((e) => {
+        if (ctl.signal.aborted) {
+          setErr(ctl.signal.reason === "timeout"
+            ? `${STRONG} did not answer within ${STRONG_LIMIT_S} s. The earlier read stands.`
+            : "Cancelled. The earlier read stands.");
+        } else setErr(String(e?.message ?? e));
+      })
+      .finally(() => { if (limit) window.clearTimeout(limit); setBusy(null); });
   };
 
   return (
@@ -55,7 +75,7 @@ export function ReplyPanel({ ticketId, text, gate }: { ticketId: string; text: s
         <>
           <div className="sr-verdict">
             <span className={`sr-send ${draft.send}`}>{draft.send === "auto" ? "✓ sent automatically" : "→ to a person for review"}</span>
-            <span className="sr-path">{draft.path === "routine" ? "routine" : "unfamiliar ticket"} · {draft.model}</span>
+            {draft.path && <span className="sr-path">{draft.path === "routine" ? "routine" : "unfamiliar ticket"} · {draft.model}</span>}
           </div>
           {draft.reasons.length > 0 && <ul className="sr-why">{draft.reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>}
           {draft.path === "unfamiliar" && (
@@ -66,7 +86,7 @@ export function ReplyPanel({ ticketId, text, gate }: { ticketId: string; text: s
             </div>
           )}
           {draft.reply && <div className="sr-reply">{draft.reply}</div>}
-          <div className="sr-guards">
+          {!draft.paused && <div className="sr-guards">
             {draft.guards.map((g) => (
               <span key={g.name} className={g.ok ? "ok" : "no"} title={g.detail ?? ""}>{g.ok ? "✓" : "✗"} {g.name}</span>
             ))}
@@ -74,17 +94,25 @@ export function ReplyPanel({ ticketId, text, gate }: { ticketId: string; text: s
               {draft.calls.length} LLM call{draft.calls.length > 1 ? "s" : ""} · {draft.tokens.toLocaleString()} tokens · {secs(draft.llm_ms)}
               {draft.usd != null ? ` · $${(draft.usd * 1000).toFixed(2)} per 1,000 like it` : " · no list price for this model"}
             </span>
-          </div>
-          {draft.path === "unfamiliar" && draft.model !== STRONG && (
+          </div>}
+          {draft.path === "unfamiliar" && draft.model !== STRONG && (busy === "strong" ? (
+            <div className="sr-wait">
+              <span className="rc-typing"><span>{STRONG} is still thinking · {waited} s (it gives up at 120 s)</span></span>
+              <button className="sr-go ghost" onClick={() => abort.current?.abort("cancel")}>Cancel</button>
+            </div>
+          ) : (
             <button className="sr-go ghost" disabled={busy !== null} onClick={() => run(true)}>
-              {busy === "strong" ? `${STRONG} is reading it, about a minute…` : `Ask ${STRONG} for a closer read (slow: about a minute)`}
+              Ask {STRONG} for a closer read (slow: often a minute or more)
             </button>
-          )}
+          ))}
         </>
       )}
       <div className="sr-foot">
         The guards are code, not prompt: a draft that promises money the decisions don&apos;t include, states a figure no
         fact contains, or cites another article goes to a person, and so does anything that moves money.
+        {" "}<b>Known limit, being fixed:</b> a question the desk doesn&apos;t handle, worded like one it does
+        (&ldquo;Where can I buy a Northwind hoodie?&rdquo;), can still be read as routine and answered. Aito is adding a
+        measure of how much of a ticket&apos;s wording it has seen, which this path will route on.
       </div>
     </div>
   );
@@ -156,6 +184,8 @@ export const SUPPORT_REPLY_CSS = `
 .sr-go{margin-top:10px;font-family:inherit;font-weight:700;font-size:12.5px;background:var(--purple);color:#fff;border:none;border-radius:8px;padding:8px 14px;cursor:pointer}
 .sr-go.ghost{background:transparent;color:var(--purple);border:1px solid var(--purple)}
 .sr-go:disabled{opacity:.6;cursor:wait}
+.sr-wait{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:10px;font-size:12px;color:var(--rc-ink2)}
+.sr-wait .sr-go{margin-top:0}
 .sr-verdict{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:10px}
 .sr-send{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:4px 9px;border-radius:6px}
 .sr-send.auto{background:#e7f4ec;color:#1f6f4a}.sr-send.review{background:#fbf1d8;color:#6f561c}
