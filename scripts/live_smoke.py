@@ -73,6 +73,9 @@ def check_opportunity(body: dict) -> str:
 # inference (one KPI with no causes is a plausible weak lift; most of them
 # empty is a broken _relate).
 MIN_KPIS_WITH_CAUSES_WITHOUT_DEGRADED = 3
+# Set by --require-degraded: once the site serves `degraded`, its absence must
+# fail rather than quietly revert to the inference above.
+REQUIRE_DEGRADED = False
 
 
 def check_company_360(body: dict) -> str:
@@ -86,6 +89,7 @@ def check_company_360(body: dict) -> str:
         assert body["degraded"] == [], f"Aito failed behind: {body['degraded']}"
         assert with_causes, "no KPI has causes (backstop)"
         return f"6 KPIs, {len(with_causes)} with causes, nothing degraded"
+    assert not REQUIRE_DEGRADED, "company-360 has no `degraded` field (--require-degraded)"
     assert len(with_causes) >= MIN_KPIS_WITH_CAUSES_WITHOUT_DEGRADED, (
         f"only {len(with_causes)} of 6 KPIs have causes ({with_causes}): a failing _relate reads as "
         "'no driver' on a pre-#24 build (no `degraded` field)")
@@ -122,7 +126,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--base", default=LIVE_BASE)
     parser.add_argument("--timeout", type=float, default=120.0)
+    parser.add_argument("--require-degraded", action="store_true",
+                        help="fail if company-360 lacks the `degraded` field (turn on once the "
+                             "deployed build serves it)")
     args = parser.parse_args()
+    global REQUIRE_DEGRADED
+    REQUIRE_DEGRADED = args.require_degraded
 
     print(f"Agent live smoke — {args.base}, {len(STEPS)} views\n")
     failures = []

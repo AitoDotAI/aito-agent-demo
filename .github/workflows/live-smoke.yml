@@ -41,7 +41,6 @@ jobs:
           echo "base=$BASE" >> "$GITHUB_OUTPUT"
           echo "Verifying ${DEPLOY_ENV:-prod (scheduled/manual)} at $BASE: image ${IMAGE_TAG:-n/a} (${DIGEST:-n/a}), built ${IMAGE_ID:-n/a}"
       - name: Smoke the agent demo on that host (read-only)
-        if: steps.target.outputs.base != ''
         env:
           BASE: ${{ steps.target.outputs.base }}
         run: python scripts/live_smoke.py --base "$BASE"

@@ -27,6 +27,14 @@ def test_degraded_names_the_failure():
     with pytest.raises(AssertionError, match="causes:ontime"):
         smoke.check_company_360(body)
     assert "nothing degraded" in smoke.check_company_360({**_c360([1, 0, 0, 0, 0, 0]), "degraded": []})
+    with pytest.raises(AssertionError, match="backstop"):
+        smoke.check_company_360({**_c360([0, 0, 0, 0, 0, 0]), "degraded": []})
+
+
+def test_require_degraded_fails_a_build_without_the_field(monkeypatch):
+    monkeypatch.setattr(smoke, "REQUIRE_DEGRADED", True)
+    with pytest.raises(AssertionError, match="require-degraded"):
+        smoke.check_company_360(_c360([1, 3, 1, 2, 1, 0]))
 
 
 def test_company_360_tolerates_a_kpi_without_causes():
