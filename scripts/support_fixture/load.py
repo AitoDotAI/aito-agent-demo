@@ -8,6 +8,7 @@ docs/design/support-agent.md), refuses an existing environment unless --reload
 is given, and checks every linked customer and product exists before writing.
 
     python3 scripts/support_fixture/generate.py
+    telco-tool-routing-bench/run-py scripts/support_fixture/embed.py              # the pinned vectors
     uv run --with 'aitoai>=1.0' python scripts/support_fixture/load.py            # dry run
     uv run --with 'aitoai>=1.0' python scripts/support_fixture/load.py --apply    # writes (Antti)
 
@@ -24,6 +25,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent.parent))
+sys.path.insert(0, str(HERE))
 from src.config import load_config  # noqa: E402
 
 #: parents before children: kb_articles and support_contacts are link targets of support_tickets
@@ -51,6 +53,19 @@ def main() -> int:
     data = {n: json.loads((HERE / "data" / f"{n}.json").read_text()) for n in ORDER}
     if list(schema) != ORDER:
         sys.exit("schema.json and ORDER disagree")
+    # the vectors: made by embed.py with the pinned model, one per ticket and article
+    from embed import DIMENSIONS, MODEL, REVISION, VECTORS
+    if not VECTORS.exists():
+        sys.exit(f"no {VECTORS.name}: run embed.py first (see the docstring)")
+    vec = json.loads(VECTORS.read_text())
+    if (vec.get("model"), vec.get("revision"), vec.get("dimensions")) != (MODEL, REVISION, DIMENSIONS):
+        sys.exit(f"{VECTORS.name} was made with {vec.get('model')}@{vec.get('revision')}, "
+                 f"not the pinned {MODEL}@{REVISION}: re-run embed.py")
+    for n, key, id_field in (("support_tickets", "tickets", "ticket_id"), ("kb_articles", "kb_articles", "article_id")):
+        missing = [r[id_field] for r in data[n] if r[id_field] not in vec[key]]
+        if missing:
+            sys.exit(f"{len(missing)} {n} rows have no vector (e.g. {missing[:3]}): re-run embed.py")
+        data[n] = [{**r, "embedding": vec[key][r[id_field]]} for r in data[n]]
 
     root = Client(db, cfg.aito_key)
     envs = root.list_envs()
@@ -101,7 +116,7 @@ def main() -> int:
                     raise
     for n in ORDER:
         env.create_collection(n, schema[n]["columns"])
-        inserted = env.upload_entries(n, data[n], batch_size=1000)
+        inserted = env.upload_entries(n, data[n], batch_size=400)  # vectors: stay well under the 10 MB request cap
         env.optimize(n)
         total = env.query({"from": n, "limit": 0})["total"]
         if total != len(data[n]):

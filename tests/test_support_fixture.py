@@ -118,3 +118,21 @@ def test_the_readme_quotes_the_measured_numbers(measured):
         quoted += [f(v[v["best"]]["p"]), f(v["none"]["p"])]
     missing = [q for q in quoted if q not in readme]
     assert not missing, f"README does not quote {missing}: re-run lifts.py and update it"
+
+
+def test_the_incoming_query_vectors_are_the_pinned_model_and_cover_the_queue():
+    import embed
+    vec = json.loads(embed.INCOMING_VECTORS.read_text())
+    assert (vec["model"], vec["revision"], vec["dimensions"]) == (embed.MODEL, embed.REVISION, embed.DIMENSIONS)
+    held = json.loads((HERE.parent / "src" / "data" / "support_incoming.json").read_text())["tickets"]
+    assert set(vec["tickets"]) == {t["ticket_id"] for t in held}
+    for v in list(vec["tickets"].values())[:20]:
+        assert len(v) == embed.DIMENSIONS and abs(sum(x * x for x in v) - 1) < 0.01  # unit length, as cosine needs
+
+
+def test_the_schema_carries_the_vector_columns_the_loader_fills():
+    import embed
+    schema = json.loads((HERE.parent / "scripts" / "support_fixture" / "schema.json").read_text())
+    for t in ("support_tickets", "kb_articles"):
+        col = schema[t]["columns"]["embedding"]
+        assert (col["type"], col["dimensions"], col["similarity"]) == ("Vector", embed.DIMENSIONS, "cosine")

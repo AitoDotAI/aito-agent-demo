@@ -23,6 +23,20 @@ history useful: its contacts, its products and its recurring problems.
 | `support_tickets` | 11,700 | `customer → customers`, `product → products`, `contact → support_contacts` (nullable), `kb_article → kb_articles` (nullable) |
 | `support_steps` | 58,710 | `ticket → support_tickets` |
 
+**Vectors.** `support_tickets.embedding` (the ticket text) and `kb_articles.embedding`
+(title and body) are 384-dimension cosine `Vector` columns, so similar cases,
+hybrid KB search and `$semantic` inference work from the first load. `embed.py`
+computes them with **`sentence-transformers/all-MiniLM-L6-v2` at revision
+`1110a243fdf4706b3f48f1d95db1a4f5529b4d41`** (sentence-transformers 3.4.1,
+torch 2.14.0 CPU), normalized and rounded to 4 decimals, so two runs give
+byte-identical files. The held-out queue's query vectors ship with the app in
+`src/data/support_incoming_vectors.json`, because the app does not run a model.
+`load.py` refuses vectors made with any other model or revision. Measured on the
+telco log (see `~/.tmp/handoff-coverage-probe/`, held-out set): `$semantic` improves
+intent on paraphrased tickets (21/22 vs 18/22 token-only), but nearest similarity
+alone does not cleanly separate paraphrases from off-topic text on templated data,
+so the envelope shows it as information, not as a gate.
+
 The **newest 300 tickets** (and their steps) are held out as the **incoming queue**:
 never loaded, and committed at `src/data/support_incoming.json` for the app. The
 envelope view predicts on those, so Aito has not seen the tickets it is judged on.
@@ -104,6 +118,7 @@ Also true of this data, and worth saying in any view built on it:
 ```bash
 python3 scripts/support_fixture/generate.py            # writes data/ and src/data/support_incoming.json (byte-identical every run)
 python3 scripts/support_fixture/lifts.py               # measure the planted effects
+telco-tool-routing-bench/run-py scripts/support_fixture/embed.py   # the pinned vectors (sentence-transformers)
 uv run --with 'aitoai>=1.0' python scripts/support_fixture/load.py           # dry run: prints the plan
 uv run --with 'aitoai>=1.0' python scripts/support_fixture/load.py --apply   # writes (Antti runs it)
 ```
@@ -112,4 +127,4 @@ uv run --with 'aitoai>=1.0' python scripts/support_fixture/load.py --apply   # w
 master so it keeps `customers` and `products` for the links. It only ever creates,
 drops or fills the four support collections, refuses master, refuses an existing
 environment unless `--reload` is given, and checks that every linked customer and
-product exists before writing.
+product exists and every ticket and article has its pinned vector before writing.
