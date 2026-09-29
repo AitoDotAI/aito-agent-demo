@@ -71,6 +71,32 @@ The resolution console and `$p` gate, the tool shortlist, the handoff queue, the
 neighbourhood (PR #13), the rules review (PR #14), the agent guards against invented inputs and
 figures (PR #11), and the shared agent loop (`src/agent_core.py`).
 
+## The LLM's half: the reply, and tickets Aito doesn't know
+
+Built on phase 1 (src/support_reply.py, the Reply panel on the Support agent page). Aito decides;
+the LLM writes. The recorded comparison (scripts/support_fixture/compare_modes.py) found the LLM adds
+little to the structured decisions, so it is used where Aito can't help:
+
+- **Routine** (Aito's resolution passed its gate): gpt-5-mini writes the reply from the decided
+  facts only, and first says whether the ticket's own words support them. That check is the second
+  opinion on Aito's known overconfidence on off-topic and vague text.
+- **Unfamiliar** (Aito unsure, or the writer said the facts don't fit): the LLM reads the ticket with
+  Aito's shortlists and the account's similar past tickets, says what the customer wants, picks an
+  allowed resolution or none, and drafts for a person. Never sent automatically. A button asks
+  gpt-6-luna for a closer read; it took 58 to 100 s per call when measured on 2026-09-29, so it is
+  not the default.
+- **Guards, in code:** no refund, credit or discount the decisions don't include; no figure the
+  facts don't contain; no article but the decided one; anything that moves money goes to a person.
+- **Your own words:** the page can run the envelope on edited text from the same sender (no truth,
+  nothing scored), which is how a visitor sees an unfamiliar ticket handled.
+
+Measured once, live, on 2026-09-29 (small n, a sanity check rather than a result): of 3 unfamiliar
+tickets, Aito's gate passed 2 as sure and the writer escalated both, and the third went to a person on
+Aito's gate alone; of 20 real held-out tickets (every 15th), Aito's gate passed 15 and the writer
+kept all 15 on the routine path. An earlier prompt that only asked "does it fit" let "hi, it doesn't
+work again" through to an auto-sent, specific fix; the prompt now requires the ticket to describe
+the problem.
+
 ## Phasing
 
 1. **Fixture and read-only envelope.** Generator plus `lifts.py`, loaded to a branch environment by

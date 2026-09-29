@@ -1,0 +1,257 @@
+"""The support agent's LLM half: the reply to the customer, and the tickets Aito
+doesn't know.
+
+Aito decides (src/support_envelope.py); the LLM writes. Two paths:
+
+- routine: Aito's resolution passed its $p gate. A fast model (gpt-5-mini) writes
+  the reply from the decided facts only, and says whether those facts fit the
+  ticket at all. That second opinion is how an off-topic ticket that Aito read
+  with false confidence still reaches a person.
+- unfamiliar: Aito was unsure, or the fast model said the facts don't fit. The
+  model reads the ticket with Aito's shortlists and the account's similar past
+  tickets, says what the customer wants, picks a resolution from the allowed
+  list or none, and drafts a reply for a person. On request a stronger model
+  (gpt-6-luna) does this read instead; it answered in 58 to 100 s when measured
+  on 2026-09-29, so it is a button, not the default. An unfamiliar ticket is
+  never sent automatically.
+
+Either way the draft passes code guards before anything is sent: no refund or
+credit that the decisions didn't include, no figure the facts don't contain, no
+knowledge-base article other than the decided one. A tripped guard sends the
+draft to a person, with the reason.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+from dataclasses import dataclass, field
+
+from openai import BadRequestError
+
+from src.agent_core import plain_dashes
+from src.llm_agent import get_agent
+
+ROUTINE_MODEL = os.environ.get("SUPPORT_REPLY_DEPLOYMENT", "gpt-5-mini")
+UNFAMILIAR_MODEL = os.environ.get("SUPPORT_UNFAMILIAR_DEPLOYMENT", "gpt-5-mini")
+STRONG_MODEL = os.environ.get("SUPPORT_STRONG_DEPLOYMENT", "gpt-6-luna")
+#: USD per 1M tokens (in, out), for the models we have a list price for
+PRICES = {"gpt-5-mini": (0.25, 2.00)}
+
+#: what counts as promising money, and the decisions that allow it
+_MONEY = re.compile(r"\b(refund\w*|reimburs\w*|credit(?:ed|s)?(?!\s*card)|compensat\w*|discount\w*|money back|waive\w*|free of charge|\d+\s*%\s*off)\b", re.I)
+MONEY_RESOLUTIONS = {"refund"}
+MONEY_RECOVERIES = {"apology_credit"}
+_FIGURE = re.compile(r"(?<![\w-])(\d+(?:[.,]\d+)?)\s*(%|eur|€|\$|usd|days?|hours?|h\b|minutes?|mins?)", re.I)
+_KB = re.compile(r"\bKB-\d+\w*\b")
+
+_STYLE = ("Write in plain, warm, professional English. No em-dashes. Do not promise anything the facts do not "
+          "contain: no refunds, credits, discounts, deadlines or figures unless listed in the facts. "
+          "Keep it under 120 words. Sign off as \"Northwind Support\".")
+
+_ROUTINE = ("You are a B2B software support agent at Northwind Cloud writing the reply to a customer ticket. "
+            "The desk's decisions are already made from its history and are given as facts; write the reply that "
+            "carries them out. First judge whether the ticket's own words support the facts: the decisions were "
+            "predicted from history and can be confidently wrong. Set fits to false, and leave reply empty, if the "
+            "ticket is about something else, is not a support request, or is too vague to tell what is wrong "
+            "(e.g. \"it doesn't work again\" with no detail); a reply must never assume a problem the customer did "
+            "not describe. " + _STYLE +
+            ' Answer only JSON: {"fits": true|false, "why_not": "<one sentence if fits is false>", "reply": "<text>"}')
+
+_UNFAMILIAR = ("You are a senior B2B software support agent at Northwind Cloud. The desk's history-based system was "
+               "not sure how to handle this ticket. Read it carefully. Say in one sentence what the customer wants. "
+               "If it matches one of the allowed resolutions, choose it; if none fits or it is not a support request, "
+               "choose null. Draft a reply a colleague will check before it is sent, and a short note for that "
+               "colleague on what to verify. " + _STYLE +
+               ' Answer only JSON: {"reading": "<one sentence>", "resolution": "<allowed value or null>", '
+               '"reply": "<text>", "note": "<for the colleague>"}')
+
+
+@dataclass
+class Draft:
+    path: str                      # "routine" | "unfamiliar"
+    model: str
+    reply: str
+    send: str                      # "auto" | "review"
+    reasons: list[str] = field(default_factory=list)
+    fits: bool | None = None
+    reading: str | None = None
+    resolution: str | None = None
+    note: str | None = None
+    guards: list[dict] = field(default_factory=list)
+    calls: list[dict] = field(default_factory=list)
+
+    def as_dict(self) -> dict:
+        return {k: getattr(self, k) for k in self.__dataclass_fields__} | {
+            "tokens": sum(c["input_tokens"] + c["output_tokens"] for c in self.calls),
+            "llm_ms": round(sum(c["ms"] for c in self.calls)),
+            "usd": _usd_total(self.calls)}
+
+
+def _usd(model: str, i: int, o: int) -> float | None:
+    rate = PRICES.get(model)
+    return None if rate is None else i / 1e6 * rate[0] + o / 1e6 * rate[1]
+
+
+def _usd_total(calls: list[dict]) -> float | None:
+    costs = [c["usd"] for c in calls]
+    return None if any(c is None for c in costs) else round(sum(costs), 6)
+
+
+def _ask(model: str, system: str, user: str) -> tuple[dict, dict]:
+    agent = get_agent(model)
+    base = {"model": agent._deployment, "response_format": {"type": "json_object"},
+            "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
+    last = None
+    for extra in ([agent._extra] if agent._extra is not None else agent._param_sets()):
+        try:
+            resp, ms = agent._create(base, extra)
+        except BadRequestError as e:
+            last = e
+            continue
+        agent._extra = extra
+        try:
+            data = json.loads(resp.choices[0].message.content or "{}")
+        except json.JSONDecodeError:
+            data = {}
+        u = resp.usage
+        i, o = int(u.prompt_tokens), int(u.completion_tokens)
+        return (data if isinstance(data, dict) else {}), {"model": model, "input_tokens": i, "output_tokens": o,
+                                                          "ms": round(ms), "usd": _usd(model, i, o)}
+    raise RuntimeError(f"{model}: all param sets rejected: {last}")
+
+
+# ── the facts the LLM may use ───────────────────────────────────────────────
+
+def _step(env: dict, key: str) -> dict:
+    return next((s for s in env["steps"] if s["key"] == key), {})
+
+
+def _label(v) -> str:
+    return str(v).replace("_", " ") if v is not None else "none"
+
+
+def facts_of(env: dict, kb: dict | None, contact: dict | None) -> dict:
+    """What Aito decided for this ticket, in the words the reply may use."""
+    res, rec, first = _step(env, "resolution"), _step(env, "recovery"), _step(env, "first_step")
+    out = {
+        "contact": (contact or {}).get("name"),
+        "product": _label(_step(env, "product").get("value")).removeprefix("PRD-"),
+        "category": _label(_step(env, "category").get("value")),
+        "priority": _label(_step(env, "priority").get("value")),
+        "resolution": res.get("value"),
+        "first step": _label(first.get("value")),
+        "recovery": rec.get("value"),
+    }
+    if kb:
+        out["article"] = {"id": kb["article_id"], "title": kb["title"], "steps": kb["body"]}
+    return out
+
+
+def _facts_text(facts: dict) -> str:
+    lines = []
+    for k, v in facts.items():
+        if k == "article":
+            lines.append(f"- knowledge-base article: {v['id']} \"{v['title']}\": {v['steps']}")
+        elif v is not None and k != "recovery":
+            lines.append(f"- {k}: {_label(v)}")
+    rec = facts.get("recovery")
+    if rec in MONEY_RECOVERIES:
+        lines.append("- goodwill: you may offer an apology credit (no amount; the account team sets it)")
+    elif rec == "priority_callback":
+        lines.append("- goodwill: offer a priority call back")
+    elif rec == "csm_outreach":
+        lines.append("- goodwill: say their customer success manager will reach out")
+    return "\n".join(lines)
+
+
+# ── guards: code, not prompt ────────────────────────────────────────────────
+
+def guard(reply: str, facts: dict, resolution: str | None = None) -> list[dict]:
+    """Checks on a draft; each returns ok and, when not, what tripped it."""
+    resolution = resolution if resolution is not None else facts.get("resolution")
+    money_ok = resolution in MONEY_RESOLUTIONS or facts.get("recovery") in MONEY_RECOVERIES
+    money = sorted({m.group(0).lower() for m in _MONEY.finditer(reply)})
+    source = json.dumps(facts)
+    figures = [m.group(0) for m in _FIGURE.finditer(reply) if m.group(1) not in source]
+    allowed_kb = (facts.get("article") or {}).get("id")
+    kbs = sorted({k for k in _KB.findall(reply) if k != allowed_kb})
+    return [
+        {"name": "money", "ok": money_ok or not money,
+         "detail": None if money_ok or not money else f"promises {', '.join(money)}, which the decisions don't include"},
+        {"name": "figures", "ok": not figures,
+         "detail": f"states {', '.join(figures)}, which no fact contains" if figures else None},
+        {"name": "article", "ok": not kbs,
+         "detail": f"cites {', '.join(kbs)}, not the decided article" if kbs else None},
+        {"name": "not empty", "ok": bool(reply.strip()), "detail": None if reply.strip() else "no reply written"},
+    ]
+
+
+# ── the two paths ───────────────────────────────────────────────────────────
+
+def _ticket_block(env: dict, contact: dict | None) -> str:
+    t = env["ticket"]
+    who = f"{contact.get('name')} ({_label(contact.get('role'))})" if contact else f"someone at {t['sender_domain']}"
+    return f"Ticket from {who}, via {t['channel']}:\n{t['text']}"
+
+
+def routine(env: dict, facts: dict, contact: dict | None) -> Draft:
+    data, call = _ask(ROUTINE_MODEL, _ROUTINE, f"{_ticket_block(env, contact)}\n\nFacts:\n{_facts_text(facts)}")
+    fits = data.get("fits") is not False
+    reply = plain_dashes(str(data.get("reply") or ""))
+    d = Draft("routine", ROUTINE_MODEL, reply, "review", fits=fits, calls=[call])
+    if not fits:
+        d.reasons.append("the reply writer says the decisions don't fit this ticket"
+                         + (f": {data['why_not']}" if data.get("why_not") else ""))
+    return d
+
+
+def unfamiliar(env: dict, facts: dict, contact: dict | None, options: list[str], prior: list[dict],
+               model: str = UNFAMILIAR_MODEL) -> Draft:
+    lines = [_ticket_block(env, contact), "", "What the history-based system found (it was not sure):"]
+    for key in ("product", "category", "resolution"):
+        s = _step(env, key)
+        opts = [(s.get("value"), s.get("p"))] + [(a["value"], a["p"]) for a in s.get("alternatives", [])]
+        lines.append(f"- {key}: " + ", ".join(f"{_label(v)} ({p:.2f})" for v, p in opts if v is not None and p is not None))
+    cases = _step(env, "similar").get("cases") or []
+    if cases:
+        lines += ["", "This account's most similar past tickets, and how they were resolved:"]
+        lines += [f'- "{c["text"]}" -> {_label(c["resolution"])}' for c in cases]
+    lines += ["", "Allowed resolutions: " + ", ".join(options)]
+    if facts.get("article"):
+        a = facts["article"]
+        lines.append(f"The article history points to: {a['id']} \"{a['title']}\": {a['steps']}")
+    data, call = _ask(model, _UNFAMILIAR, "\n".join(lines))
+    chosen = data.get("resolution") if data.get("resolution") in options else None
+    d = Draft("unfamiliar", model, plain_dashes(str(data.get("reply") or "")), "review",
+              reading=plain_dashes(str(data.get("reading") or "")) or None, resolution=chosen,
+              note=plain_dashes(str(data.get("note") or "")) or None, calls=prior + [call])
+    d.reasons.append("Aito was not sure of this ticket, so a person checks the reply")
+    return d
+
+
+def draft_reply(env: dict, kb: dict | None, contact: dict | None, options: list[str],
+                stronger: bool = False) -> dict:
+    """The reply for one envelope. Aito's gate picks the path; the guards pick send or review.
+    `stronger` asks the stronger model to read a ticket that is unfamiliar, skipping the fast draft."""
+    facts = facts_of(env, kb, contact)
+    model = STRONG_MODEL if stronger else UNFAMILIAR_MODEL
+    if env["gate"] == "auto" and not stronger:
+        d = routine(env, facts, contact)
+        if not d.fits:
+            first = d
+            d = unfamiliar(env, facts, contact, options, prior=first.calls, model=model)
+            d.reasons = first.reasons + ["so it was read as an unfamiliar ticket instead"]
+    else:
+        d = unfamiliar(env, facts, contact, options, prior=[], model=model)
+    d.guards = guard(d.reply, facts, d.resolution if d.path == "unfamiliar" else None)
+    d.reasons += [g["detail"] for g in d.guards if not g["ok"]]
+    moves_money = bool(_MONEY.search(d.reply))
+    if moves_money and all(g["ok"] for g in d.guards):
+        d.reasons.append("it moves money, so a person approves it")
+    if d.path == "routine" and d.fits and not moves_money and all(g["ok"] for g in d.guards):
+        d.send = "auto"
+    out = d.as_dict()
+    out["facts"] = facts
+    return out

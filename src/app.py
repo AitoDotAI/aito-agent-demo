@@ -389,6 +389,8 @@ def handoff():
 
 import json as _json
 
+from pydantic import BaseModel as _BaseModel
+
 _CATALOG = _json.loads((Path(__file__).resolve().parent / "tools_catalog.json").read_text())
 _CATALOG_BY_NAME = {t["name"]: t for t in _CATALOG}
 
@@ -1132,18 +1134,92 @@ def support_incoming():
                         for i in reversed(q["order"])]}
 
 
-@app.get("/api/support/envelope")
-def support_envelope(ticket_id: str):
-    from src.support_envelope import envelope, load_incoming
+#: what the envelope reads for a ticket; truth fields are blanked when the text is edited
+_TRUTH = ("customer", "product", "category", "priority", "resolution", "kb_article", "nps_after",
+          "upsell_accepted", "upsell_offered")
+#: envelopes already run, so the reply reuses the calls the page just made
+_envelopes: dict[tuple[int, str, str | None], dict] = {}
+
+
+def _support_ticket(ticket_id: str, text: str | None) -> tuple[dict, list]:
+    from src.support_envelope import load_incoming
     q = load_incoming()
     if ticket_id not in q["tickets"]:
         raise HTTPException(status_code=404, detail=f"no incoming ticket {ticket_id}")
+    t = q["tickets"][ticket_id]
+    if text is None or text.strip() == t["text"]:
+        return t, q["steps"].get(ticket_id, [])
+    text = text.strip()
+    if not text or len(text) > 600:
+        raise HTTPException(status_code=422, detail="Write the ticket in 1 to 600 characters.")
+    # your own words from the same sender: nothing recorded happened to them, so no truth
+    return {**t, "text": text, **{k: None for k in _TRUTH}}, []
+
+
+def _envelope_for(ticket_id: str, text: str | None) -> dict:
+    from src.support_envelope import envelope
+    ticket, steps = _support_ticket(ticket_id, text)
     if not _support_loaded():
         raise HTTPException(status_code=503, detail="The support fixture is not loaded in this environment yet.")
+    key = (id(_support_client()), ticket_id, None if ticket["customer"] is not None else ticket["text"])
+    if key not in _envelopes:
+        try:
+            out = envelope(_support_client(), ticket, steps)
+        except AitoError as e:
+            raise HTTPException(status_code=502, detail=str(e))
+        out["edited"] = key[2] is not None
+        if out["edited"]:
+            for s in out["steps"]:
+                if "happened" in s:
+                    s["happened"] = None
+        if len(_envelopes) > 500:
+            _envelopes.clear()
+        _envelopes[key] = out
+    return _envelopes[key]
+
+
+@app.get("/api/support/envelope")
+def support_envelope(ticket_id: str, text: str | None = None):
+    return _envelope_for(ticket_id, text)
+
+
+class ReplyRequest(_BaseModel):
+    ticket_id: str
+    text: str | None = None
+    stronger: bool = False
+
+
+@app.post("/api/support/reply")
+def support_reply(req: ReplyRequest):
+    """The LLM's half: a reply from Aito's decisions, through code guards (src/support_reply.py)."""
+    from src.support_envelope import load_incoming
+    from src.support_reply import draft_reply
+    env = _envelope_for(req.ticket_id, req.text)
+    step = {s["key"]: s for s in env["steps"]}
+    kb = None
+    if step["kb"].get("value"):
+        try:
+            hits = _support_client().query(table="kb_articles", where={"article_id": step["kb"]["value"]},
+                                           select=["article_id", "title", "body"], limit=1).get("hits") or []
+        except AitoError as e:
+            raise HTTPException(status_code=502, detail=str(e))
+        kb = hits[0] if hits else None
+    options = sorted({t["resolution"] for t in load_incoming()["tickets"].values()})
     try:
-        return envelope(_support_client(), q["tickets"][ticket_id], q["steps"].get(ticket_id, []))
-    except AitoError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        return draft_reply(env, kb, step["customer"].get("contact"), options, stronger=req.stronger)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=f"The LLM is not available: {e}")
+
+
+_BENCH = Path(__file__).resolve().parent.parent / "scripts" / "support_fixture" / "results" / "compare_modes.json"
+
+
+@app.get("/api/support/benchmark")
+def support_benchmark():
+    """The recorded Aito vs LLM comparison on the held-out queue (scripts/support_fixture/compare_modes.py)."""
+    if not _BENCH.exists():
+        raise HTTPException(status_code=404, detail="no recorded comparison")
+    return _json.loads(_BENCH.read_text())
 
 
 # ── Static files — keep this last ─────────────────────────────────

@@ -79,13 +79,13 @@ class LLMResolution:
 
 
 class LLMAgent:
-    def __init__(self) -> None:
+    def __init__(self, deployment: str | None = None) -> None:
         endpoint = os.environ.get("OPENAI_MODEL_URL")
         key = os.environ.get("OPENAI_MODEL_API_KEY")
         if not endpoint or not key:
             raise RuntimeError("OPENAI_MODEL_URL / OPENAI_MODEL_API_KEY not set")
-        self.model = os.environ.get("OPENAI_MODEL_NAME", "gpt-5-mini")
-        self._deployment = os.environ.get("OPENAI_MODEL_DEPLOYMENT", "gpt-5-mini")
+        self.model = deployment or os.environ.get("OPENAI_MODEL_NAME", "gpt-5-mini")
+        self._deployment = deployment or os.environ.get("OPENAI_MODEL_DEPLOYMENT", "gpt-5-mini")
         self._client = AzureOpenAI(
             azure_endpoint=endpoint.rstrip("/"),
             api_key=key,
@@ -200,10 +200,16 @@ LLMAgent.pick_tool = _LLMAgent_pick_tool  # type: ignore[attr-defined]
 
 
 _agent: LLMAgent | None = None
+_by_deployment: dict[str, LLMAgent] = {}
 
 
-def get_agent() -> LLMAgent:
+def get_agent(deployment: str | None = None) -> LLMAgent:
+    """The configured agent, or one for a named deployment on the same resource."""
     global _agent
+    if deployment:
+        if deployment not in _by_deployment:
+            _by_deployment[deployment] = LLMAgent(deployment)
+        return _by_deployment[deployment]
     if _agent is None:
         _agent = LLMAgent()
     return _agent

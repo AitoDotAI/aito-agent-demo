@@ -243,3 +243,18 @@ def test_an_error_in_a_parallel_call_surfaces():
     t = q["tickets"][q["order"][0]]
     with pytest.raises(app_module.AitoError, match="503 on resolution"):
         env.envelope(_Tagged(fail_on="resolution"), t, q["steps"].get(t["ticket_id"], []), parallel=True)
+
+
+def test_your_own_words_carry_no_truth(monkeypatch):
+    """Edited text keeps the sender but not what happened to the real ticket."""
+    c = TestClient(app_module.app)
+    monkeypatch.setitem(app_module._support_state, "checked", 1e18)
+    monkeypatch.setitem(app_module._support_state, "loaded", True)
+    monkeypatch.setattr(app_module, "_support_aito", _Fake())
+    tid = env.load_incoming()["order"][0]
+    r = c.get("/api/support/envelope", params={"ticket_id": tid, "text": "What's the weather in Oulu tomorrow?"}).json()
+    assert r["edited"] is True and r["ticket"]["text"].startswith("What's the weather")
+    assert all(s["truth"] is None and s["correct"] is None and s.get("happened") is None for s in r["steps"])
+    same = c.get("/api/support/envelope", params={"ticket_id": tid, "text": env.load_incoming()["tickets"][tid]["text"]})
+    assert same.json()["edited"] is False
+    assert c.get("/api/support/envelope", params={"ticket_id": tid, "text": "x" * 601}).status_code == 422

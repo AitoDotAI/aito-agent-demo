@@ -238,7 +238,9 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: b
         # later steps use its top pick, so a wrong pick shows up downstream too
         prod = guarded(aito, "support_tickets", known, "product", 3, why)
         e = entry("product", "Which product?", "_predict product  ·  top 3", prod, ticket["product"])
-        e["correct"], e["shortlist"] = ticket["product"] in [prod["value"]] + [a["value"] for a in prod["alternatives"]], True
+        e["shortlist"] = True
+        if ticket["product"] is not None:
+            e["correct"] = ticket["product"] in [prod["value"]] + [a["value"] for a in prod["alternatives"]]
         known = {**known, **({"product": prod["value"]} if prod["value"] else {})}
 
         cat = guarded(aito, "support_tickets", known, "category", 3, why)
