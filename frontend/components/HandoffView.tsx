@@ -35,7 +35,7 @@ export function HandoffView({ data, loading }: { data: HandoffData | null; loadi
           <div className="rc-colh"><span className="tag" style={{ background: "rgba(124,108,255,.13)", color: "var(--plight)" }}>human handoff</span><span className="ct">Your queue · {data.handoff.length}</span></div>
           <div className="rc-cbody" style={{ minHeight: 0, padding: 0 }}>
             {data.handoff.map((h, i) => {
-              const lowconf = h.reason.startsWith("low confidence");
+              const lowconf = h.reason.startsWith("low confidence") || h.reason.startsWith("unfamiliar");
               return (
                 <div key={i} style={{ padding: "14px 16px", borderBottom: i < data.handoff.length - 1 ? "1px solid #f1efe8" : "none" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
@@ -62,7 +62,7 @@ export function HandoffView({ data, loading }: { data: HandoffData | null; loadi
         </div>
       )}
 
-      <div className="rc-foot">Live: each ticket scored by a real Aito `_predict` over learned history. The split is the calibration doing governance: auto when sure, human when not, verification on anything that changes money or state.</div>
+      <div className="rc-foot">Live: each ticket scored by a real Aito `_predict` over learned history. The split is the calibration doing governance: auto when sure, human when not, verification on anything that changes money or state. &ldquo;Unfamiliar wording&rdquo; is this demo&apos;s own interim check (the share of a ticket&apos;s words that appear in past tickets), used until Aito reports how much of a ticket&apos;s evidence it has seen.</div>
     </div>
   );
 }

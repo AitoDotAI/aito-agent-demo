@@ -331,6 +331,35 @@ _TEAM = {
 _SENSITIVE = {"refund", "cancel_service"}
 _AUTO_GATE, _ASSIST_GATE = 0.85, 0.65
 
+# Unfamiliar wording: the demo's own interim check, until Aito ships an evidence-
+# coverage signal next to $p. A ticket whose words mostly never appear in the
+# resolution log gets a confident-looking $p from the few words it shares (engine
+# 2.11.0: "What's the weather like in Oulu tomorrow?" -> cancel_service 0.91), so
+# below this share of familiar words the ticket goes to a person. Measured on the
+# handoff probes (scripts/handoff_probes.py): every clear ticket is at >= 0.60 and
+# every vague or off-topic one at <= 0.50, so the margin is thin; replace this with
+# Aito's coverage signal when it ships.
+_COVERAGE_GATE = 0.55
+_STOPWORDS = frozenset(
+    "a an the i me my we our you your it its is are was were be been am to of in on at for with and or but "
+    "not no so do does did can could would will just this that there here what whats how please hi hello hey "
+    "thanks thank".split())
+_log_vocab: set[str] | None = None
+
+
+def _words(text: str) -> list[str]:
+    return [w for w in _re.findall(r"[a-z]+", text.lower()) if w not in _STOPWORDS and len(w) > 1]
+
+
+def _coverage(text: str) -> float:
+    """The share of a ticket's content words that appear anywhere in the resolution log."""
+    global _log_vocab
+    if _log_vocab is None:
+        hits = aito.query("resolutions", select=["text"], limit=10000).get("hits") or []
+        _log_vocab = {w for h in hits for w in _words(h.get("text") or "")}
+    words = _words(text)
+    return sum(w in _log_vocab for w in words) / len(words) if words else 0.0
+
 
 @app.get("/api/handoff")
 def handoff():
@@ -342,7 +371,11 @@ def handoff():
     try:
         for text in _HANDOFF_QUEUE:
             intent, p, alts = _top_and_alts(aito.predict("resolutions", {"text": text}, "intent", limit=3, select=["$p", "feature"]))
-            if p < _ASSIST_GATE:  # unsure first — Aito won't guess, regardless of intent
+            coverage = _coverage(text)
+            if coverage < _COVERAGE_GATE:  # wording the log has barely seen: $p can't be trusted
+                band, reason = "handoff", (f"unfamiliar wording (only {coverage*100:.0f}% of its words appear in "
+                                           "past tickets), so no guess is made")
+            elif p < _ASSIST_GATE:  # unsure first — Aito won't guess, regardless of intent
                 band, reason = "handoff", f"low confidence ({p*100:.0f}%), Aito won't guess on this"
             elif intent in _SENSITIVE:  # confident, but money/state-change → verify with a human
                 band, reason = "handoff", f"sensitive action ({intent.replace('_', ' ')}), needs human verification"
@@ -350,7 +383,7 @@ def handoff():
                 band, reason = "auto", None
             else:
                 band, reason = "assist", None
-            rows.append({"text": text, "intent": intent, "p": p, "alts": alts,
+            rows.append({"text": text, "intent": intent, "p": p, "alts": alts, "coverage": round(coverage, 2),
                          "band": band, "reason": reason, "team": _TEAM.get(intent, "Support")})
     except AitoError as e:
         raise HTTPException(status_code=502, detail=str(e))
