@@ -149,7 +149,9 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
     const qs = `text=${encodeURIComponent(t)}${s ? `&sender=${encodeURIComponent(s)}` : ""}`;
     apiFetch<Aito>(`/api/resolve?${qs}`)
       .then(setAito).catch(() => {}).finally(() => setAitoLoading(false));
-    apiFetch<Llm>(`/api/resolve-llm?${qs}`)
+    apiFetch<Llm>("/api/resolve-llm", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: t, sender: s }),
+    })
       .then(setLlm)
       .catch((e: ApiError) => setLlmErr(e?.detail || "LLM agent unavailable"))
       .finally(() => { setLlmLoading(false); if (timer.current) window.clearInterval(timer.current); });
