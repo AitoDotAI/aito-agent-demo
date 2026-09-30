@@ -22,6 +22,21 @@ def _c360(causes_per_kpi):
             "customer": {"profile": {"id": "c1"}}}
 
 
+def test_degraded_names_the_failure():
+    body = {**_c360([1, 3, 1, 2, 1, 0]), "degraded": ["causes:ontime"]}
+    with pytest.raises(AssertionError, match="causes:ontime"):
+        smoke.check_company_360(body)
+    assert "nothing degraded" in smoke.check_company_360({**_c360([1, 0, 0, 0, 0, 0]), "degraded": []})
+    with pytest.raises(AssertionError, match="backstop"):
+        smoke.check_company_360({**_c360([0, 0, 0, 0, 0, 0]), "degraded": []})
+
+
+def test_require_degraded_fails_a_build_without_the_field(monkeypatch):
+    monkeypatch.setattr(smoke, "REQUIRE_DEGRADED", True)
+    with pytest.raises(AssertionError, match="require-degraded"):
+        smoke.check_company_360(_c360([1, 3, 1, 2, 1, 0]))
+
+
 def test_company_360_tolerates_a_kpi_without_causes():
     # 29.9: ontime 0 causes (a weak lift is plausible), the others filled
     assert "5 with causes" in smoke.check_company_360(_c360([1, 3, 1, 2, 1, 0]))
@@ -54,7 +69,8 @@ def test_no_llm_route_is_called():
     llm_paths = next(ast.literal_eval(n.value) for n in ast.walk(tree)
                      if isinstance(n, ast.Assign) and any(getattr(t, "id", None) == "_LLM_PATHS" for t in n.targets))
     assert "/api/resolve-llm" in llm_paths      # guards against reading the wrong assignment
-    forbidden = set(llm_paths) | {"/api/route"}
+    assert "/api/route" in llm_paths            # #23: the route that calls the LLM is listed too
+    forbidden = set(llm_paths)
     assert not {s.path for s in smoke.STEPS} & forbidden
 
 

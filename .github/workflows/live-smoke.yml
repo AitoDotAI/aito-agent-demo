@@ -25,5 +25,22 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Open every Aito-backed view on agent.aito.ai (read-only, stdlib only)
-        run: python scripts/live_smoke.py
+      - name: Pick the host the deploy targeted
+        id: target
+        env:
+          # the payload arrives through env vars, never interpolated into the script
+          DEPLOY_ENV: ${{ github.event.client_payload.env }}
+          IMAGE_TAG: ${{ github.event.client_payload.image_tag }}
+          IMAGE_ID: ${{ github.event.client_payload.image_id }}
+          DIGEST: ${{ github.event.client_payload.digest }}
+        run: |
+          BASE="https://agent.aito.ai"
+          if [ "$DEPLOY_ENV" = "test" ]; then
+            BASE="https://agent-test.aito.ai"
+          fi
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "Verifying ${DEPLOY_ENV:-prod (scheduled/manual)} at $BASE: image ${IMAGE_TAG:-n/a} (${DIGEST:-n/a}), built ${IMAGE_ID:-n/a}"
+      - name: Smoke the agent demo on that host (read-only)
+        env:
+          BASE: ${{ steps.target.outputs.base }}
+        run: python scripts/live_smoke.py --base "$BASE"
