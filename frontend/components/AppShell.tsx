@@ -363,7 +363,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
                         {showWhy && <WhyCards why={aito.why} confidence={aito.intent_p} />}
                       </div>
                     )}
-                    <div className="rc-meta">0 model calls · $0 · calibrated $p</div>
+                    <div className="rc-meta">0 model calls · no LLM spend · calibrated $p</div>
                   </>
                 )}
               </div>

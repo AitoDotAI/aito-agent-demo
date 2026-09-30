@@ -139,7 +139,7 @@ def main() -> None:
     print(f"BETTER  end-to-end acc: aito(full)={s_aito_full['end_to_end_acc']:.3f} "
           f"aito(sample)={s_aito_sample['end_to_end_acc']:.3f} llm(sample)={s_llm['end_to_end_acc']:.3f}")
     print(f"FASTER  p50 latency/resolution: aito={s_aito_full['latency_ms_p50']:.0f}ms llm={s_llm['latency_ms_p50']:.0f}ms")
-    print(f"CHEAPER $/1000 resolutions: aito=$0.00 llm=${result['llm_cost_per_1000_usd']:.2f} "
+    print(f"CHEAPER $/1000 resolutions: aito=no LLM spend llm=${result['llm_cost_per_1000_usd']:.2f} "
           f"({result['llm_tokens_per_resolution']:.0f} tok/resolution)")
     print(f"AUTO    aito auto-resolve rate (gate {config.GATE}): {result['aito_auto_resolve_rate']:.2f}")
     print("wrote scorecard.json")

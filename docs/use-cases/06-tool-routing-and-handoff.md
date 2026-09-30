@@ -28,7 +28,7 @@ POST /api/v2/_predict
 
 **~17× fewer input tokens** (median 3,829 → 225 on 20 fixed test tickets, gpt-5-mini;
 `telco-tool-routing-bench/results/shortlist_live.json`, re-measured on engine 2.11.0 in
-`shortlist_live.rerun-2026-09-30.json` with the same result) and a better pick: 20 of 20
+`shortlist_live.rerun-2026-09-30.json` with the same token counts) and a better pick: 20 of 20
 right from the shortlist, 13–15 of 20 from the full catalog. When Aito is confident
 enough, the LLM isn't needed at all. Backend: `POST /api/route`
 in `src/app.py` runs the LLM over the full catalog and over Aito's
