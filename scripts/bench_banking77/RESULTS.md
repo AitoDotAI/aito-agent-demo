@@ -56,8 +56,8 @@ queries).
 No gate is distinguishable from its fallback alone (paired p 0.18–1.0). So a
 gate keeps the LLM's accuracy while 50–60% of messages are answered by Aito in
 under 0.2 s, with no LLM tokens. The Aito-then-RAG gates were added after the
-first results were seen, so treat them as a finding to confirm on another
-dataset, not as a pre-registered result.
+first results were seen. **The pre-registered test on CLINC150 did not confirm
+them** (see below): there, the gate cost 2.3 points of accuracy against RAG.
 
 ## How to read it
 
@@ -73,3 +73,45 @@ dataset, not as a pre-registered result.
 
 Caveats: one dataset, one domain, English, short messages; one prompt per arm; no
 fine-tuned classifier in the comparison; latency from one workstation.
+
+# CLINC150: the pre-registered test (2026-09-30)
+
+Source: `results/clinc150/clinc150.json`. The gate rule and the pass criteria
+were committed before any CLINC150 run (PREREGISTRATION.md, gate_rule.json).
+CLINC150 (Larson et al. 2019, CC BY 3.0), 150 in-scope intents, 15,000 training
+queries in Aito, 600 paired test queries (4 per intent; 2 test texts that also
+occur in train were excluded); Aito 2.11.0; gpt-5.4 on Azure OpenAI.
+
+| arm (600 paired queries) | accuracy (95% CI) | LLM tokens / query | latency p50 · p95 |
+|---|---|---|---|
+| Aito only | 86.5% (83.5–89.0) | 0 | 0.07 s · 0.11 s |
+| gpt-5.4 alone | 95.0% (93.0–96.5) | 585 | 1.3 s · 2.6 s |
+| gpt-5.4 + RAG | 98.3% (97.0–99.1) | 737 | 1.3 s · 2.1 s |
+
+Both LLM arms beat Aito alone here (p < 0.001). On all 4,498 in-scope test queries,
+Aito is right 87.8% of the time, the answer is in its top 5 for 97.5%, and its
+calibration error is 0.020. 70.5% of queries get p ≥ 0.9, and those are 97.5% right.
+
+**Pre-registered verdict: not confirmed.** The frozen rule picked the threshold
+0.9 on the fit half. On the scoring half (300 queries):
+
+- **Calls saved: yes.** 27% of queries called the LLM (the limit was 60%). Median
+  latency was 0.07 s.
+- **Accuracy kept: no.** The gate scored 95.3%, RAG alone 97.7%: 2.3 points lower
+  (95% CI −4.0 to −0.6). RAG was right on 7 queries where the gate was wrong, and
+  never the other way round (McNemar p 0.016).
+
+The gate matched gpt-5.4 alone on the same queries (95.3% vs 95.3%, p 1.0) while
+calling the LLM on 27% of them.
+
+## What the two datasets say together
+
+- **An LLM with retrieval is the most accurate setup on both** (banking77 95.1%,
+  CLINC150 98.3% with gpt-5.4).
+- **Aito alone** answers in about 70 ms with no LLM tokens. It is well calibrated
+  on both (ECE 0.018 and 0.020), and it is sure (p ≥ 0.9) on 61–71% of queries
+  with 97.5–97.7% accuracy on those.
+- **An Aito gate in front of RAG costs accuracy.** banking77's post-hoc finding
+  that it keeps RAG's accuracy did not replicate: on CLINC150 it lost 2.3 points
+  while cutting LLM calls by 73%. Whether that trade is worth it depends on the
+  cost of a call and of an error; the data does not decide it.
