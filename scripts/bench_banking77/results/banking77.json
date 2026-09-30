@@ -16,7 +16,7 @@
   "seed": 77,
   "note": "every arm is scored on these same queries, so the comparisons are paired"
  },
- "measured_at": "2026-09-30T08:48:16+00:00",
+ "measured_at": "2026-09-30T08:53:00+00:00",
  "arms": {
   "aito": {
    "n": 616,
@@ -335,6 +335,107 @@
     "only_second_right": 10,
     "p": 0.179565
    },
+   "vs_each_arm_same_half": {
+    "aito": {
+     "n": 308,
+     "right": 255,
+     "accuracy": 0.8279,
+     "ci95": [
+      0.7818,
+      0.866
+     ],
+     "paired": {
+      "only_first_right": 26,
+      "only_second_right": 11,
+      "p": 0.020074
+     }
+    },
+    "aito_llm.gpt-5-mini": {
+     "n": 308,
+     "right": 264,
+     "accuracy": 0.8571,
+     "ci95": [
+      0.8137,
+      0.8918
+     ],
+     "paired": {
+      "only_first_right": 10,
+      "only_second_right": 4,
+      "p": 0.179565
+     }
+    },
+    "aito_llm.gpt-5.4": {
+     "n": 308,
+     "right": 278,
+     "accuracy": 0.9026,
+     "ci95": [
+      0.8644,
+      0.9309
+     ],
+     "paired": {
+      "only_first_right": 7,
+      "only_second_right": 15,
+      "p": 0.133801
+     }
+    },
+    "llm_rag.gpt-5-mini": {
+     "n": 308,
+     "right": 288,
+     "accuracy": 0.9351,
+     "ci95": [
+      0.9018,
+      0.9576
+     ],
+     "paired": {
+      "only_first_right": 3,
+      "only_second_right": 21,
+      "p": 0.000277
+     }
+    },
+    "llm_rag.gpt-5.4": {
+     "n": 308,
+     "right": 289,
+     "accuracy": 0.9383,
+     "ci95": [
+      0.9057,
+      0.9602
+     ],
+     "paired": {
+      "only_first_right": 3,
+      "only_second_right": 22,
+      "p": 0.000157
+     }
+    },
+    "llm_zero.gpt-5-mini": {
+     "n": 308,
+     "right": 240,
+     "accuracy": 0.7792,
+     "ci95": [
+      0.7296,
+      0.8219
+     ],
+     "paired": {
+      "only_first_right": 36,
+      "only_second_right": 6,
+      "p": 3e-06
+     }
+    },
+    "llm_zero.gpt-5.4": {
+     "n": 308,
+     "right": 259,
+     "accuracy": 0.8409,
+     "ci95": [
+      0.7959,
+      0.8775
+     ],
+     "paired": {
+      "only_first_right": 18,
+      "only_second_right": 7,
+      "p": 0.043285
+     }
+    }
+   },
+   "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
    "median_latency_ms": 88.5,
    "p95_latency_ms": 3440.3
   },
@@ -379,6 +480,107 @@
     "only_second_right": 1,
     "p": 1.0
    },
+   "vs_each_arm_same_half": {
+    "aito": {
+     "n": 308,
+     "right": 255,
+     "accuracy": 0.8279,
+     "ci95": [
+      0.7818,
+      0.866
+     ],
+     "paired": {
+      "only_first_right": 28,
+      "only_second_right": 5,
+      "p": 6.6e-05
+     }
+    },
+    "aito_llm.gpt-5-mini": {
+     "n": 308,
+     "right": 264,
+     "accuracy": 0.8571,
+     "ci95": [
+      0.8137,
+      0.8918
+     ],
+     "paired": {
+      "only_first_right": 19,
+      "only_second_right": 5,
+      "p": 0.006611
+     }
+    },
+    "aito_llm.gpt-5.4": {
+     "n": 308,
+     "right": 278,
+     "accuracy": 0.9026,
+     "ci95": [
+      0.8644,
+      0.9309
+     ],
+     "paired": {
+      "only_first_right": 1,
+      "only_second_right": 1,
+      "p": 1.0
+     }
+    },
+    "llm_rag.gpt-5-mini": {
+     "n": 308,
+     "right": 288,
+     "accuracy": 0.9351,
+     "ci95": [
+      0.9018,
+      0.9576
+     ],
+     "paired": {
+      "only_first_right": 7,
+      "only_second_right": 17,
+      "p": 0.063915
+     }
+    },
+    "llm_rag.gpt-5.4": {
+     "n": 308,
+     "right": 289,
+     "accuracy": 0.9383,
+     "ci95": [
+      0.9057,
+      0.9602
+     ],
+     "paired": {
+      "only_first_right": 6,
+      "only_second_right": 17,
+      "p": 0.03469
+     }
+    },
+    "llm_zero.gpt-5-mini": {
+     "n": 308,
+     "right": 240,
+     "accuracy": 0.7792,
+     "ci95": [
+      0.7296,
+      0.8219
+     ],
+     "paired": {
+      "only_first_right": 40,
+      "only_second_right": 2,
+      "p": 0.0
+     }
+    },
+    "llm_zero.gpt-5.4": {
+     "n": 308,
+     "right": 259,
+     "accuracy": 0.8409,
+     "ci95": [
+      0.7959,
+      0.8775
+     ],
+     "paired": {
+      "only_first_right": 21,
+      "only_second_right": 2,
+      "p": 6.6e-05
+     }
+    }
+   },
+   "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
    "median_latency_ms": 192.0,
    "p95_latency_ms": 2692.6
   },
@@ -423,6 +625,107 @@
     "only_second_right": 0,
     "p": 1.0
    },
+   "vs_each_arm_same_half": {
+    "aito": {
+     "n": 308,
+     "right": 255,
+     "accuracy": 0.8279,
+     "ci95": [
+      0.7818,
+      0.866
+     ],
+     "paired": {
+      "only_first_right": 38,
+      "only_second_right": 6,
+      "p": 1e-06
+     }
+    },
+    "aito_llm.gpt-5-mini": {
+     "n": 308,
+     "right": 264,
+     "accuracy": 0.8571,
+     "ci95": [
+      0.8137,
+      0.8918
+     ],
+     "paired": {
+      "only_first_right": 28,
+      "only_second_right": 5,
+      "p": 6.6e-05
+     }
+    },
+    "aito_llm.gpt-5.4": {
+     "n": 308,
+     "right": 278,
+     "accuracy": 0.9026,
+     "ci95": [
+      0.8644,
+      0.9309
+     ],
+     "paired": {
+      "only_first_right": 17,
+      "only_second_right": 8,
+      "p": 0.107752
+     }
+    },
+    "llm_rag.gpt-5-mini": {
+     "n": 308,
+     "right": 288,
+     "accuracy": 0.9351,
+     "ci95": [
+      0.9018,
+      0.9576
+     ],
+     "paired": {
+      "only_first_right": 0,
+      "only_second_right": 1,
+      "p": 1.0
+     }
+    },
+    "llm_rag.gpt-5.4": {
+     "n": 308,
+     "right": 289,
+     "accuracy": 0.9383,
+     "ci95": [
+      0.9057,
+      0.9602
+     ],
+     "paired": {
+      "only_first_right": 1,
+      "only_second_right": 3,
+      "p": 0.625
+     }
+    },
+    "llm_zero.gpt-5-mini": {
+     "n": 308,
+     "right": 240,
+     "accuracy": 0.7792,
+     "ci95": [
+      0.7296,
+      0.8219
+     ],
+     "paired": {
+      "only_first_right": 51,
+      "only_second_right": 4,
+      "p": 0.0
+     }
+    },
+    "llm_zero.gpt-5.4": {
+     "n": 308,
+     "right": 259,
+     "accuracy": 0.8409,
+     "ci95": [
+      0.7959,
+      0.8775
+     ],
+     "paired": {
+      "only_first_right": 34,
+      "only_second_right": 6,
+      "p": 8e-06
+     }
+    }
+   },
+   "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
    "median_latency_ms": 192.0,
    "p95_latency_ms": 3298.2
   },
@@ -467,6 +770,107 @@
     "only_second_right": 2,
     "p": 0.6875
    },
+   "vs_each_arm_same_half": {
+    "aito": {
+     "n": 308,
+     "right": 255,
+     "accuracy": 0.8279,
+     "ci95": [
+      0.7818,
+      0.866
+     ],
+     "paired": {
+      "only_first_right": 35,
+      "only_second_right": 3,
+      "p": 0.0
+     }
+    },
+    "aito_llm.gpt-5-mini": {
+     "n": 308,
+     "right": 264,
+     "accuracy": 0.8571,
+     "ci95": [
+      0.8137,
+      0.8918
+     ],
+     "paired": {
+      "only_first_right": 28,
+      "only_second_right": 5,
+      "p": 6.6e-05
+     }
+    },
+    "aito_llm.gpt-5.4": {
+     "n": 308,
+     "right": 278,
+     "accuracy": 0.9026,
+     "ci95": [
+      0.8644,
+      0.9309
+     ],
+     "paired": {
+      "only_first_right": 16,
+      "only_second_right": 7,
+      "p": 0.09314
+     }
+    },
+    "llm_rag.gpt-5-mini": {
+     "n": 308,
+     "right": 288,
+     "accuracy": 0.9351,
+     "ci95": [
+      0.9018,
+      0.9576
+     ],
+     "paired": {
+      "only_first_right": 4,
+      "only_second_right": 5,
+      "p": 1.0
+     }
+    },
+    "llm_rag.gpt-5.4": {
+     "n": 308,
+     "right": 289,
+     "accuracy": 0.9383,
+     "ci95": [
+      0.9057,
+      0.9602
+     ],
+     "paired": {
+      "only_first_right": 2,
+      "only_second_right": 4,
+      "p": 0.6875
+     }
+    },
+    "llm_zero.gpt-5-mini": {
+     "n": 308,
+     "right": 240,
+     "accuracy": 0.7792,
+     "ci95": [
+      0.7296,
+      0.8219
+     ],
+     "paired": {
+      "only_first_right": 51,
+      "only_second_right": 4,
+      "p": 0.0
+     }
+    },
+    "llm_zero.gpt-5.4": {
+     "n": 308,
+     "right": 259,
+     "accuracy": 0.8409,
+     "ci95": [
+      0.7959,
+      0.8775
+     ],
+     "paired": {
+      "only_first_right": 33,
+      "only_second_right": 5,
+      "p": 4e-06
+     }
+    }
+   },
+   "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
    "median_latency_ms": 88.5,
    "p95_latency_ms": 2270.9
   }

@@ -116,6 +116,14 @@ def main() -> int:
             # against the LLM arm it falls back to, alone on the same half: what gating costs in accuracy
             "fallback_alone_same_half": share([coop[q]["pred"] == coop[q]["gold"] for q in hold]),
             "paired_vs_fallback_alone_same_half": mcnemar([coop[q]["pred"] == coop[q]["gold"] for q in hold], right),
+            # every arm alone on the same scoring half, paired with the gate
+            # (only_first_right = the gate right, the arm wrong)
+            "vs_each_arm_same_half": {
+                other: {**share([rows[q]["pred"] == rows[q]["gold"] for q in hold]),
+                        "paired": mcnemar(right, [rows[q]["pred"] == rows[q]["gold"] for q in hold])}
+                for other, rows in arms.items()},
+            "vs_each_arm_note": ("descriptive: one paired McNemar per arm, not corrected for the number of "
+                                 "comparisons; only_first_right = the gate right, the arm wrong"),
             "median_latency_ms": pct([aito[q]["ms"] if aito[q]["p"] >= best else coop[q]["ms"] for q in hold], 0.5),
             "p95_latency_ms": pct([aito[q]["ms"] if aito[q]["p"] >= best else coop[q]["ms"] for q in hold], 0.95)}
 
