@@ -183,7 +183,11 @@
  },
  "gated": {
   "aito_then_rag_llm.gpt-5.4": {
-   "planned": false,
+   "planned": true,
+   "preregistered": {
+    "file": "PREREGISTRATION.md + gate_rule.json",
+    "commit": "f49c5062"
+   },
    "threshold_fit_on": 300,
    "threshold": 0.9,
    "scored_on": 300,

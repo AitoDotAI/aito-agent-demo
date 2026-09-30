@@ -296,6 +296,7 @@
  "gated": {
   "aito_then_shortlist_llm.gpt-5-mini": {
    "planned": true,
+   "preregistered": null,
    "threshold_fit_on": 308,
    "threshold": 0.9,
    "scored_on": 308,
@@ -441,6 +442,7 @@
   },
   "aito_then_shortlist_llm.gpt-5.4": {
    "planned": true,
+   "preregistered": null,
    "threshold_fit_on": 308,
    "threshold": 0.95,
    "scored_on": 308,
@@ -586,6 +588,7 @@
   },
   "aito_then_rag_llm.gpt-5-mini": {
    "planned": false,
+   "preregistered": null,
    "threshold_fit_on": 308,
    "threshold": 0.95,
    "scored_on": 308,
@@ -731,6 +734,7 @@
   },
   "aito_then_rag_llm.gpt-5.4": {
    "planned": false,
+   "preregistered": null,
    "threshold_fit_on": 308,
    "threshold": 0.9,
    "scored_on": 308,

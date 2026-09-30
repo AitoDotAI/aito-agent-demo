@@ -112,3 +112,13 @@ def test_the_gate_rule_is_read_from_the_frozen_file():
     import summarize
     rule = json.loads((B / "gate_rule.json").read_text())
     assert summarize.THRESHOLDS == rule["thresholds"] and rule["split_seed"] == 77
+
+
+def test_the_published_gate_flags_match_how_each_gate_was_decided():
+    b77 = json.loads((B / "results" / "banking77.json").read_text())["gated"]
+    assert b77["aito_then_shortlist_llm.gpt-5.4"]["planned"] is True
+    assert b77["aito_then_rag_llm.gpt-5.4"]["planned"] is False       # found after the first results
+    clinc = B / "results" / "clinc150" / "clinc150.json"
+    if clinc.exists():
+        g = json.loads(clinc.read_text())["gated"]["aito_then_rag_llm.gpt-5.4"]
+        assert g["planned"] is True and g["preregistered"]["commit"] == "f49c5062"

@@ -26,6 +26,8 @@ RUNS = RESULTS / "runs"
 #: the frozen gate rule (PREREGISTRATION.md); the code below implements exactly it
 RULE = json.loads((Path(__file__).resolve().parent / "gate_rule.json").read_text())
 THRESHOLDS = RULE["thresholds"]
+#: the commit that froze the rule, before any CLINC150 load or model call
+PREREG_COMMIT = "f49c5062"
 
 
 def arm_stats(rows: list[dict], qids: list[str]) -> dict:
@@ -108,7 +110,11 @@ def main() -> int:
         calls = sum(aito[q]["p"] < best for q in hold) / len(hold)
         kind, model = name.split(".", 1)
         out["gated"][f"aito_then_{'shortlist_llm' if kind == 'aito_llm' else 'rag_llm'}.{model}"] = {
-            "planned": kind == "aito_llm",
+            # banking77: the shortlist gate was planned, the RAG gate found after the first results.
+            # Elsewhere the gate on the rule's fallback arm was fixed in advance (PREREGISTRATION.md).
+            "planned": kind == "aito_llm" if DATASET == "banking77" else name == RULE["clinc150_fallback"],
+            "preregistered": (None if DATASET == "banking77" or name != RULE["clinc150_fallback"] else
+                              {"file": "PREREGISTRATION.md + gate_rule.json", "commit": PREREG_COMMIT}),
             "threshold_fit_on": len(fit), "threshold": best, "scored_on": len(hold), **share(right),
             "share_calling_llm": round(calls, 3),
             "aito_only_same_half": share([aito[q]["pred"] == aito[q]["gold"] for q in hold]),
