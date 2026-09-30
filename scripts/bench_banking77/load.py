@@ -17,12 +17,12 @@ from __future__ import annotations
 import argparse
 import sys
 
-from common import HERE, split
+from common import DATASET, HERE, split
 
 sys.path.insert(0, str(HERE.parent.parent))
 from src.config import load_config  # noqa: E402  (reads AITO_API_URL / AITO_API_KEY, and .env if present)
 
-COLLECTION = "banking77_train"
+COLLECTION = f"{DATASET}_train"
 SCHEMA = {"type": "collection", "columns": {
     "query_id": {"type": "String"},
     "text": {"type": "Text", "analyzer": "english"},
@@ -41,10 +41,10 @@ def main() -> int:
     from aito.v2 import Error
 
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--env", default="banking77")
+    ap.add_argument("--env", default=DATASET)
     ap.add_argument("--master", action="store_true", help="load into master (a database of your own only)")
     ap.add_argument("--apply", action="store_true", help="perform the writes (default: dry run)")
-    ap.add_argument("--reload", action="store_true", help="drop and refill banking77_train if it exists")
+    ap.add_argument("--reload", action="store_true", help=f"drop and refill {COLLECTION} if it exists")
     ap.add_argument("--check", action="store_true", help="only check the training data is loaded, in full")
     args = ap.parse_args()
     env = None if args.master else args.env.strip()

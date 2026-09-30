@@ -90,3 +90,25 @@ def test_gated_threshold_is_fit_and_scored_on_disjoint_halves(monkeypatch, tmp_p
     right = summarize.gated(aito, coop, qids, 0.5)
     assert all(right)   # sure ones from Aito (right), unsure ones from the LLM (right here)
     assert summarize.gated(aito, coop, qids, 0.3).count(True) == 10   # everything from Aito
+
+
+def test_clinc150_is_pinned_and_sampled_like_banking77(monkeypatch):
+    import importlib
+    monkeypatch.setenv("BENCH_DATASET", "clinc150")
+    c = importlib.reload(common)
+    try:
+        if not all((c.DATA / n).exists() for n in c.SHA256):
+            pytest.skip("CLINC150 not fetched")
+        train, test, dropped = c.split()
+        assert (len(train), len(test), dropped, len(c.labels(train))) == (15000, 4498, 2, 150)
+        s = c.sample(test)
+        assert len(s) == 600 and c.RESULTS.name == "clinc150"
+    finally:
+        monkeypatch.delenv("BENCH_DATASET")
+        importlib.reload(common)
+
+
+def test_the_gate_rule_is_read_from_the_frozen_file():
+    import summarize
+    rule = json.loads((B / "gate_rule.json").read_text())
+    assert summarize.THRESHOLDS == rule["thresholds"] and rule["split_seed"] == 77

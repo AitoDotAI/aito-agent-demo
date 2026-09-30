@@ -12,7 +12,8 @@
 #   ./do v2-probe                 /api/v1 vs /api/v2 op-level parity (exit = #diffs)
 #   ./do v2-parity                /api/v1 vs /api/v2 route-level parity (boots both)
 #   ./do v2-check                 read-only v2 correctness + engine/count checks
-#   ./do bench-banking77 [models] the Aito vs LLM benchmark on banking77 (scripts/bench_banking77/README.md)
+#   ./do bench-banking77 [models] the Aito vs LLM intent benchmark (scripts/bench_banking77/README.md);
+#                                 BENCH_DATASET=clinc150 for the pre-registered second dataset
 #   ./do screenshot-teaser        render assets/teaser.html → assets/teaser.png (1200×630)
 #   ./do product-sheet            compile docs/product-sheet/product-sheet.typ → PDF (needs typst)
 #   ./do screenshot-pages [...]   desktop full-page screenshots of given paths

@@ -13,7 +13,7 @@ from common import DATA, SHA256, SOURCE
 
 
 def main() -> int:
-    DATA.mkdir(exist_ok=True)
+    DATA.mkdir(parents=True, exist_ok=True)
     for name, want in SHA256.items():
         path = DATA / name
         if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != want:

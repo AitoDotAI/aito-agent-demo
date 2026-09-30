@@ -1,4 +1,4 @@
-"""Shared pieces of the banking77 benchmark: the pinned data, the pinned sample,
+"""Shared pieces of the intent benchmark (banking77, CLINC150): the pinned data, the pinned sample,
 the statistics. Standard library only, so the numbers can be checked without
 installing anything."""
 
@@ -15,17 +15,40 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent  # the repo
-DATA = HERE / "data"          # downloaded, not committed (see .gitignore)
-RESULTS = Path(os.environ["BANKING77_RESULTS"]) if os.environ.get("BANKING77_RESULTS") else HERE / "results"  # committed: every number the page shows comes from here
 
-#: PolyAI's banking77 (CC BY 4.0), pinned by content
-SOURCE = "https://raw.githubusercontent.com/PolyAI-LDN/task-specific-datasets/master/banking_data"
-SHA256 = {
-    "train.csv": "b06e26ac675513959a63135f11b94ea7786ed02da65db93a5650d8838cbc664b",
-    "test.csv": "d12d6e3bc4c3103966ae786dc435913c0c563dfa328f5a3646d0e62cfeeb474d",
+#: the datasets this harness runs on, pinned by content. BENCH_DATASET picks one
+#: (banking77 by default); banking77 keeps the top-level data/ and results/ it was
+#: published with, any other dataset gets its own subdirectory.
+DATASETS = {
+    "banking77": {
+        "title": "banking77", "license": "CC BY 4.0",
+        "source": "PolyAI, https://github.com/PolyAI-LDN/task-specific-datasets",
+        "base": "https://raw.githubusercontent.com/PolyAI-LDN/task-specific-datasets/master/banking_data",
+        "files": {"train.csv": "b06e26ac675513959a63135f11b94ea7786ed02da65db93a5650d8838cbc664b",
+                  "test.csv": "d12d6e3bc4c3103966ae786dc435913c0c563dfa328f5a3646d0e62cfeeb474d"},
+        "per_intent": 8,
+        "domain": "a bank's support chat", "history_owner": "This bank's",
+    },
+    "clinc150": {
+        "title": "CLINC150 (in-scope)", "license": "CC BY 3.0",
+        "source": "Larson et al. 2019, https://github.com/clinc/oos-eval",
+        "base": "https://raw.githubusercontent.com/clinc/oos-eval/master/data",
+        "files": {"data_full.json": "36923c3705a59e08fe9c3883d8bc2dd966ef93e22cb78ac41171782a698d56e0"},
+        "per_intent": 4,
+        "domain": "a user of a general-purpose virtual assistant", "history_owner": "This assistant's",
+    },
 }
+DATASET = os.environ.get("BENCH_DATASET", "banking77").strip()
+if DATASET not in DATASETS:
+    raise SystemExit(f"BENCH_DATASET={DATASET!r}: pick one of {sorted(DATASETS)}")
+CFG = DATASETS[DATASET]
+DATA = HERE / "data" if DATASET == "banking77" else HERE / "data" / DATASET   # downloaded, not committed
+RESULTS = (Path(os.environ["BANKING77_RESULTS"]) if os.environ.get("BANKING77_RESULTS")
+           else HERE / "results" if DATASET == "banking77" else HERE / "results" / DATASET)  # committed
+SOURCE = CFG["base"]
+SHA256 = CFG["files"]
 #: the LLM arms run on a stratified sample of the test set: this many per intent
-PER_INTENT = 8
+PER_INTENT = CFG["per_intent"]
 SEED = 77
 
 
@@ -33,25 +56,39 @@ def norm(text: str) -> str:
     return " ".join(text.lower().split())
 
 
-def read(name: str) -> list[dict]:
+def _checked(name: str) -> Path:
     path = DATA / name
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
     if digest != SHA256[name]:
         raise SystemExit(f"{path} has sha256 {digest}, not the pinned {SHA256[name]}: run fetch.py again")
-    with path.open(newline="", encoding="utf-8") as f:
+    return path
+
+
+def read(name: str) -> list[dict]:
+    """banking77's CSV files: text, category."""
+    with _checked(name).open(newline="", encoding="utf-8") as f:
         return [{"text": " ".join(r["text"].split()), "intent": r["category"]} for r in csv.DictReader(f)]
+
+
+def _raw() -> tuple[list[dict], list[dict]]:
+    if DATASET == "banking77":
+        return read("train.csv"), read("test.csv")
+    # CLINC150: [text, intent] pairs; the in-scope splits only (the oos_* splits are a separate question)
+    d = json.loads(_checked("data_full.json").read_text())
+    rows = lambda pairs: [{"text": " ".join(t.split()), "intent": i} for t, i in pairs]  # noqa: E731
+    return rows(d["train"]), rows(d["test"])
 
 
 def split() -> tuple[list[dict], list[dict], int]:
     """Train, and test without the texts that also occur in train (7 in banking77)."""
-    train, test = read("train.csv"), read("test.csv")
+    train, test = _raw()
     seen = {norm(r["text"]) for r in train}
     kept = [dict(r, qid=f"t{i:04d}") for i, r in enumerate(test) if norm(r["text"]) not in seen]
     return train, kept, len(test) - len(kept)
 
 
 def sample(test: list[dict]) -> list[dict]:
-    """PER_INTENT queries per intent, drawn with SEED: the same 616 for every arm."""
+    """PER_INTENT queries per intent, drawn with SEED: the same sample for every arm."""
     by = defaultdict(list)
     for r in test:
         by[r["intent"]].append(r)

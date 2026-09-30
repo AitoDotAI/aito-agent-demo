@@ -26,20 +26,20 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from common import RESULTS, ROOT, jsonl, labels, sample, split
+from common import CFG, DATASET, RESULTS, ROOT, jsonl, labels, sample, split
 
 RUNS = RESULTS / "runs"
 K_RAG = 10
 K_AITO = 5
 
-SYSTEM = ("You classify one customer message from a bank's support chat into exactly one intent from the "
+SYSTEM = (f"You classify one customer message from {CFG['domain']} into exactly one intent from the "
           "allowed list. Answer only JSON: {\"intent\": \"<one allowed label>\"}.")
 
 
 def _aito():
     from load import COLLECTION, client
     import os
-    env = os.environ.get("BANKING77_ENV", "banking77").strip()
+    env = os.environ.get("BANKING77_ENV", DATASET).strip()
     _, c = client(None if env in ("", "master") else env)
     return c, COLLECTION
 
@@ -84,7 +84,7 @@ def prompt(q: dict, allowed: list[str], examples: list[dict] | None = None, aito
         lines += ["Similar past messages and their intents:"]
         lines += [f'- "{e["text"]}" -> {e["intent"]}' for e in examples] + [""]
     if aito:
-        lines.append("This bank's history suggests: " + ", ".join(f"{t['intent']} ({t['p']:.2f})" for t in aito["top"]))
+        lines.append(f"{CFG['history_owner']} history suggests: " + ", ".join(f"{t['intent']} ({t['p']:.2f})" for t in aito["top"]))
         if aito.get("why"):
             lines.append(f"Words behind the first suggestion: {aito['why']}")
         lines.append("")

@@ -65,3 +65,13 @@ Every arm's accuracy with a 95% Wilson interval, paired McNemar against Aito,
 tokens, LLM spend where a list price is known, p50/p95 latency (from the same
 workstation as banking77, labelled), and Aito's calibration on the full in-scope
 test split.
+
+## Addendum (2026-09-30, still before any CLINC150 run)
+
+The prompts' one dataset-specific phrase is now a per-dataset setting in
+`common.py`. The system prompt names the source of the message ("a bank's
+support chat" for banking77; "a user of a general-purpose virtual assistant" for
+CLINC150), and the shortlist arm says "This bank's" or "This assistant's"
+history. banking77's prompts are byte-identical to the ones its results were
+recorded with (checked), and its results file is unchanged. Nothing else in the
+plan above changes. The harness runs CLINC150 with `BENCH_DATASET=clinc150`.

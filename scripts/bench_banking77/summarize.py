@@ -19,7 +19,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from common import RESULTS, SEED, ece, jsonl, labels, mcnemar, pct, sample, share, split
+from common import CFG, DATASET, RESULTS, SEED, ece, jsonl, labels, mcnemar, pct, sample, share, split
 from llm import PRICES
 
 RUNS = RESULTS / "runs"
@@ -69,9 +69,9 @@ def main() -> int:
             print(f"skipping {path.name}: {sum(q in rows for q in picked)} of {len(picked)} sampled queries done")
 
     out = {
-        "benchmark": "banking77 intent classification (77 intents), Aito vs LLMs, paired on one sample",
-        "dataset": {"name": "banking77", "source": "PolyAI, https://github.com/PolyAI-LDN/task-specific-datasets",
-                    "license": "CC BY 4.0", "train": len(train), "test": len(test) + dropped,
+        "benchmark": f"{DATASET} intent classification ({len(labels(train))} intents), Aito vs LLMs, paired on one sample",
+        "dataset": {"name": CFG["title"], "source": CFG["source"],
+                    "license": CFG["license"], "train": len(train), "test": len(test) + dropped,
                     "test_scored": len(test), "excluded_test_texts_also_in_train": dropped,
                     "labels": len(labels(train))},
         "sample": {"per_intent": len(picked) // len(labels(train)), "n": len(picked), "seed": SEED,
@@ -119,6 +119,26 @@ def main() -> int:
             "median_latency_ms": pct([aito[q]["ms"] if aito[q]["p"] >= best else coop[q]["ms"] for q in hold], 0.5),
             "p95_latency_ms": pct([aito[q]["ms"] if aito[q]["p"] >= best else coop[q]["ms"] for q in hold], 0.95)}
 
+    # the pre-registered test (PREREGISTRATION.md, gate_rule.json), on any dataset but banking77
+    if DATASET != "banking77":
+        fb = RULE["clinc150_fallback"]
+        g = out["gated"].get(f"aito_then_rag_llm.{fb.split('.', 1)[1]}") if fb.startswith("llm_rag.") else None
+        if g is None:
+            out["preregistered_verdict"] = {"status": f"not run: the fallback arm {fb} is incomplete"}
+        else:
+            m = g["paired_vs_fallback_alone_same_half"]
+            worse = m["p"] < 0.05 and m["only_first_right"] > m["only_second_right"]   # the fallback right more often
+            n = g["n"]
+            diff = (m["only_second_right"] - m["only_first_right"]) / n
+            se = ((m["only_first_right"] + m["only_second_right"]) / n - diff ** 2) ** 0.5 / n ** 0.5
+            kept, saved = not worse, g["share_calling_llm"] <= RULE["confirm"]["max_share_calling_llm"]
+            out["preregistered_verdict"] = {
+                "rule": "gate_rule.json", "fallback": fb, "threshold": g["threshold"],
+                "accuracy_kept": kept, "calls_saved": saved,
+                "gate_minus_fallback": round(diff, 4), "ci95": [round(diff - 1.96 * se, 4), round(diff + 1.96 * se, 4)],
+                "share_calling_llm": g["share_calling_llm"],
+                "status": "confirmed" if kept and saved else "not confirmed"}
+
     out["prices"] = PRICES
     emb = RESULTS / "embedding.json"
     if emb.exists():
@@ -136,7 +156,7 @@ def main() -> int:
                            "rate-limit backoff, which is reported per arm")
     out["cost_note"] = ("LLM spend only, at the listed prices. Aito has its own compute and licence cost, which "
                         "is not LLM spend; say 'no LLM spend / 0 tokens', never '$0'")
-    (RESULTS / "banking77.json").write_text(json.dumps(out, indent=1) + "\n")
+    (RESULTS / f"{DATASET}.json").write_text(json.dumps(out, indent=1) + "\n")
     for name, a in out["arms"].items():
         print(f"{name:28} {a['accuracy']:.3f} {a['ci95']}  tokens {a['llm']['tokens_per_query']:>5}  "
               f"p50 {a['latency_ms']['p50']} ms")
