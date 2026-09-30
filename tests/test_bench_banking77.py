@@ -71,11 +71,14 @@ def test_prompts_carry_what_each_arm_is_given():
 
 def test_why_words_come_from_the_lift_leaves():
     import run
+    # the live shape (banking77 env, 2026-09-30): single words, and $group of words
     why = {"type": "product", "factors": [
-        {"type": "relatedPropositionLift", "proposition": {"text": {"$has": "arriv"}}, "value": 3.2},
-        {"type": "relatedPropositionLift", "proposition": {"text": {"$has": "the"}}, "value": 0.9},
-        {"type": "baseP", "value": 0.02}]}
-    assert run._words(why) == '"arriv" (x3.2)'
+        {"type": "baseP", "value": 0.016, "proposition": {"intent": {"$has": "Refund_not_showing_up"}}},
+        {"type": "relatedPropositionLift", "proposition": {"text": "showing"}, "value": 3.88},
+        {"type": "relatedPropositionLift", "proposition": {"$group": [{"text": "but"}, {"text": "I"}]}, "value": 3.40},
+        {"type": "relatedPropositionLift", "proposition": {"text": "refund"}, "value": 32.0},
+        {"type": "relatedPropositionLift", "proposition": {"text": "the"}, "value": 0.9}]}
+    assert run._words(why) == '"refund" (x32.0), "showing" (x3.9), "but + I" (x3.4)'
 
 
 def test_gated_threshold_is_fit_and_scored_on_disjoint_halves(monkeypatch, tmp_path):
