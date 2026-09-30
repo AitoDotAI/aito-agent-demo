@@ -1,0 +1,953 @@
+{
+ "dataset": "banking77",
+ "measured_at": "2026-09-30T09:29:32+00:00",
+ "method": [
+  "banking77 (2020) and CLINC150 (2019) are public, so they may be in the models'\ntraining data, which would flatter the LLM arms compared with a company's own,\nprivate data. Two probes, no retrieval, no labels given:",
+  "1. Label recall: \"list the intent labels of <dataset>\". Scored as the share of the\n   true labels named exactly (case-insensitive), and how many named labels are\n   not real ones.\n2. Completion: the first half of a held-out test message (by words); the model\n   continues it. Scored as the share completed verbatim (normalised), and the\n   share whose first three continued words match.",
+  "The metrics were fixed before the first run. A high verbatim rate shows\nmemorisation. A low one doesn't rule it out, since the models may know the data\nwithout reproducing it word for word."
+ ],
+ "models": {
+  "gpt-5.4": {
+   "label_recall": {
+    "true_labels": 77,
+    "named": 0,
+    "exact_hits": 0,
+    "recall": 0.0,
+    "named_not_real": 0,
+    "tokens": 1553
+   },
+   "label_hits": [],
+   "completion": {
+    "n": 50,
+    "verbatim": 0,
+    "verbatim_share": 0.0,
+    "first3_share": 0.04,
+    "refused_or_empty": 26
+   },
+   "completions": [
+    {
+     "qid": "t0923",
+     "head": "Is there an option",
+     "tail": "to have a virtual card?",
+     "got": " to disable the contactless feature?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1950",
+     "head": "I was getting cash and",
+     "tail": "can't get my card back.",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0556",
+     "head": "How can I",
+     "tail": "unlock the pin?",
+     "got": "I’m sorry, but I can’t help complete verbatim text from a copyrighted dataset.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2715",
+     "head": "Where is my money? I transfered",
+     "tail": "it and it isn't in my account.",
+     "got": "Sorry, I can’t provide the exact continuation of that dataset text.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0683",
+     "head": "I made a transaction but",
+     "tail": "did it to the wrong account.",
+     "got": " cash did not come out",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1213",
+     "head": "I am not being",
+     "tail": "recognized by the app.",
+     "got": " refunded",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t0006",
+     "head": "Do you know if there is a tracking",
+     "tail": "number for the new card you sent me?",
+     "got": "Sorry, I can’t provide the exact continuation of that dataset text, but I can help with a summary or paraphrase if you want.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1607",
+     "head": "I recently made a payment, and it is showing",
+     "tail": "up in my account as \"pending\". What does that mean?",
+     "got": "Sorry, I can’t provide the exact continuation of that dataset text, but I can help with a summary or paraphrase.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1185",
+     "head": "Why do you require",
+     "tail": "so many identity details?",
+     "got": " me to verify my identity",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1065",
+     "head": "I made a deposit of cash and check",
+     "tail": "that has not been added to my balance.",
+     "got": " yesterday and it isn't showing up",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t2233",
+     "head": "What extra",
+     "tail": "charges are there?",
+     "got": " charges are there for cash withdrawal",
+     "verbatim": false,
+     "first3": true,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1597",
+     "head": "Is there a reason that",
+     "tail": "the ATM declined my transaction?",
+     "got": " my cash withdrawal is still pending?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1446",
+     "head": "Which ATM's",
+     "tail": "accept my card?",
+     "got": " can I use?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t0961",
+     "head": "Who accepts",
+     "tail": "this card?",
+     "got": " cash deposits",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1898",
+     "head": "Delete",
+     "tail": "this account!",
+     "got": " beneficiary",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t2082",
+     "head": "the app",
+     "tail": "reverted my payment",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2192",
+     "head": "Why couldn't I do",
+     "tail": "a transfer to a beneficiary?",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1396",
+     "head": "What are the limits",
+     "tail": "for disposable virtual cards?",
+     "got": "Sorry, I can’t provide the exact continuation of that dataset text, but I can help summarize or paraphrase it.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0991",
+     "head": "Can I make online",
+     "tail": "purchases with my card?",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2001",
+     "head": "I want information about",
+     "tail": "the source of funds.",
+     "got": " exchange rates",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t0890",
+     "head": "Can I use American Express",
+     "tail": "to add money into my account?",
+     "got": "Sorry, I can’t provide the exact continuation of that dataset text, but I can help with a summary or paraphrase.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1048",
+     "head": "cash from this",
+     "tail": "morning has not deposited",
+     "got": " card",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t2545",
+     "head": "My disposable card seems not to",
+     "tail": "be working am I doing something wrong?",
+     "got": "Sorry, I can’t provide the exact continuation of a dataset text I don’t have in full.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0397",
+     "head": "Nothing goes through",
+     "tail": "on my card.",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1755",
+     "head": "I tried to buy something online yesterday but it wouldn't stop",
+     "tail": "saying declined. Tried again today but same thing happened. What's Broken?",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1042",
+     "head": "Is there a reason why my account isn't updating",
+     "tail": "because I used a check to balance my account?",
+     "got": "Sorry, I can’t provide the exact continuation of a dataset text, but I can help with a summary or a paraphrase.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1294",
+     "head": "I would prefer",
+     "tail": "a visa card",
+     "got": " to withdraw cash",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1199",
+     "head": "Why did I need",
+     "tail": "to verfiy my identity?",
+     "got": "Sorry, I can’t provide the exact continuation of a copyrighted dataset message.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0545",
+     "head": "Can you assist me with unblocking my PIN?",
+     "tail": "I put it in wrong too many times.",
+     "got": "Sorry, I can’t provide the exact continuation of that dataset text, but I can help summarize or paraphrase it.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2687",
+     "head": "When will my transfer",
+     "tail": "be available in my account.",
+     "got": " go through",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1759",
+     "head": "I think my transfer",
+     "tail": "was declined, but why?",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0337",
+     "head": "Why are there",
+     "tail": "limits on auto top-up?",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2384",
+     "head": "How do I go",
+     "tail": "forth verifying my top-up card?",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1086",
+     "head": "What should I do if I",
+     "tail": "see a payment I didn't make?",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0257",
+     "head": "When considering currency holdings and",
+     "tail": "exchanges, what fiat currencies are supported?",
+     "got": " cash, what is the maximum amount that I can withdraw?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t2088",
+     "head": "Please explain to me the circumstances in",
+     "tail": "which my card payment would be reverted?",
+     "got": " which I would be charged for a cash withdrawal",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t0125",
+     "head": "This rate is too low. Are you",
+     "tail": "sure your using the right exchange rate.",
+     "got": " sure I got the best exchange rate?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t3018",
+     "head": "What should I do",
+     "tail": "to verify my identity?",
+     "got": " if my card is stolen?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t0389",
+     "head": "I cannot",
+     "tail": "use my card.",
+     "got": "Sorry, I can’t provide the exact continuation of that dataset text, but I can help with a summary or paraphrase if you want.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1303",
+     "head": "I would like to",
+     "tail": "apply for a visa card.",
+     "got": " transfer money",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1261",
+     "head": "Where can I",
+     "tail": "find the card PIN?",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2379",
+     "head": "How do I find the",
+     "tail": "verification code for my top-up card?",
+     "got": " exchange rate",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1405",
+     "head": "Freeze my account",
+     "tail": "it's been hacked.",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0281",
+     "head": "my card was not in",
+     "tail": "the mail again can you advise?",
+     "got": "Sorry, I can’t provide the exact continuation of a dataset example, but I can help with a summary or paraphrase.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1175",
+     "head": "I don't like that I have to",
+     "tail": "fill out so much information about my identity.",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0591",
+     "head": "I am not",
+     "tail": "able to do contactless.",
+     "got": "Sorry, I can’t provide the exact continuation of that dataset message, but I can help with a summary or a paraphrase if you want.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0221",
+     "head": "I have a",
+     "tail": "pending cash withdrawal",
+     "got": " cash withdrawal issue",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t0016",
+     "head": "I've been waiting longer",
+     "tail": "than expected for my card.",
+     "got": " than expected for my bank card",
+     "verbatim": false,
+     "first3": true,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t2017",
+     "head": "Help me check where",
+     "tail": "the funds came from.",
+     "got": " my cash withdrawal was made",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t2163",
+     "head": "I was unable to make",
+     "tail": "a transfer to another account.",
+     "got": " a transfer",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    }
+   ]
+  },
+  "gpt-5-mini": {
+   "label_recall": {
+    "true_labels": 77,
+    "named": 0,
+    "exact_hits": 0,
+    "recall": 0.0,
+    "named_not_real": 0,
+    "tokens": 259
+   },
+   "label_hits": [],
+   "completion": {
+    "n": 50,
+    "verbatim": 0,
+    "verbatim_share": 0.0,
+    "first3_share": 0.0,
+    "refused_or_empty": 35
+   },
+   "completions": [
+    {
+     "qid": "t0923",
+     "head": "Is there an option",
+     "tail": "to have a virtual card?",
+     "got": "Sorry, I can’t provide that request. I can offer to summarize the rest of the message or help with a short paraphrase—would you like that?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1950",
+     "head": "I was getting cash and",
+     "tail": "can't get my card back.",
+     "got": "Sorry—I can’t help with continuing that copyrighted text. I can provide a brief summary of the rest of the message instead if that would be helpful. Would you like a summary?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0556",
+     "head": "How can I",
+     "tail": "unlock the pin?",
+     "got": "Sorry, I can’t provide the requested continuation from that copyrighted dataset. I can offer a brief summary or help rephrase your message—which would you prefer?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2715",
+     "head": "Where is my money? I transfered",
+     "tail": "it and it isn't in my account.",
+     "got": " it yesterday but it hasn't shown up in my account.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t0683",
+     "head": "I made a transaction but",
+     "tail": "did it to the wrong account.",
+     "got": " it didn't go through.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1213",
+     "head": "I am not being",
+     "tail": "recognized by the app.",
+     "got": "Sorry, I can’t provide the continuation of copyrighted text from a specific location. I can offer a brief summary or a paraphrase of the requested content instead—which would you prefer?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0006",
+     "head": "Do you know if there is a tracking",
+     "tail": "number for the new card you sent me?",
+     "got": " number for a wire transfer?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1607",
+     "head": "I recently made a payment, and it is showing",
+     "tail": "up in my account as \"pending\". What does that mean?",
+     "got": "Sorry, I can’t provide the continuation of that copyrighted text. I can, however, offer a brief summary of the rest of the message—would you like that?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1185",
+     "head": "Why do you require",
+     "tail": "so many identity details?",
+     "got": " my phone number?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1065",
+     "head": "I made a deposit of cash and check",
+     "tail": "that has not been added to my balance.",
+     "got": "Sorry, I can’t provide that continuation verbatim. I can offer a brief summary of the likely rest of the message instead.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2233",
+     "head": "What extra",
+     "tail": "charges are there?",
+     "got": " fees will I be charged?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1597",
+     "head": "Is there a reason that",
+     "tail": "the ATM declined my transaction?",
+     "got": " my account has been locked?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1446",
+     "head": "Which ATM's",
+     "tail": "accept my card?",
+     "got": " are open 24 hours?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t0961",
+     "head": "Who accepts",
+     "tail": "this card?",
+     "got": "Sorry, I can’t provide that request. I can offer a brief summary of the rest of the message or help in another way—would you like a summary?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1898",
+     "head": "Delete",
+     "tail": "this account!",
+     "got": "Sorry, I can’t provide the continuation of that copyrighted dataset text. I can, however, offer a brief summary of the rest of the message if that would help—would you like a short summary?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2082",
+     "head": "the app",
+     "tail": "reverted my payment",
+     "got": "Sorry, I can’t provide that continuation. I can offer a brief summary of the requested content instead.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2192",
+     "head": "Why couldn't I do",
+     "tail": "a transfer to a beneficiary?",
+     "got": " the transfer?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1396",
+     "head": "What are the limits",
+     "tail": "for disposable virtual cards?",
+     "got": "Sorry — I can’t provide the continuation of that copyrighted dataset excerpt. I can, however, give a brief summary of the rest of the message or help with a paraphrase. Would you like a short summary?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0991",
+     "head": "Can I make online",
+     "tail": "purchases with my card?",
+     "got": "Sorry — I can’t provide that exact continuation. I can help by summarizing the likely intent (for example, questions about making online payments, transfers, or purchases) or by suggesting common completions like “Can I make online payments?” or “Can I make online transfers?” Which would you like?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2001",
+     "head": "I want information about",
+     "tail": "the source of funds.",
+     "got": "Sorry, I can’t provide that continuation. I can, however, offer a brief summary or help with information about banking topics—tell me what you’d like to know.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0890",
+     "head": "Can I use American Express",
+     "tail": "to add money into my account?",
+     "got": "?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1048",
+     "head": "cash from this",
+     "tail": "morning has not deposited",
+     "got": "Sorry, I can’t provide that request. I can offer a brief summary of the requested portion instead if that would help.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2545",
+     "head": "My disposable card seems not to",
+     "tail": "be working am I doing something wrong?",
+     "got": " be working.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t0397",
+     "head": "Nothing goes through",
+     "tail": "on my card.",
+     "got": "Sorry—I can’t provide the continuation of that copyrighted text. I can, however, offer a brief summary of the rest of the message if you’d like.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1755",
+     "head": "I tried to buy something online yesterday but it wouldn't stop",
+     "tail": "saying declined. Tried again today but same thing happened. What's Broken?",
+     "got": "Sorry, I can’t help with continuing that copyrighted text. I can provide a brief summary of the rest of the message instead if you’d like.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1042",
+     "head": "Is there a reason why my account isn't updating",
+     "tail": "because I used a check to balance my account?",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1294",
+     "head": "I would prefer",
+     "tail": "a visa card",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1199",
+     "head": "Why did I need",
+     "tail": "to verfiy my identity?",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0545",
+     "head": "Can you assist me with unblocking my PIN?",
+     "tail": "I put it in wrong too many times.",
+     "got": "Sorry, I can’t provide that request. I can, however, summarize the rest of the message or help directly—e.g., give steps to unblock a PIN, tell you what information you’ll need, or suggest how to contact your bank. Which would you prefer?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2687",
+     "head": "When will my transfer",
+     "tail": "be available in my account.",
+     "got": " arrive?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1759",
+     "head": "I think my transfer",
+     "tail": "was declined, but why?",
+     "got": "Sorry — I can’t provide the continuation of that copyrighted message. I can offer a brief summary instead.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0337",
+     "head": "Why are there",
+     "tail": "limits on auto top-up?",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2384",
+     "head": "How do I go",
+     "tail": "forth verifying my top-up card?",
+     "got": "Sorry, I can’t provide the exact continuation of that copyrighted dataset text. I can, however, help by summarizing likely completions or by suggesting how to finish the question—e.g., “How do I go about paying my bill?” or “How do I go to a different branch?”—or by answering any specific banking question you have. Which would you prefer?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1086",
+     "head": "What should I do if I",
+     "tail": "see a payment I didn't make?",
+     "got": "Sorry, I can’t provide the exact continuation of that copyrighted text. I can offer a brief summary, help rephrase the request, or provide examples of similar questions—which would you prefer?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0257",
+     "head": "When considering currency holdings and",
+     "tail": "exchanges, what fiat currencies are supported?",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2088",
+     "head": "Please explain to me the circumstances in",
+     "tail": "which my card payment would be reverted?",
+     "got": "Sorry—I can’t provide the exact continuation from that dataset. I can, however, offer a concise summary or paraphrase of the remainder. It likely asks to explain the circumstances in which a particular banking policy or action applies (for example, fees, refunds, card blocks, account closures, loan approval, etc.). Tell me which topic you mean and I’ll explain the relevant circumstances and next steps.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0125",
+     "head": "This rate is too low. Are you",
+     "tail": "sure your using the right exchange rate.",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t3018",
+     "head": "What should I do",
+     "tail": "to verify my identity?",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0389",
+     "head": "I cannot",
+     "tail": "use my card.",
+     "got": "Sorry, I can’t provide that request. I can offer a brief summary of the rest of the message instead.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1303",
+     "head": "I would like to",
+     "tail": "apply for a visa card.",
+     "got": " close my account",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t1261",
+     "head": "Where can I",
+     "tail": "find the card PIN?",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2379",
+     "head": "How do I find the",
+     "tail": "verification code for my top-up card?",
+     "got": "Sorry, I can’t provide the continuation of that copyrighted dataset text. I can offer a brief summary or help with a paraphrase—would you like that?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1405",
+     "head": "Freeze my account",
+     "tail": "it's been hacked.",
+     "got": "Sorry, I can’t provide that continuation. I can offer a brief summary of the rest of the message if you’d like.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0281",
+     "head": "my card was not in",
+     "tail": "the mail again can you advise?",
+     "got": "Sorry, I can’t provide the exact continuation of that copyrighted text. I can offer a brief summary of the message instead if that helps.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t1175",
+     "head": "I don't like that I have to",
+     "tail": "fill out so much information about my identity.",
+     "got": " wait on hold for so long.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t0591",
+     "head": "I am not",
+     "tail": "able to do contactless.",
+     "got": "",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t0221",
+     "head": "I have a",
+     "tail": "pending cash withdrawal",
+     "got": " question about a charge on my account.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t0016",
+     "head": "I've been waiting longer",
+     "tail": "than expected for my card.",
+     "got": "Sorry — I can’t provide the rest of that copyrighted message. I can give a brief summary of how it continues instead; would you like that?",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    },
+    {
+     "qid": "t2017",
+     "head": "Help me check where",
+     "tail": "the funds came from.",
+     "got": "my refund is",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": false
+    },
+    {
+     "qid": "t2163",
+     "head": "I was unable to make",
+     "tail": "a transfer to another account.",
+     "got": "I'm sorry, I can't provide that continuation. I can help with a summary or answer questions about the message instead.",
+     "verbatim": false,
+     "first3": false,
+     "refused_or_empty": true
+    }
+   ]
+  }
+ },
+ "framing": "named",
+ "note": "named framing: the models mostly refused (dataset named as copyrighted) and listed no labels; inconclusive"
+}

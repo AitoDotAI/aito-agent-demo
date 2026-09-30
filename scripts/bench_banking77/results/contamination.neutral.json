@@ -1,0 +1,1425 @@
+{
+ "dataset": "banking77",
+ "framing": "neutral",
+ "measured_at": "2026-09-30T10:35:51+00:00",
+ "method": [
+  "banking77 (2020) and CLINC150 (2019) are public, so they may be in the models'\ntraining data, which would flatter the LLM arms compared with a company's own,\nprivate data. Two probes, no retrieval, no labels given:",
+  "1. Label recall: \"list the intent labels of <dataset>\". Scored as the share of the\n   true labels named exactly (case-insensitive), and how many named labels are\n   not real ones.\n2. Completion: the first half of a held-out test message (by words); the model\n   continues it. Scored as the share completed verbatim (normalised), and the\n   share whose first three continued words match.",
+  "The metrics were fixed before the first run. A high verbatim rate shows\nmemorisation. A low one doesn't rule it out, since the models may know the data\nwithout reproducing it word for word."
+ ],
+ "models": {
+  "gpt-5.4": {
+   "label_recall": {
+    "true_labels": 77,
+    "named": 77,
+    "exact_hits": 0,
+    "recall": 0.0,
+    "named_not_real": 77,
+    "tokens": 457
+   },
+   "label_hits": [],
+   "completion": {
+    "n": 50,
+    "refused_or_empty": 1,
+    "verbatim": 0,
+    "verbatim_share": 0.0,
+    "first3_share": 0.04
+   },
+   "completions": [
+    {
+     "qid": "t0923",
+     "head": "Is there an option",
+     "tail": "to have a virtual card?",
+     "got": " to speak with a representative?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1950",
+     "head": "I was getting cash and",
+     "tail": "can't get my card back.",
+     "got": "the ATM kept my card.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0556",
+     "head": "How can I",
+     "tail": "unlock the pin?",
+     "got": " help you today?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2715",
+     "head": "Where is my money? I transfered",
+     "tail": "it and it isn't in my account.",
+     "got": " it yesterday and it still hasn't arrived in my account.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0683",
+     "head": "I made a transaction but",
+     "tail": "did it to the wrong account.",
+     "got": "it hasn’t shown up in my account yet.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1213",
+     "head": "I am not being",
+     "tail": "recognized by the app.",
+     "got": "able to access my account online",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0006",
+     "head": "Do you know if there is a tracking",
+     "tail": "number for the new card you sent me?",
+     "got": " number for the card delivery?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": true
+    },
+    {
+     "qid": "t1607",
+     "head": "I recently made a payment, and it is showing",
+     "tail": "up in my account as \"pending\". What does that mean?",
+     "got": " as pending on my account. Can you tell me why?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1185",
+     "head": "Why do you require",
+     "tail": "so many identity details?",
+     "got": " my Social Security number?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1065",
+     "head": "I made a deposit of cash and check",
+     "tail": "that has not been added to my balance.",
+     "got": " into my account, but only the cash is showing as available. When will the check amount be available?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2233",
+     "head": "What extra",
+     "tail": "charges are there?",
+     "got": " help do you need today?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1597",
+     "head": "Is there a reason that",
+     "tail": "the ATM declined my transaction?",
+     "got": "my transfer is still pending?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1446",
+     "head": "Which ATM's",
+     "tail": "accept my card?",
+     "got": " did you use?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0961",
+     "head": "Who accepts",
+     "tail": "this card?",
+     "got": " Zelle?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1898",
+     "head": "Delete",
+     "tail": "this account!",
+     "got": " and reinstall the app, then try again.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2082",
+     "head": "the app",
+     "tail": "reverted my payment",
+     "got": " is currently unavailable, please try again later.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2192",
+     "head": "Why couldn't I do",
+     "tail": "a transfer to a beneficiary?",
+     "got": " a bank transfer?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1396",
+     "head": "What are the limits",
+     "tail": "for disposable virtual cards?",
+     "got": " on transfers?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0991",
+     "head": "Can I make online",
+     "tail": "purchases with my card?",
+     "got": " payments?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2001",
+     "head": "I want information about",
+     "tail": "the source of funds.",
+     "got": " my account balance and recent transactions.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0890",
+     "head": "Can I use American Express",
+     "tail": "to add money into my account?",
+     "got": " cards?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1048",
+     "head": "cash from this",
+     "tail": "morning has not deposited",
+     "got": " account?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2545",
+     "head": "My disposable card seems not to",
+     "tail": "be working am I doing something wrong?",
+     "got": "be working for online purchases.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0397",
+     "head": "Nothing goes through",
+     "tail": "on my card.",
+     "got": " at the weekend, so it should update on the next working day.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1755",
+     "head": "I tried to buy something online yesterday but it wouldn't stop",
+     "tail": "saying declined. Tried again today but same thing happened. What's Broken?",
+     "got": " getting declined. Is there a problem with my card?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1042",
+     "head": "Is there a reason why my account isn't updating",
+     "tail": "because I used a check to balance my account?",
+     "got": " after I made a deposit?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1294",
+     "head": "I would prefer",
+     "tail": "a visa card",
+     "got": " to speak with a representative about my account, please.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1199",
+     "head": "Why did I need",
+     "tail": "to verfiy my identity?",
+     "got": " to verify my identity?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0545",
+     "head": "Can you assist me with unblocking my PIN?",
+     "tail": "I put it in wrong too many times.",
+     "got": "",
+     "refused_or_empty": true,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2687",
+     "head": "When will my transfer",
+     "tail": "be available in my account.",
+     "got": " arrive?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1759",
+     "head": "I think my transfer",
+     "tail": "was declined, but why?",
+     "got": "didn't go through.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0337",
+     "head": "Why are there",
+     "tail": "limits on auto top-up?",
+     "got": " pending transactions on my account?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2384",
+     "head": "How do I go",
+     "tail": "forth verifying my top-up card?",
+     "got": "about disputing a transaction?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1086",
+     "head": "What should I do if I",
+     "tail": "see a payment I didn't make?",
+     "got": " lose my debit card?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0257",
+     "head": "When considering currency holdings and",
+     "tail": "exchanges, what fiat currencies are supported?",
+     "got": " international transfers, exchange rates and fees may apply depending on the currencies involved.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2088",
+     "head": "Please explain to me the circumstances in",
+     "tail": "which my card payment would be reverted?",
+     "got": " which your card was lost or stolen.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0125",
+     "head": "This rate is too low. Are you",
+     "tail": "sure your using the right exchange rate.",
+     "got": " able to offer anything better?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3018",
+     "head": "What should I do",
+     "tail": "to verify my identity?",
+     "got": " if I notice a transaction I don't recognize on my account?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0389",
+     "head": "I cannot",
+     "tail": "use my card.",
+     "got": "access my account online.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1303",
+     "head": "I would like to",
+     "tail": "apply for a visa card.",
+     "got": " check my account balance.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1261",
+     "head": "Where can I",
+     "tail": "find the card PIN?",
+     "got": " find my account number?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2379",
+     "head": "How do I find the",
+     "tail": "verification code for my top-up card?",
+     "got": " account number?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1405",
+     "head": "Freeze my account",
+     "tail": "it's been hacked.",
+     "got": " immediately, I think my card was stolen.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0281",
+     "head": "my card was not in",
+     "tail": "the mail again can you advise?",
+     "got": " my wallet and I think I lost it",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1175",
+     "head": "I don't like that I have to",
+     "tail": "fill out so much information about my identity.",
+     "got": " wait on hold so long just to speak to someone about my account.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0591",
+     "head": "I am not",
+     "tail": "able to do contactless.",
+     "got": " able to log in to my account.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0221",
+     "head": "I have a",
+     "tail": "pending cash withdrawal",
+     "got": " problem with my account",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0016",
+     "head": "I've been waiting longer",
+     "tail": "than expected for my card.",
+     "got": " than expected for my transfer to go through. Can you please check the status for me?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": true
+    },
+    {
+     "qid": "t2017",
+     "head": "Help me check where",
+     "tail": "the funds came from.",
+     "got": "my nearest ATM is",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2163",
+     "head": "I was unable to make",
+     "tail": "a transfer to another account.",
+     "got": " a payment with my card.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    }
+   ]
+  },
+  "gpt-5-mini": {
+   "label_recall": {
+    "true_labels": 77,
+    "named": 77,
+    "exact_hits": 0,
+    "recall": 0.0,
+    "named_not_real": 77,
+    "tokens": 1068
+   },
+   "label_hits": [],
+   "completion": {
+    "n": 50,
+    "refused_or_empty": 2,
+    "verbatim": 0,
+    "verbatim_share": 0.0,
+    "first3_share": 0.0
+   },
+   "completions": [
+    {
+     "qid": "t0923",
+     "head": "Is there an option",
+     "tail": "to have a virtual card?",
+     "got": " to set up automatic payments for my credit card so I don’t miss due dates?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1950",
+     "head": "I was getting cash and",
+     "tail": "can't get my card back.",
+     "got": "the ATM swallowed my card and didn’t return it — what should I do?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0556",
+     "head": "How can I",
+     "tail": "unlock the pin?",
+     "got": " help you today?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2715",
+     "head": "Where is my money? I transfered",
+     "tail": "it and it isn't in my account.",
+     "got": " to my friend’s account yesterday and it still hasn’t arrived. The app shows it as completed. Can you check what happened and tell me when I’ll get it back or where it is?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0683",
+     "head": "I made a transaction but",
+     "tail": "did it to the wrong account.",
+     "got": " it hasn't appeared on my account yet — can you check why and when it will show up?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1213",
+     "head": "I am not being",
+     "tail": "recognized by the app.",
+     "got": "able to access my account; I keep getting an error when I try to sign in. Can you help?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0006",
+     "head": "Do you know if there is a tracking",
+     "tail": "number for the new card you sent me?",
+     "got": "number for my replacement debit card? I requested one last week and haven't received it.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1607",
+     "head": "I recently made a payment, and it is showing",
+     "tail": "up in my account as \"pending\". What does that mean?",
+     "got": "as pending and the amount has been deducted from my available balance. Can you please check why it's still pending and when it will post to my account? The payment was made yesterday for $125 to Amazon.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1185",
+     "head": "Why do you require",
+     "tail": "so many identity details?",
+     "got": "my ID and proof of address to verify my account and complete the transaction?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1065",
+     "head": "I made a deposit of cash and check",
+     "tail": "that has not been added to my balance.",
+     "got": " but it hasn’t shown up in my account yet. Can you check the status and tell me when the funds will be available?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2233",
+     "head": "What extra",
+     "tail": "charges are there?",
+     "got": " information do you need to verify my identity to process this request?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1597",
+     "head": "Is there a reason that",
+     "tail": "the ATM declined my transaction?",
+     "got": "my payment was declined? If so, can you tell me why and what I need to do to resolve it?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1446",
+     "head": "Which ATM's",
+     "tail": "accept my card?",
+     "got": " are you referring to? Are you seeing an error, a fee, or did your card get retained? Please tell us the ATM location, the bank name on the machine, and the date/time of the transaction (and the last four digits of your card if possible) so we can look into it.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0961",
+     "head": "Who accepts",
+     "tail": "this card?",
+     "got": " our debit cards? Most merchants that display the Visa or Mastercard logo (in‑store and online) accept them, and ATMs that show your card network logo accept cash withdrawals.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1898",
+     "head": "Delete",
+     "tail": "this account!",
+     "got": " my account. How can I do that?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2082",
+     "head": "the app",
+     "tail": "reverted my payment",
+     "got": "keeps crashing when I try to open it — can you help?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2192",
+     "head": "Why couldn't I do",
+     "tail": "a transfer to a beneficiary?",
+     "got": " the transfer from my checking to savings earlier? I kept getting an error saying the transaction couldn't be processed and my balance still shows the funds as pending.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1396",
+     "head": "What are the limits",
+     "tail": "for disposable virtual cards?",
+     "got": " on ATM withdrawals and daily transfers for my account?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0991",
+     "head": "Can I make online",
+     "tail": "purchases with my card?",
+     "got": "transactions, such as transfers and bill payments, and how do I set them up?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2001",
+     "head": "I want information about",
+     "tail": "the source of funds.",
+     "got": " opening a new checking account — what documents I need, minimum deposit, monthly fees, interest rates, and how to apply online or in branch.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0890",
+     "head": "Can I use American Express",
+     "tail": "to add money into my account?",
+     "got": " to pay my credit card bill?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1048",
+     "head": "cash from this",
+     "tail": "morning has not deposited",
+     "got": "deposit will be available in your account after it clears, typically within 1–5 business days. You can track the status in the mobile app under Recent Activity or contact us for more details.",
+     "refused_or_empty": true,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2545",
+     "head": "My disposable card seems not to",
+     "tail": "be working am I doing something wrong?",
+     "got": "be working. I tried to make a payment and it was declined — can you check why and how to fix it?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0397",
+     "head": "Nothing goes through",
+     "tail": "on my card.",
+     "got": " — I can't make payments, transfers, or card purchases; transactions are being declined or stuck. My account shows pending items and I’m worried there’s a hold or a system issue. Can you please check and advise?",
+     "refused_or_empty": true,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1755",
+     "head": "I tried to buy something online yesterday but it wouldn't stop",
+     "tail": "saying declined. Tried again today but same thing happened. What's Broken?",
+     "got": "declining my card — the payment kept failing every time I tried. Can you check why my card was blocked and help me complete the purchase?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1042",
+     "head": "Is there a reason why my account isn't updating",
+     "tail": "because I used a check to balance my account?",
+     "got": "with recent transactions? I made a deposit two days ago and a transfer yesterday but my balance still shows the old amount. Can you check if there are any holds or technical issues on my account and let me know what I need to do to get it updated?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1294",
+     "head": "I would prefer",
+     "tail": "a visa card",
+     "got": " to be contacted by email about this issue, please — my preferred address is the one on file. If you need to call, please do so after 5 PM.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1199",
+     "head": "Why did I need",
+     "tail": "to verfiy my identity?",
+     "got": "to verify my identity to access my account?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0545",
+     "head": "Can you assist me with unblocking my PIN?",
+     "tail": "I put it in wrong too many times.",
+     "got": "I entered the wrong PIN several times and now my card is blocked — what information do you need from me to verify my identity and restore access?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2687",
+     "head": "When will my transfer",
+     "tail": "be available in my account.",
+     "got": "be processed and reach the recipient's account?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1759",
+     "head": "I think my transfer",
+     "tail": "was declined, but why?",
+     "got": "didn't go through — it still shows as pending and the recipient says they haven't received it. Can you check the status and help resolve this?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0337",
+     "head": "Why are there",
+     "tail": "limits on auto top-up?",
+     "got": "charges on my account that I don't recognize?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2384",
+     "head": "How do I go",
+     "tail": "forth verifying my top-up card?",
+     "got": " about opening a new account online?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1086",
+     "head": "What should I do if I",
+     "tail": "see a payment I didn't make?",
+     "got": "lost my debit card?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0257",
+     "head": "When considering currency holdings and",
+     "tail": "exchanges, what fiat currencies are supported?",
+     "got": " exchange-rate risk, it’s important to diversify across currencies, monitor interest rate differentials, factor in conversion fees and taxes, and consider hedging strategies or professional advice if you have significant exposure or upcoming foreign payments.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2088",
+     "head": "Please explain to me the circumstances in",
+     "tail": "which my card payment would be reverted?",
+     "got": "which this charge was made on my account, including the date, merchant name, transaction amount, and any available supporting details or documentation so I can understand and dispute it if necessary.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0125",
+     "head": "This rate is too low. Are you",
+     "tail": "sure your using the right exchange rate.",
+     "got": " referring to the APR or the monthly rate? If you’d like, I can check your account and see if there are higher-rate options or current promotions that apply.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3018",
+     "head": "What should I do",
+     "tail": "to verify my identity?",
+     "got": " if I see an unauthorized transaction on my account?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0389",
+     "head": "I cannot",
+     "tail": "use my card.",
+     "got": " access my account — it says my password is incorrect even though I'm sure it's right. Can you help me reset it or unlock my account?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1303",
+     "head": "I would like to",
+     "tail": "apply for a visa card.",
+     "got": "check my account balance and recent transactions, please.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1261",
+     "head": "Where can I",
+     "tail": "find the card PIN?",
+     "got": "find my account number?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2379",
+     "head": "How do I find the",
+     "tail": "verification code for my top-up card?",
+     "got": "routing number for my account?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1405",
+     "head": "Freeze my account",
+     "tail": "it's been hacked.",
+     "got": "— I lost my card; please block my account immediately and tell me what steps I need to take to get a new card and restore access.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0281",
+     "head": "my card was not in",
+     "tail": "the mail again can you advise?",
+     "got": "the mail today. Can you check the status of my replacement card and let me know when it will arrive?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1175",
+     "head": "I don't like that I have to",
+     "tail": "fill out so much information about my identity.",
+     "got": "wait on hold for so long to speak to a representative.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0591",
+     "head": "I am not",
+     "tail": "able to do contactless.",
+     "got": " able to access your account without verifying your identity. For security, could you please provide the last four digits of your account number and the email or phone number registered on the account so I can help further?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0221",
+     "head": "I have a",
+     "tail": "pending cash withdrawal",
+     "got": "question about my account.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0016",
+     "head": "I've been waiting longer",
+     "tail": "than expected for my card.",
+     "got": " than the estimated time for my transfer to clear — can someone please check my account and give me an update?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2017",
+     "head": "Help me check where",
+     "tail": "the funds came from.",
+     "got": "my money went.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2163",
+     "head": "I was unable to make",
+     "tail": "a transfer to another account.",
+     "got": " a payment on my credit card through the app — it kept showing an error and wouldn’t go through. Can you help me resolve this and confirm whether the payment was processed?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    }
+   ]
+  },
+  "gpt-6-luna": {
+   "label_recall": {
+    "true_labels": 77,
+    "named": 77,
+    "exact_hits": 2,
+    "recall": 0.026,
+    "named_not_real": 75,
+    "tokens": 696
+   },
+   "label_hits": [
+    "cancel_transfer",
+    "change_pin"
+   ],
+   "completion": {
+    "n": 50,
+    "refused_or_empty": 1,
+    "verbatim": 1,
+    "verbatim_share": 0.02,
+    "first3_share": 0.02
+   },
+   "completions": [
+    {
+     "qid": "t0923",
+     "head": "Is there an option",
+     "tail": "to have a virtual card?",
+     "got": " to speak with a customer service representative?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1950",
+     "head": "I was getting cash and",
+     "tail": "can't get my card back.",
+     "got": " the ATM kept my card.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0556",
+     "head": "How can I",
+     "tail": "unlock the pin?",
+     "got": " help you today?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2715",
+     "head": "Where is my money? I transfered",
+     "tail": "it and it isn't in my account.",
+     "got": " money from my account to another account yesterday, but it hasn’t arrived yet.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0683",
+     "head": "I made a transaction but",
+     "tail": "did it to the wrong account.",
+     "got": " it hasn’t shown up in my account yet.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1213",
+     "head": "I am not being",
+     "tail": "recognized by the app.",
+     "got": "able to access my account.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0006",
+     "head": "Do you know if there is a tracking",
+     "tail": "number for the new card you sent me?",
+     "got": " number for my replacement card?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1607",
+     "head": "I recently made a payment, and it is showing",
+     "tail": "up in my account as \"pending\". What does that mean?",
+     "got": " as pending in my account. Could you please let me know when it will be processed?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1185",
+     "head": "Why do you require",
+     "tail": "so many identity details?",
+     "got": " my Social Security number?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1065",
+     "head": "I made a deposit of cash and check",
+     "tail": "that has not been added to my balance.",
+     "got": ", but only the cash is showing in my account.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2233",
+     "head": "What extra",
+     "tail": "charges are there?",
+     "got": " information do you need from me to help with this?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1597",
+     "head": "Is there a reason that",
+     "tail": "the ATM declined my transaction?",
+     "got": " your card was declined?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1446",
+     "head": "Which ATM's",
+     "tail": "accept my card?",
+     "got": " are you referring to?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0961",
+     "head": "Who accepts",
+     "tail": "this card?",
+     "got": " this card?",
+     "refused_or_empty": false,
+     "verbatim": true,
+     "first3": true
+    },
+    {
+     "qid": "t1898",
+     "head": "Delete",
+     "tail": "this account!",
+     "got": " the app and reinstall it, then try logging in again.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2082",
+     "head": "the app",
+     "tail": "reverted my payment",
+     "got": " is currently undergoing maintenance. Please try again later, and let us know if you still need help.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2192",
+     "head": "Why couldn't I do",
+     "tail": "a transfer to a beneficiary?",
+     "got": " that?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1396",
+     "head": "What are the limits",
+     "tail": "for disposable virtual cards?",
+     "got": " on how much I can transfer or withdraw from my account?",
+     "refused_or_empty": true,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0991",
+     "head": "Can I make online",
+     "tail": "purchases with my card?",
+     "got": " payments with my card?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2001",
+     "head": "I want information about",
+     "tail": "the source of funds.",
+     "got": "my account balance and recent transactions.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0890",
+     "head": "Can I use American Express",
+     "tail": "to add money into my account?",
+     "got": " to make a payment?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1048",
+     "head": "cash from this",
+     "tail": "morning has not deposited",
+     "got": " account is available for withdrawal at any ATM.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2545",
+     "head": "My disposable card seems not to",
+     "tail": "be working am I doing something wrong?",
+     "got": " be working. Could you help me figure out why?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0397",
+     "head": "Nothing goes through",
+     "tail": "on my card.",
+     "got": " when I try to make a payment.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1755",
+     "head": "I tried to buy something online yesterday but it wouldn't stop",
+     "tail": "saying declined. Tried again today but same thing happened. What's Broken?",
+     "got": "declining my card.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1042",
+     "head": "Is there a reason why my account isn't updating",
+     "tail": "because I used a check to balance my account?",
+     "got": " with my recent transactions?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1294",
+     "head": "I would prefer",
+     "tail": "a visa card",
+     "got": " to speak with a human representative, please.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1199",
+     "head": "Why did I need",
+     "tail": "to verfiy my identity?",
+     "got": " to verify my identity?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0545",
+     "head": "Can you assist me with unblocking my PIN?",
+     "tail": "I put it in wrong too many times.",
+     "got": " I’ve entered it incorrectly too many times. Could you tell me how to unblock it securely? I won’t share my PIN here.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2687",
+     "head": "When will my transfer",
+     "tail": "be available in my account.",
+     "got": " arrive?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1759",
+     "head": "I think my transfer",
+     "tail": "was declined, but why?",
+     "got": " hasn't gone through yet.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0337",
+     "head": "Why are there",
+     "tail": "limits on auto top-up?",
+     "got": "unexpected charges on my account?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2384",
+     "head": "How do I go",
+     "tail": "forth verifying my top-up card?",
+     "got": " about opening a new account?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1086",
+     "head": "What should I do if I",
+     "tail": "see a payment I didn't make?",
+     "got": "lose my card?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0257",
+     "head": "When considering currency holdings and",
+     "tail": "exchanges, what fiat currencies are supported?",
+     "got": " exchange rates, remember that currency values can fluctuate, which may affect the value of your holdings.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2088",
+     "head": "Please explain to me the circumstances in",
+     "tail": "which my card payment would be reverted?",
+     "got": "which this transaction occurred, including the date, amount, and any relevant details.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0125",
+     "head": "This rate is too low. Are you",
+     "tail": "sure your using the right exchange rate.",
+     "got": " able to offer a better rate?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3018",
+     "head": "What should I do",
+     "tail": "to verify my identity?",
+     "got": " if I think my account has been compromised?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0389",
+     "head": "I cannot",
+     "tail": "use my card.",
+     "got": " access your account details here, but I can help you find the right support option.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1303",
+     "head": "I would like to",
+     "tail": "apply for a visa card.",
+     "got": " speak to a customer service representative.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1261",
+     "head": "Where can I",
+     "tail": "find the card PIN?",
+     "got": " find my account number?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2379",
+     "head": "How do I find the",
+     "tail": "verification code for my top-up card?",
+     "got": " routing number for my account?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1405",
+     "head": "Freeze my account",
+     "tail": "it's been hacked.",
+     "got": " because I think my card has been stolen.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0281",
+     "head": "my card was not in",
+     "tail": "the mail again can you advise?",
+     "got": "the envelope when I received it.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1175",
+     "head": "I don't like that I have to",
+     "tail": "fill out so much information about my identity.",
+     "got": " verify my identity every time I contact support.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0591",
+     "head": "I am not",
+     "tail": "able to do contactless.",
+     "got": " able to access your account details here, but I can help you find the right support option.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0221",
+     "head": "I have a",
+     "tail": "pending cash withdrawal",
+     "got": " question about a recent transaction on my account.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0016",
+     "head": "I've been waiting longer",
+     "tail": "than expected for my card.",
+     "got": " than expected to speak with someone. Could you please let me know how much longer it will be?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2017",
+     "head": "Help me check where",
+     "tail": "the funds came from.",
+     "got": " my card was used.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2163",
+     "head": "I was unable to make",
+     "tail": "a transfer to another account.",
+     "got": " a payment because my account was temporarily locked.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    }
+   ]
+  }
+ }
+}

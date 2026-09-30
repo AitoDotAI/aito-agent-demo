@@ -1,0 +1,11 @@
+{
+ "frozen": "2026-09-30, before any CLINC150 run (PREREGISTRATION.md)",
+ "split_seed": 77,
+ "split": "shuffle the sampled query ids with random.Random(split_seed); first half fits, second half scores",
+ "thresholds": [0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95],
+ "pick": "most right answers on the fit half; ties go to the lower threshold",
+ "answer": "Aito's top intent if its $p >= threshold, else the fallback arm's answer",
+ "confirm": {"accuracy_kept": "McNemar exact two-sided, gate vs fallback on the scoring half: not p < 0.05 with the fallback right more often",
+             "max_share_calling_llm": 0.6},
+ "clinc150_fallback": "llm_rag.gpt-5.4"
+}

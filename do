@@ -12,6 +12,8 @@
 #   ./do v2-probe                 /api/v1 vs /api/v2 op-level parity (exit = #diffs)
 #   ./do v2-parity                /api/v1 vs /api/v2 route-level parity (boots both)
 #   ./do v2-check                 read-only v2 correctness + engine/count checks
+#   ./do bench-banking77 [models] the Aito vs LLM intent benchmark (scripts/bench_banking77/README.md);
+#                                 BENCH_DATASET=clinc150 for the pre-registered second dataset
 #   ./do screenshot-teaser        render assets/teaser.html → assets/teaser.png (1200×630)
 #   ./do product-sheet            compile docs/product-sheet/product-sheet.typ → PDF (needs typst)
 #   ./do screenshot-pages [...]   desktop full-page screenshots of given paths
@@ -61,6 +63,21 @@ cmd_dev() {
 cmd_test() {
   # plain pytest unit tests live under tests/ (book/ is booktest — see test-book)
   exec uv run pytest tests/ "$@"
+}
+
+cmd_bench_banking77() {
+  # fetch (pinned sha256) -> check the Aito load -> embed for RAG -> run every arm -> summarize.
+  # Resumable: re-running continues where it stopped. The load itself is a separate, explicit step.
+  local b=scripts/bench_banking77
+  if [ -z "${BANKING77_RESULTS:-}" ]; then
+    say "note: no BANKING77_RESULTS given, so the runs resume from the committed answers in $b/results/;"
+    say "      to measure afresh, set BANKING77_RESULTS to an empty directory (see $b/README.md)"
+  fi
+  python3 "$b/fetch.py"
+  uv run --with 'aitoai>=1.0' python "$b/load.py" --check || return 1
+  uv run python "$b/embed.py"
+  uv run --with 'aitoai>=1.0' python "$b/run.py" --models "${@:-gpt-5-mini}"
+  uv run python "$b/summarize.py"
 }
 
 cmd_test_book() {
@@ -149,6 +166,7 @@ case "${1:-help}" in
   backend)             shift; cmd_backend "$@" ;;
   test)                shift; cmd_test "$@" ;;
   test-book)           shift; cmd_test_book "$@" ;;
+  bench-banking77)     shift; cmd_bench_banking77 "$@" ;;
   v2-probe)            shift; cmd_v2_probe "$@" ;;
   v2-parity)           shift; cmd_v2_parity "$@" ;;
   v2-check)            shift; exec uv run python -m scripts.v2_check "$@" ;;
