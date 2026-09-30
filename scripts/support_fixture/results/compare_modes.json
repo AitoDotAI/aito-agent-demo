@@ -1,0 +1,421 @@
+{
+ "caveat": "on a synthetic fixture with planted effects; 300 held-out tickets; gpt-5-mini",
+ "tickets": 300,
+ "accuracy": {
+  "aito_only": {
+   "product": {
+    "share": 0.85,
+    "ci95": [
+     0.805,
+     0.886
+    ],
+    "n": 300
+   },
+   "category": {
+    "share": 0.953,
+    "ci95": [
+     0.923,
+     0.972
+    ],
+    "n": 300
+   },
+   "priority": {
+    "share": 0.863,
+    "ci95": [
+     0.82,
+     0.898
+    ],
+    "n": 300
+   },
+   "resolution": {
+    "share": 0.913,
+    "ci95": [
+     0.876,
+     0.94
+    ],
+    "n": 300
+   },
+   "first_step": {
+    "share": 0.94,
+    "ci95": [
+     0.907,
+     0.962
+    ],
+    "n": 300
+   },
+   "all_five_right": {
+    "share": 0.683,
+    "ci95": [
+     0.629,
+     0.733
+    ]
+   }
+  },
+  "aito_plus_llm": {
+   "product": {
+    "share": 0.873,
+    "ci95": [
+     0.831,
+     0.906
+    ],
+    "n": 300
+   },
+   "category": {
+    "share": 0.957,
+    "ci95": [
+     0.927,
+     0.975
+    ],
+    "n": 300
+   },
+   "priority": {
+    "share": 0.747,
+    "ci95": [
+     0.695,
+     0.793
+    ],
+    "n": 300
+   },
+   "resolution": {
+    "share": 0.91,
+    "ci95": [
+     0.872,
+     0.937
+    ],
+    "n": 300
+   },
+   "first_step": {
+    "share": 0.95,
+    "ci95": [
+     0.919,
+     0.969
+    ],
+    "n": 300
+   },
+   "all_five_right": {
+    "share": 0.603,
+    "ci95": [
+     0.547,
+     0.657
+    ]
+   }
+  },
+  "llm_only": {
+   "product": {
+    "share": 0.74,
+    "ci95": [
+     0.688,
+     0.786
+    ],
+    "n": 300
+   },
+   "category": {
+    "share": 0.86,
+    "ci95": [
+     0.816,
+     0.895
+    ],
+    "n": 300
+   },
+   "priority": {
+    "share": 0.54,
+    "ci95": [
+     0.483,
+     0.596
+    ],
+    "n": 300
+   },
+   "resolution": {
+    "share": 0.733,
+    "ci95": [
+     0.681,
+     0.78
+    ],
+    "n": 300
+   },
+   "first_step": {
+    "share": 0.847,
+    "ci95": [
+     0.802,
+     0.883
+    ],
+    "n": 300
+   },
+   "all_five_right": {
+    "share": 0.22,
+    "ci95": [
+     0.177,
+     0.27
+    ]
+   }
+  },
+  "rag_llm": {
+   "product": {
+    "share": 0.81,
+    "ci95": [
+     0.762,
+     0.85
+    ],
+    "n": 300
+   },
+   "category": {
+    "share": 0.963,
+    "ci95": [
+     0.936,
+     0.979
+    ],
+    "n": 300
+   },
+   "priority": {
+    "share": 0.8,
+    "ci95": [
+     0.751,
+     0.841
+    ],
+    "n": 300
+   },
+   "resolution": {
+    "share": 0.907,
+    "ci95": [
+     0.868,
+     0.935
+    ],
+    "n": 300
+   },
+   "first_step": {
+    "share": 0.963,
+    "ci95": [
+     0.936,
+     0.979
+    ],
+    "n": 300
+   },
+   "all_five_right": {
+    "share": 0.607,
+    "ci95": [
+     0.55,
+     0.66
+    ]
+   }
+  },
+  "aito_shortlist_why_llm": {
+   "product": {
+    "share": 0.843,
+    "ci95": [
+     0.798,
+     0.88
+    ],
+    "n": 300
+   },
+   "category": {
+    "share": 0.94,
+    "ci95": [
+     0.907,
+     0.962
+    ],
+    "n": 300
+   },
+   "priority": {
+    "share": 0.837,
+    "ci95": [
+     0.791,
+     0.874
+    ],
+    "n": 300
+   },
+   "resolution": {
+    "share": 0.893,
+    "ci95": [
+     0.853,
+     0.923
+    ],
+    "n": 300
+   },
+   "first_step": {
+    "share": 0.957,
+    "ci95": [
+     0.927,
+     0.975
+    ],
+    "n": 300
+   },
+   "all_five_right": {
+    "share": 0.63,
+    "ci95": [
+     0.574,
+     0.683
+    ]
+   }
+  }
+ },
+ "llm": {
+  "aito_only": {
+   "calls_per_ticket": 0.0,
+   "tokens_per_ticket": 0,
+   "usd_per_1000_tickets": 0.0
+  },
+  "aito_plus_llm": {
+   "calls_per_ticket": 0.73,
+   "tokens_per_ticket": 203,
+   "usd_per_1000_tickets": 0.171
+  },
+  "llm_only": {
+   "calls_per_ticket": 1.0,
+   "tokens_per_ticket": 455,
+   "usd_per_1000_tickets": 0.402
+  },
+  "rag_llm": {
+   "calls_per_ticket": 1.0,
+   "tokens_per_ticket": 804,
+   "usd_per_1000_tickets": 0.421
+  },
+  "aito_shortlist_why_llm": {
+   "calls_per_ticket": 1.0,
+   "tokens_per_ticket": 676,
+   "usd_per_1000_tickets": 0.333
+  }
+ },
+ "latency_ms": {
+  "aito_only": {
+   "p50": 575,
+   "p95": 993,
+   "mean": 787
+  },
+  "aito_plus_llm": {
+   "p50": 2446,
+   "p95": 7539,
+   "mean": 3227
+  },
+  "llm_only": {
+   "p50": 2673,
+   "p95": 7090,
+   "mean": 4022
+  },
+  "rag_llm": {
+   "p50": 2503,
+   "p95": 3642,
+   "mean": 2621
+  },
+  "aito_shortlist_why_llm": {
+   "p50": 2600,
+   "p95": 3710,
+   "mean": 2756
+  },
+  "note": "LLM time is the successful call's own, excluding rate-limit backoff"
+ },
+ "handed_to_llm": {
+  "product": 83,
+  "category": 21,
+  "priority": 145,
+  "resolution": 23,
+  "first_step": 22
+ },
+ "selective": {
+  "policy": {
+   "product": "llm",
+   "category": "llm",
+   "priority": "aito",
+   "resolution": "aito",
+   "first_step": "llm"
+  },
+  "fit_evidence": {
+   "product": {
+    "unsure_n": 46,
+    "aito_right": 25,
+    "llm_right": 30
+   },
+   "category": {
+    "unsure_n": 10,
+    "aito_right": 6,
+    "llm_right": 9
+   },
+   "priority": {
+    "unsure_n": 71,
+    "aito_right": 60,
+    "llm_right": 42
+   },
+   "resolution": {
+    "unsure_n": 15,
+    "aito_right": 9,
+    "llm_right": 8
+   },
+   "first_step": {
+    "unsure_n": 10,
+    "aito_right": 4,
+    "llm_right": 7
+   }
+  },
+  "fit_n": 150,
+  "test_n": 150,
+  "scored_on_test": {
+   "aito_only": {
+    "all_five_right": 0.66,
+    "ci95": [
+     0.581,
+     0.731
+    ],
+    "tickets_calling_llm": 0.0,
+    "per_step": {
+     "product": 0.86,
+     "category": 0.96,
+     "priority": 0.84,
+     "resolution": 0.927,
+     "first_step": 0.947
+    }
+   },
+   "every_unsure_step": {
+    "all_five_right": 0.58,
+    "ci95": [
+     0.5,
+     0.656
+    ],
+    "tickets_calling_llm": 0.72,
+    "per_step": {
+     "product": 0.873,
+     "category": 0.947,
+     "priority": 0.727,
+     "resolution": 0.927,
+     "first_step": 0.947
+    }
+   },
+   "selective": {
+    "all_five_right": 0.68,
+    "ci95": [
+     0.602,
+     0.749
+    ],
+    "tickets_calling_llm": 0.333,
+    "per_step": {
+     "product": 0.873,
+     "category": 0.947,
+     "priority": 0.84,
+     "resolution": 0.927,
+     "first_step": 0.947
+    }
+   }
+  }
+ },
+ "paired_vs_aito_only": {
+  "aito_plus_llm": {
+   "only_aito_right": 42,
+   "only_other_right": 18,
+   "mcnemar_p": 0.0027
+  },
+  "llm_only": {
+   "only_aito_right": 156,
+   "only_other_right": 17,
+   "mcnemar_p": 0.0
+  },
+  "rag_llm": {
+   "only_aito_right": 57,
+   "only_other_right": 34,
+   "mcnemar_p": 0.0206
+  },
+  "aito_shortlist_why_llm": {
+   "only_aito_right": 37,
+   "only_other_right": 21,
+   "mcnemar_p": 0.0479
+  },
+  "note": "4 comparisons against Aito only: at a Bonferroni-corrected 0.05 / 4, a p above that threshold is suggestive, not conclusive, at this n"
+ }
+}
