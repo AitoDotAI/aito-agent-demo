@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import threading
 import time
@@ -120,6 +121,12 @@ def main() -> int:
     RUNS.mkdir(parents=True, exist_ok=True)
     needs_aito = {"aito_full", "aito", "aito_llm"} & set(args.arms)
     c, coll = _aito() if needs_aito else (None, None)
+    # where this run's answers came from, recorded with them (not guessed at summary time)
+    from urllib.parse import urlparse
+    llm_url = os.environ.get("OPENAI_MODEL_URL")
+    (RUNS / "endpoints.json").write_text(json.dumps({
+        "aito": f"{urlparse(c.api_url if c is not None and hasattr(c, 'api_url') else '').hostname or 'unknown'}, Aito v2",
+        "llm": f"Azure OpenAI, {urlparse(llm_url).hostname}" if llm_url else "OpenAI"}, indent=1) + "\n")
     if c is not None:
         v = c.get_version()
         meta = RUNS / "engine.json"

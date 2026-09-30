@@ -1,0 +1,5 @@
+{
+ "aito": "shared.aito.ai, Aito v2",
+ "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com",
+ "note": "written 2026-09-30 for the runs recorded before run.py wrote this file; the same endpoints throughout"
+}

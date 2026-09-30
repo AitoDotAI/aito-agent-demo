@@ -83,7 +83,17 @@ measured from; the summary records it.
 
 `load.py` without `--apply` is a dry run. By default it writes one collection,
 `banking77_train`, into a branch environment `banking77`, and refuses master
-unless you pass `--master` (for a database of your own). Runs are resumable:
+unless you pass `--master`. **With a database of your own**, load into master and
+tell the other steps where it is:
+
+```bash
+uv run --with 'aitoai>=1.0' python scripts/bench_banking77/load.py --master --apply
+export BANKING77_ENV=master      # run.py and ./do's load check then read master
+```
+
+Nothing but your own keys is needed: the data comes from PolyAI's and Clinc's
+public repositories, and `summarize.py` works on the committed runs with no
+credentials at all. Runs are resumable:
 re-running `./do bench-banking77` continues where it stopped. The run files keep
 every answer, so any number can be recomputed or re-cut without calling a model
 again.

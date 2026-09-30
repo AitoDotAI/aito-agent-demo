@@ -15,6 +15,7 @@ given, which is for a database of your own that holds nothing else.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 
 from common import DATASET, HERE, split
@@ -41,14 +42,16 @@ def main() -> int:
     from aito.v2 import Error
 
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--env", default=DATASET)
+    ap.add_argument("--env", default=os.environ.get("BANKING77_ENV", DATASET),
+                    help="branch environment to load into (default: BANKING77_ENV, else the dataset name)")
     ap.add_argument("--master", action="store_true", help="load into master (a database of your own only)")
     ap.add_argument("--apply", action="store_true", help="perform the writes (default: dry run)")
     ap.add_argument("--reload", action="store_true", help=f"drop and refill {COLLECTION} if it exists")
     ap.add_argument("--check", action="store_true", help="only check the training data is loaded, in full")
     args = ap.parse_args()
-    env = None if args.master else args.env.strip()
-    if env is not None and env.lower() in ("", "master", "env.master"):
+    wants_master = args.env.strip().lower() in ("", "master", "env.master")
+    env = None if (args.master or wants_master) else args.env.strip()
+    if env is None and not args.master and not args.check:
         sys.exit("refusing master: pass --master explicitly, and only for a database of your own")
 
     train, test, dropped = split()

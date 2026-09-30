@@ -17,18 +17,18 @@
   "note": "every arm is scored on these same queries, so the comparisons are paired"
  },
  "measured_at": "2026-09-30T09:22:14+00:00",
- "summarized_at": "2026-09-30T11:32:20+00:00",
+ "summarized_at": "2026-09-30T11:41:09+00:00",
  "run_files_last_written": {
-  "aito": "2026-09-30T11:31:18+00:00",
-  "aito_full": "2026-09-30T11:31:18+00:00",
-  "aito_llm.gpt-5-mini": "2026-09-30T11:31:18+00:00",
-  "aito_llm.gpt-6-luna": "2026-09-30T11:31:18+00:00",
-  "llm_rag.gpt-5-mini": "2026-09-30T11:31:18+00:00",
-  "llm_rag.gpt-5.4": "2026-09-30T11:31:18+00:00",
-  "llm_rag.gpt-6-luna": "2026-09-30T11:31:18+00:00",
-  "llm_zero.gpt-5-mini": "2026-09-30T11:31:18+00:00",
-  "llm_zero.gpt-5.4": "2026-09-30T11:31:18+00:00",
-  "llm_zero.gpt-6-luna": "2026-09-30T11:31:18+00:00"
+  "aito": "2026-09-30T11:34:11+00:00",
+  "aito_full": "2026-09-30T11:34:11+00:00",
+  "aito_llm.gpt-5-mini": "2026-09-30T11:34:12+00:00",
+  "aito_llm.gpt-6-luna": "2026-09-30T11:34:12+00:00",
+  "llm_rag.gpt-5-mini": "2026-09-30T11:34:12+00:00",
+  "llm_rag.gpt-5.4": "2026-09-30T11:34:12+00:00",
+  "llm_rag.gpt-6-luna": "2026-09-30T11:34:12+00:00",
+  "llm_zero.gpt-5-mini": "2026-09-30T11:34:12+00:00",
+  "llm_zero.gpt-5.4": "2026-09-30T11:34:12+00:00",
+  "llm_zero.gpt-6-luna": "2026-09-30T11:34:12+00:00"
  },
  "arms": {
   "aito": {

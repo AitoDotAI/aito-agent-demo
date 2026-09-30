@@ -183,13 +183,12 @@ def main() -> int:
     out["latency_client"] = os.environ.get("BENCH_CLIENT") or ("the maintainer's workstation; not a neutral client"
                                                                if RECORDED else "unknown: set BENCH_CLIENT")
     engine = RUNS / "engine.json"
-    from urllib.parse import urlparse
-    sys.path.insert(0, str(ROOT))
-    from src.config import load_config  # the repo's configuration, for the endpoint hosts
-    llm_url = os.environ.get("OPENAI_MODEL_URL")
-    out["endpoints"] = {"aito": f"{urlparse(load_config().aito_url).hostname}, Aito v2",
+    # recorded by run.py with the answers; a summary needs no credentials
+    recorded = RUNS / "endpoints.json"
+    where = json.loads(recorded.read_text()) if recorded.exists() else {"aito": "unknown", "llm": "unknown"}
+    out["endpoints"] = {"aito": where["aito"],
                         "aito_engine": json.loads(engine.read_text()) if engine.exists() else None,
-                        "llm": f"Azure OpenAI, {urlparse(llm_url).hostname}" if llm_url else "OpenAI"}
+                        "llm": where["llm"]}
     out["latency_note"] = ("wall time per query from the machine that ran run.py; Aito's calls ran one at a time, "
                            "the LLM's with --workers in parallel, each timed on its own. LLM time excludes "
                            "rate-limit backoff, which is reported per arm")
