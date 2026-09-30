@@ -1,0 +1,297 @@
+{
+ "what": "the recorded support benchmark (compare_modes) re-scored by whether a held-out ticket's wording also occurs in the loaded training data; no new model or Aito calls",
+ "caveat": "synthetic fixture with planted effects; gpt-5-mini; the novel split's Aito figures were seen in the 2026-09-30 audit before this script fixed the split",
+ "groups": {
+  "novel_text": {
+   "n": 134,
+   "arms": {
+    "aito_only": {
+     "all_five_right": 0.619,
+     "ci95": [
+      0.535,
+      0.697
+     ],
+     "per_decision": {
+      "product": 0.866,
+      "category": 0.903,
+      "priority": 0.784,
+      "resolution": 0.881,
+      "first_step": 0.873
+     }
+    },
+    "aito_plus_llm": {
+     "all_five_right": 0.597,
+     "ci95": [
+      0.512,
+      0.676
+     ],
+     "per_decision": {
+      "product": 0.91,
+      "category": 0.903,
+      "priority": 0.701,
+      "resolution": 0.888,
+      "first_step": 0.888
+     }
+    },
+    "llm_only": {
+     "all_five_right": 0.269,
+     "ci95": [
+      0.201,
+      0.349
+     ],
+     "per_decision": {
+      "product": 0.806,
+      "category": 0.851,
+      "priority": 0.56,
+      "resolution": 0.731,
+      "first_step": 0.799
+     }
+    },
+    "rag_llm": {
+     "all_five_right": 0.634,
+     "ci95": [
+      0.55,
+      0.711
+     ],
+     "per_decision": {
+      "product": 0.903,
+      "category": 0.918,
+      "priority": 0.739,
+      "resolution": 0.896,
+      "first_step": 0.925
+     }
+    },
+    "aito_shortlist_why_llm": {
+     "all_five_right": 0.634,
+     "ci95": [
+      0.55,
+      0.711
+     ],
+     "per_decision": {
+      "product": 0.896,
+      "category": 0.873,
+      "priority": 0.791,
+      "resolution": 0.858,
+      "first_step": 0.903
+     }
+    }
+   },
+   "paired_vs_aito_only": {
+    "aito_plus_llm": {
+     "only_aito_right": 14,
+     "only_other_right": 11,
+     "mcnemar_p": 0.69
+    },
+    "llm_only": {
+     "only_aito_right": 58,
+     "only_other_right": 11,
+     "mcnemar_p": 0.0
+    },
+    "rag_llm": {
+     "only_aito_right": 19,
+     "only_other_right": 21,
+     "mcnemar_p": 0.8746
+    },
+    "aito_shortlist_why_llm": {
+     "only_aito_right": 9,
+     "only_other_right": 11,
+     "mcnemar_p": 0.8238
+    }
+   }
+  },
+  "seen_text": {
+   "n": 166,
+   "arms": {
+    "aito_only": {
+     "all_five_right": 0.735,
+     "ci95": [
+      0.663,
+      0.796
+     ],
+     "per_decision": {
+      "product": 0.837,
+      "category": 0.994,
+      "priority": 0.928,
+      "resolution": 0.94,
+      "first_step": 0.994
+     }
+    },
+    "aito_plus_llm": {
+     "all_five_right": 0.608,
+     "ci95": [
+      0.533,
+      0.679
+     ],
+     "per_decision": {
+      "product": 0.843,
+      "category": 1.0,
+      "priority": 0.783,
+      "resolution": 0.928,
+      "first_step": 1.0
+     }
+    },
+    "llm_only": {
+     "all_five_right": 0.181,
+     "ci95": [
+      0.13,
+      0.246
+     ],
+     "per_decision": {
+      "product": 0.687,
+      "category": 0.867,
+      "priority": 0.524,
+      "resolution": 0.735,
+      "first_step": 0.886
+     }
+    },
+    "rag_llm": {
+     "all_five_right": 0.584,
+     "ci95": [
+      0.508,
+      0.657
+     ],
+     "per_decision": {
+      "product": 0.735,
+      "category": 1.0,
+      "priority": 0.849,
+      "resolution": 0.916,
+      "first_step": 0.994
+     }
+    },
+    "aito_shortlist_why_llm": {
+     "all_five_right": 0.627,
+     "ci95": [
+      0.551,
+      0.696
+     ],
+     "per_decision": {
+      "product": 0.801,
+      "category": 0.994,
+      "priority": 0.873,
+      "resolution": 0.922,
+      "first_step": 1.0
+     }
+    }
+   },
+   "paired_vs_aito_only": {
+    "aito_plus_llm": {
+     "only_aito_right": 28,
+     "only_other_right": 7,
+     "mcnemar_p": 0.0005
+    },
+    "llm_only": {
+     "only_aito_right": 98,
+     "only_other_right": 6,
+     "mcnemar_p": 0.0
+    },
+    "rag_llm": {
+     "only_aito_right": 38,
+     "only_other_right": 13,
+     "mcnemar_p": 0.0006
+    },
+    "aito_shortlist_why_llm": {
+     "only_aito_right": 28,
+     "only_other_right": 10,
+     "mcnemar_p": 0.0051
+    }
+   }
+  },
+  "all": {
+   "n": 300,
+   "arms": {
+    "aito_only": {
+     "all_five_right": 0.683,
+     "ci95": [
+      0.629,
+      0.733
+     ],
+     "per_decision": {
+      "product": 0.85,
+      "category": 0.953,
+      "priority": 0.863,
+      "resolution": 0.913,
+      "first_step": 0.94
+     }
+    },
+    "aito_plus_llm": {
+     "all_five_right": 0.603,
+     "ci95": [
+      0.547,
+      0.657
+     ],
+     "per_decision": {
+      "product": 0.873,
+      "category": 0.957,
+      "priority": 0.747,
+      "resolution": 0.91,
+      "first_step": 0.95
+     }
+    },
+    "llm_only": {
+     "all_five_right": 0.22,
+     "ci95": [
+      0.177,
+      0.27
+     ],
+     "per_decision": {
+      "product": 0.74,
+      "category": 0.86,
+      "priority": 0.54,
+      "resolution": 0.733,
+      "first_step": 0.847
+     }
+    },
+    "rag_llm": {
+     "all_five_right": 0.607,
+     "ci95": [
+      0.55,
+      0.66
+     ],
+     "per_decision": {
+      "product": 0.81,
+      "category": 0.963,
+      "priority": 0.8,
+      "resolution": 0.907,
+      "first_step": 0.963
+     }
+    },
+    "aito_shortlist_why_llm": {
+     "all_five_right": 0.63,
+     "ci95": [
+      0.574,
+      0.683
+     ],
+     "per_decision": {
+      "product": 0.843,
+      "category": 0.94,
+      "priority": 0.837,
+      "resolution": 0.893,
+      "first_step": 0.957
+     }
+    }
+   },
+   "paired_vs_aito_only": {
+    "aito_plus_llm": {
+     "only_aito_right": 42,
+     "only_other_right": 18,
+     "mcnemar_p": 0.0027
+    },
+    "llm_only": {
+     "only_aito_right": 156,
+     "only_other_right": 17,
+     "mcnemar_p": 0.0
+    },
+    "rag_llm": {
+     "only_aito_right": 57,
+     "only_other_right": 34,
+     "mcnemar_p": 0.0206
+    },
+    "aito_shortlist_why_llm": {
+     "only_aito_right": 37,
+     "only_other_right": 21,
+     "mcnemar_p": 0.0479
+    }
+   }
+  }
+ }
+}
