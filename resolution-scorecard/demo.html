@@ -126,7 +126,7 @@
       <div class="ch"><span class="tag">+ predictive layer</span><span class="nm">Aito</span>
         <div class="meters">
           <div class="meter"><div class="mv" id="aito_t">0.0s</div><div class="ml">elapsed</div></div>
-          <div class="meter"><div class="mv" id="aito_c">$0.000</div><div class="ml">llm cost</div></div>
+          <div class="meter"><div class="mv" id="aito_c">none</div><div class="ml">llm cost</div></div>
         </div>
       </div>
       <div class="steps" id="aitoSteps"></div>
@@ -183,7 +183,7 @@ function loadScenario(i){ sc=i; $('tmsg').textContent=SCEN[i].msg; $('tfrom').te
 function reset(){
   $('llmSteps').innerHTML=''; $('aitoSteps').innerHTML='';
   $('llm_t').textContent='0.0s'; $('aito_t').textContent='0.0s';
-  $('llm_c').textContent='$0.000'; $('aito_c').textContent='$0.000';
+  $('llm_c').textContent='$0.000'; $('aito_c').textContent='none';
   $('verdict').classList.remove('show');
   const S=SCEN[sc];
   S.steps.forEach((s,idx)=>{
@@ -211,7 +211,7 @@ async function play(){
       el.querySelector('.r').innerHTML=`<span class="pred">${S.preds[i][1]}</span><span class="pp">p≈0.9${6-i}</span>`;
     }
     $('aito_t').textContent=(aitoMs/1000).toFixed(2)+'s';
-    $('aito_c').textContent='$0.000';
+    $('aito_c').textContent='none';
   })();
   // LLM: sequential steps, timer + cost accumulate
   let elapsed=0, cost=0;
@@ -228,9 +228,9 @@ async function play(){
   // verdict
   const llmTotal=S.steps.length*stepMs;
   const speed=Math.round(llmTotal/aitoMs);
-  $('vbig').innerHTML=`Aito resolved the whole workflow in <span class="hl">${(aitoMs/1000).toFixed(2)}s</span> for <span class="hl">$0</span> — <span class="dim">the agent took ${(llmTotal/1000).toFixed(1)}s across ${S.steps.length} sequential calls.</span> About <span class="hl">${speed}× faster</span>, and free.`;
+  $('vbig').innerHTML=`Aito resolved the whole workflow in <span class="hl">${(aitoMs/1000).toFixed(2)}s</span> with <span class="hl">no LLM spend</span> — <span class="dim">the agent took ${(llmTotal/1000).toFixed(1)}s across ${S.steps.length} sequential calls.</span> About <span class="hl">${speed}× faster</span>, and free.`;
   $('k_speed').textContent=speed+'×'; $('k_speed_d').textContent=`${(aitoMs/1000).toFixed(2)}s vs ${(llmTotal/1000).toFixed(1)}s`;
-  $('k_cost').textContent='$0'; $('k_cost_d').textContent=`vs $${M.llmCostPer1000.toFixed(2)} (LLM)`;
+  $('k_cost').textContent='no LLM'; $('k_cost_d').textContent=`vs $${M.llmCostPer1000.toFixed(2)} (LLM)`;
   $('k_acc').textContent=(M.aitoAcc*100).toFixed(0)+'%'; $('k_acc_d').textContent=`LLM ${(M.llmAcc*100).toFixed(0)}% — a tie on quality`;
   $('k_auto').textContent=(M.autoRate*100).toFixed(0)+'%';
   $('verdict').classList.add('show');

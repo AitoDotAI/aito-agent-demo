@@ -45,7 +45,7 @@ the LLM agent measured on {s['n_llm_sample']}. LLM priced at ${s['price_in_per_m
 |---|---|---|
 | **better** — end-to-end accuracy | {af['end_to_end_acc']:.0%} (full {s['n_test']}) | {llm['end_to_end_acc']:.0%} (sample) |
 | **faster** — latency / resolution | **{aito_ms:.0f} ms** | ~{LLM_CLEAN_MS/1000:.1f} s / call |
-| **cheaper** — LLM $ / 1000 resolutions | **$0.00** | ${s['llm_cost_per_1000_usd']:.2f} ({s['llm_tokens_per_resolution']:.0f} tok/res) |
+| **cheaper** — LLM $ / 1000 resolutions | **none** (no LLM calls) | ${s['llm_cost_per_1000_usd']:.2f} ({s['llm_tokens_per_resolution']:.0f} tok/res) |
 | **hands-off** — auto-resolved at gate {s['gate']} | **{s['aito_auto_resolve_rate']:.0%}** | n/a (no calibrated abstain) |
 
 **Honest reading: accuracy is a tie ({af['end_to_end_acc']:.0%} vs {llm['end_to_end_acc']:.0%}).** This data is clean enough that
@@ -110,7 +110,7 @@ weighting, TTL-style windows. That — not cold start — is the risk to manage.
   limit, 78 back-to-back calls measured a p50 of ~{throttled_ms/1000:.0f}s. We headline the conservative ~{LLM_CLEAN_MS/1000:.1f}s
   and do **not** exploit the throttle. Aito's {aito_ms:.0f}ms is the measured round-trip for two `_predict`s.
 - **Cost is modest per ticket for a mini model** (${s['llm_cost_per_1000_usd']:.2f}/1000); it grows with workflow
-  length, model size (Opus-class is ~40× the token price), and volume — while Aito stays $0 LLM.
+  length, model size (Opus-class is ~40× the token price), and volume — while Aito has no LLM spend (it has its own compute cost).
 - The LLM baseline is a **single structured call** (best case). A real tool-calling agent chains
   round-trips, so its true latency/cost are higher — the gap shown is a lower bound.
 - Synthetic, seeded data; phrasing uses aliases, not canonical tokens. The transferable result is the

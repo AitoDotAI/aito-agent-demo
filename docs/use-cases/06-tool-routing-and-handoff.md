@@ -26,8 +26,11 @@ POST /api/v2/_predict
 // → a 5-tool short-list, ranked by calibrated probability
 ```
 
-Same answer, **~16× fewer tokens**, lower latency — and when Aito is
-confident enough, the LLM isn't needed at all. Backend: `GET /api/route`
+**~17× fewer input tokens** (median 3,829 → 225 on 20 fixed test tickets, gpt-5-mini;
+`telco-tool-routing-bench/results/shortlist_live.json`, re-measured on engine 2.11.0 in
+`shortlist_live.rerun-2026-09-30.json` with the same token counts) and a better pick: 20 of 20
+right from the shortlist, 13–15 of 20 from the full catalog. When Aito is confident
+enough, the LLM isn't needed at all. Backend: `POST /api/route`
 in `src/app.py` runs the LLM over the full catalog and over Aito's
 short-list, so the UI can show the token/latency gap directly. The view
 makes the augment thesis literal: *the same model, two ways*.

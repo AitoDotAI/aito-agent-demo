@@ -106,7 +106,7 @@ export function AugmentView({ onAito }: { onAito?: (ms: number | null) => void }
               <div className="rc-act">{coop.tool}() {full && coop.tool === full.tool && <span style={{ color: "var(--rc-green-ink)", fontSize: 12 }}>· same answer ✓</span>}</div>
               <div className="rc-meta">{coop.n_tools} tools in prompt · <b style={{ color: "var(--turq)" }}>{coop.tokens} tokens</b> · ${coop.cost_usd.toFixed(5)} · {coop.latency_ms.toFixed(0)}ms</div>
               <div style={{ marginTop: 12, fontSize: 11.5, color: "var(--rc-faint)", lineHeight: 1.5, borderTop: "1px dashed var(--rc-line)", paddingTop: 10 }}>
-                Same LLM, same answer, but {tokFactor ?? "many"}× fewer tokens and grounded in Aito&apos;s calibrated shortlist. {top != null && top >= 0.9 ? "Here Aito's top confidence clears the gate, so you could skip this call entirely." : ""}
+                Same LLM, {full && coop.tool === full.tool ? "same answer" : "a different pick"}, {tokFactor ?? "many"}× fewer tokens, grounded in Aito&apos;s calibrated shortlist. {top != null && top >= 0.9 ? "Here Aito's top confidence clears the gate, so you could skip this call entirely." : ""}
               </div>
             </>)}
           </div>

@@ -6,7 +6,7 @@
 A support ticket arrives. The view resolves it **two ways at once**, side
 by side: a live LLM agent reasons the answer out (seconds, tokens, a
 dollar cost), while Aito reads the answer straight from 4,000 past
-`resolutions` (two `_predict` calls, sub-second, $0, with a calibrated
+`resolutions` (two `_predict` calls, sub-second, no LLM spend, with a calibrated
 `$why`). The point is the gap.
 
 ## The data
@@ -47,9 +47,9 @@ state, then shows the resolved action, token count, latency, and dollar
 cost — and a note that it asserts without calibrated confidence or
 evidence. The **Aito** column shows the predicted intent + parameter as
 `PredictionBadge`s with confidence bars, the `$why` cards (verifiable from
-history), and `0 model calls · $0`. A KPI strip across the top shows Aito
+history), and `0 model calls · no LLM spend`. A KPI strip across the top shows Aito
 latency, LLM latency, the **speed-up** (often 100×+), and LLM cost per
-resolution vs Aito's $0.
+resolution vs Aito's none (Aito has its own compute cost, not LLM spend).
 
 ## The framing: a predictive cache in front of the LLM
 

@@ -1,0 +1,340 @@
+{
+ "measured_at": "2026-09-30T11:39:40+00:00",
+ "engine": {
+  "name": "aitoai",
+  "version": "2.11.0",
+  "gitRevision": "03b4c2ed76480afd3e3d00dc2541639551400f6c",
+  "builtAt": "2026-09-29T04:50:43.457579355Z"
+ },
+ "api_version": "v2",
+ "model": "gpt-5-mini",
+ "n": 20,
+ "median_full_input_tokens": 3829.0,
+ "median_coop_input_tokens": 225.0,
+ "ratio": 17.0,
+ "same_pick": 15,
+ "full_correct": 15,
+ "coop_correct": 20,
+ "rows": [
+  {
+   "id": "TK-1593",
+   "gold": "activate_sim",
+   "full_input_tokens": 3827,
+   "full_pick": "activate_sim",
+   "coop_input_tokens": 223,
+   "coop_pick": "activate_sim",
+   "shortlist": [
+    "activate_sim",
+    "check_invoice",
+    "check_roaming",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1041",
+   "gold": "activate_sim",
+   "full_input_tokens": 3825,
+   "full_pick": "activate_sim",
+   "coop_input_tokens": 221,
+   "coop_pick": "activate_sim",
+   "shortlist": [
+    "activate_sim",
+    "check_invoice",
+    "check_roaming",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1135",
+   "gold": "activate_sim",
+   "full_input_tokens": 3829,
+   "full_pick": "activate_sim",
+   "coop_input_tokens": 225,
+   "coop_pick": "activate_sim",
+   "shortlist": [
+    "activate_sim",
+    "check_invoice",
+    "check_roaming",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1683",
+   "gold": "activate_sim",
+   "full_input_tokens": 3825,
+   "full_pick": "activate_sim",
+   "coop_input_tokens": 221,
+   "coop_pick": "activate_sim",
+   "shortlist": [
+    "activate_sim",
+    "check_invoice",
+    "check_roaming",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1884",
+   "gold": "activate_sim",
+   "full_input_tokens": 3830,
+   "full_pick": "activate_sim",
+   "coop_input_tokens": 226,
+   "coop_pick": "activate_sim",
+   "shortlist": [
+    "activate_sim",
+    "check_invoice",
+    "check_roaming",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1420",
+   "gold": "activate_sim",
+   "full_input_tokens": 3830,
+   "full_pick": "activate_sim",
+   "coop_input_tokens": 226,
+   "coop_pick": "activate_sim",
+   "shortlist": [
+    "activate_sim",
+    "check_invoice",
+    "check_roaming",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1185",
+   "gold": "check_invoice",
+   "full_input_tokens": 3831,
+   "full_pick": "issue_refund",
+   "coop_input_tokens": 227,
+   "coop_pick": "check_invoice",
+   "shortlist": [
+    "check_invoice",
+    "activate_sim",
+    "check_roaming",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1247",
+   "gold": "check_invoice",
+   "full_input_tokens": 3829,
+   "full_pick": "check_invoice",
+   "coop_input_tokens": 225,
+   "coop_pick": "check_invoice",
+   "shortlist": [
+    "check_invoice",
+    "activate_sim",
+    "check_roaming",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1067",
+   "gold": "check_invoice",
+   "full_input_tokens": 3829,
+   "full_pick": "issue_refund",
+   "coop_input_tokens": 225,
+   "coop_pick": "check_invoice",
+   "shortlist": [
+    "check_invoice",
+    "activate_sim",
+    "check_roaming",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1558",
+   "gold": "check_invoice",
+   "full_input_tokens": 3831,
+   "full_pick": "check_invoice",
+   "coop_input_tokens": 227,
+   "coop_pick": "check_invoice",
+   "shortlist": [
+    "check_invoice",
+    "activate_sim",
+    "check_roaming",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1665",
+   "gold": "check_invoice",
+   "full_input_tokens": 3828,
+   "full_pick": "check_invoice",
+   "coop_input_tokens": 224,
+   "coop_pick": "check_invoice",
+   "shortlist": [
+    "check_invoice",
+    "activate_sim",
+    "check_roaming",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1614",
+   "gold": "check_invoice",
+   "full_input_tokens": 3827,
+   "full_pick": "check_invoice",
+   "coop_input_tokens": 223,
+   "coop_pick": "check_invoice",
+   "shortlist": [
+    "check_invoice",
+    "activate_sim",
+    "check_roaming",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1204",
+   "gold": "check_roaming",
+   "full_input_tokens": 3835,
+   "full_pick": "enable_roaming",
+   "coop_input_tokens": 231,
+   "coop_pick": "check_roaming",
+   "shortlist": [
+    "check_roaming",
+    "activate_sim",
+    "check_invoice",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1870",
+   "gold": "check_roaming",
+   "full_input_tokens": 3835,
+   "full_pick": "enable_roaming",
+   "coop_input_tokens": 231,
+   "coop_pick": "check_roaming",
+   "shortlist": [
+    "check_roaming",
+    "activate_sim",
+    "check_invoice",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1346",
+   "gold": "check_roaming",
+   "full_input_tokens": 3826,
+   "full_pick": "check_roaming",
+   "coop_input_tokens": 222,
+   "coop_pick": "check_roaming",
+   "shortlist": [
+    "check_roaming",
+    "activate_sim",
+    "check_invoice",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1382",
+   "gold": "check_roaming",
+   "full_input_tokens": 3834,
+   "full_pick": "enable_roaming",
+   "coop_input_tokens": 230,
+   "coop_pick": "check_roaming",
+   "shortlist": [
+    "check_roaming",
+    "activate_sim",
+    "check_invoice",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1760",
+   "gold": "check_roaming",
+   "full_input_tokens": 3834,
+   "full_pick": "check_roaming",
+   "coop_input_tokens": 230,
+   "coop_pick": "check_roaming",
+   "shortlist": [
+    "check_roaming",
+    "activate_sim",
+    "check_invoice",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1663",
+   "gold": "check_roaming",
+   "full_input_tokens": 3829,
+   "full_pick": "check_roaming",
+   "coop_input_tokens": 225,
+   "coop_pick": "check_roaming",
+   "shortlist": [
+    "check_roaming",
+    "activate_sim",
+    "check_invoice",
+    "check_stock",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1531",
+   "gold": "check_stock",
+   "full_input_tokens": 3831,
+   "full_pick": "check_stock",
+   "coop_input_tokens": 227,
+   "coop_pick": "check_stock",
+   "shortlist": [
+    "check_stock",
+    "activate_sim",
+    "check_invoice",
+    "check_roaming",
+    "create_order"
+   ],
+   "catalog_size": 240
+  },
+  {
+   "id": "TK-1553",
+   "gold": "check_stock",
+   "full_input_tokens": 3828,
+   "full_pick": "check_stock",
+   "coop_input_tokens": 224,
+   "coop_pick": "check_stock",
+   "shortlist": [
+    "check_stock",
+    "activate_sim",
+    "check_invoice",
+    "check_roaming",
+    "create_order"
+   ],
+   "catalog_size": 240
+  }
+ ]
+}

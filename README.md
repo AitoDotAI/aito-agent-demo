@@ -125,8 +125,8 @@ Tables: **`resolutions`** (4,000 resolved tickets) · **`tool_calls`** (a
 
 | Surface | What it does | Ops |
 |---------|--------------|-----|
-| **Ticket resolution** | The same ticket resolved two ways, side by side: a live `gpt-5-mini` call (seconds, tokens) vs. two `_predict` calls (sub-second, $0, with a calibrated `$why`). The response-rate gap, live. | `_predict` ×2 vs LLM |
-| **Tool routing · short-list** | `_predict` narrows the 240-tool catalog to the ~5 that fit, so the LLM picks from 5 not 240 — smaller prompt, same answer, ~16× fewer tokens. Aito *augments* the LLM, it doesn't replace it. | `_predict` short-list |
+| **Ticket resolution** | The same ticket resolved two ways, side by side: a live `gpt-5-mini` call (seconds, tokens) vs. two `_predict` calls (sub-second, no LLM spend, with a calibrated `$why`). The response-rate gap, live. | `_predict` ×2 vs LLM |
+| **Tool routing · short-list** | `_predict` narrows the 240-tool catalog to the ~5 that fit, so the LLM picks from 5 not 240: ~17× fewer input tokens (median 3,829 → 225 on 20 test tickets, `telco-tool-routing-bench/results/shortlist_live.json`), and the pick from the shortlist was right on 20 of 20 against 13–15 of 20 from the full catalog. Aito *augments* the LLM, it doesn't replace it. | `_predict` short-list |
 | **Human handoff** | Calibrated confidence as **governance**: `$p ≥ .85` auto-resolves, a borderline read is handed to a human, and anything sensitive (refund, cancel) is gated regardless. The number decides who acts. | `_predict` `$p` gate |
 
 → [docs/use-cases/05-ticket-resolution.md](docs/use-cases/05-ticket-resolution.md) ·
