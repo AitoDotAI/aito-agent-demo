@@ -17,12 +17,15 @@ import random
 import statistics as st
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 from common import RESULTS, SEED, ece, jsonl, labels, mcnemar, pct, sample, share, split
 from llm import PRICES
 
 RUNS = RESULTS / "runs"
-THRESHOLDS = [round(0.30 + 0.05 * i, 2) for i in range(14)]   # 0.30 .. 0.95
+#: the frozen gate rule (PREREGISTRATION.md); the code below implements exactly it
+RULE = json.loads((Path(__file__).resolve().parent / "gate_rule.json").read_text())
+THRESHOLDS = RULE["thresholds"]
 
 
 def arm_stats(rows: list[dict], qids: list[str]) -> dict:
@@ -92,7 +95,7 @@ def main() -> int:
 
     # gated: fit the threshold on one half, score it on the other
     order = picked[:]
-    random.Random(SEED).shuffle(order)
+    random.Random(RULE["split_seed"]).shuffle(order)
     fit, hold = sorted(order[: len(order) // 2]), sorted(order[len(order) // 2:])
     out["gated"] = {}
     # planned: Aito when sure, else Aito's shortlist to the LLM. Added after the first results
