@@ -3,7 +3,7 @@
 A reproducible benchmark: how accurate, fast and token-hungry an intent decision
 is with Aito alone, with an LLM alone, with an LLM plus retrieval (RAG), and with
 Aito and an LLM together. Every number on the benchmark page comes from
-`results/banking77.json`, which `summarize.py` writes from the per-query run
+`results/banking77.json` (read as prose in `RESULTS.md`), which `summarize.py` writes from the per-query run
 files in `results/runs/`.
 
 ## The data
@@ -30,7 +30,8 @@ sha256 hashes.
 | `llm_zero.<model>` | the LLM | the 77 intent labels and the message |
 | `llm_rag.<model>` | the LLM | the labels, the message, and the 10 most similar training messages with their intents (text-embedding-3-large, 256 dimensions, cosine) |
 | `aito_llm.<model>` | the LLM | the labels, the message, Aito's top 5 intents with their probabilities, and the words behind the top one (`$why`); it may overrule Aito |
-| gated | Aito, or `aito_llm` when Aito's probability is below a threshold | the threshold is chosen on one half of the sample and scored on the other |
+| gated (planned) | Aito, or `aito_llm` when Aito's probability is below a threshold | the threshold is chosen on one half of the sample and scored on the other |
+| gated, RAG fallback (post hoc) | Aito, or `llm_rag` below the threshold | the same, added after the first results were seen, so labelled post hoc |
 
 Models: gpt-5-mini and gpt-5.4 (Azure OpenAI). The prompts are in `run.py`.
 

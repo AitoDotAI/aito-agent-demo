@@ -8,13 +8,15 @@ import csv
 import hashlib
 import json
 import math
+import os
 import random
 from collections import defaultdict
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent.parent  # the repo
 DATA = HERE / "data"          # downloaded, not committed (see .gitignore)
-RESULTS = HERE / "results"    # committed: every number the page shows comes from here
+RESULTS = Path(os.environ["BANKING77_RESULTS"]) if os.environ.get("BANKING77_RESULTS") else HERE / "results"  # committed: every number the page shows comes from here
 
 #: PolyAI's banking77 (CC BY 4.0), pinned by content
 SOURCE = "https://raw.githubusercontent.com/PolyAI-LDN/task-specific-datasets/master/banking_data"

@@ -26,7 +26,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from common import RESULTS, jsonl, labels, sample, split
+from common import RESULTS, ROOT, jsonl, labels, sample, split
 
 RUNS = RESULTS / "runs"
 K_RAG = 10
@@ -51,9 +51,13 @@ def _words(why) -> str:
     def walk(n):
         if isinstance(n, dict):
             if n.get("type") == "relatedPropositionLift":
-                prop = json.dumps(n.get("proposition", {}))
-                for w in __import__("re").findall(r'"\$has": "([^"]+)"', prop):
-                    found.append((float(n.get("value", 1.0)), w))
+                # {"text": "refund"}, or a $group of such words: "but + I"
+                prop = n.get("proposition", {})
+                parts = prop.get("$group", [prop]) if isinstance(prop, dict) else []
+                words = [p.get("text") for p in parts if isinstance(p, dict) and isinstance(p.get("text"), str)]
+                if words:
+                    found.append((float(n.get("value", 1.0)), " + ".join(words)))
+                return
             for v in n.values():
                 walk(v)
         elif isinstance(n, list):
@@ -66,10 +70,9 @@ def _words(why) -> str:
 
 def aito_arm(c, coll, q: dict) -> dict:
     t0 = time.perf_counter()
-    r = c.predict({"from": coll, "where": {"text": q["text"]}, "predict": "intent", "limit": K_AITO,
-                   "select": ["$p", "feature", "$why"]})
+    r = c.predict(coll, "intent", where={"text": q["text"]}, limit=K_AITO, select=["$p", "feature", "$why"])
     ms = (time.perf_counter() - t0) * 1000
-    hits = r.get("hits") or []
+    hits = (r["hits"] if not hasattr(r, "hits") else r.hits) or []
     top = [{"intent": h.get("feature"), "p": round(float(h["$p"]), 4)} for h in hits]
     return {"pred": top[0]["intent"] if top else None, "p": top[0]["p"] if top else None, "top": top,
             "why": _words(hits[0].get("$why")) if hits else "", "ms": round(ms, 1)}
@@ -99,7 +102,7 @@ def llm_arm(model: str, q: dict, allowed: list[str], examples=None, aito=None, e
 
 
 def main() -> int:
-    sys.path.insert(0, str(RESULTS.parent.parent.parent))
+    sys.path.insert(0, str(ROOT))
     import src.config  # noqa: F401  (loads .env: Aito and the LLM endpoint)
 
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
@@ -117,6 +120,15 @@ def main() -> int:
     RUNS.mkdir(parents=True, exist_ok=True)
     needs_aito = {"aito_full", "aito", "aito_llm"} & set(args.arms)
     c, coll = _aito() if needs_aito else (None, None)
+    if c is not None:
+        v = c.get_version()
+        meta = RUNS / "engine.json"
+        seen = json.loads(meta.read_text()) if meta.exists() else []
+        version = v.get("version") if isinstance(v, dict) else str(v)
+        if not seen or seen[-1]["version"] != version:
+            seen.append({"version": version, "git": v.get("gitRevision") if isinstance(v, dict) else None,
+                         "first_seen": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
+            meta.write_text(json.dumps(seen, indent=1) + "\n")
     lock = threading.Lock()
 
     def run(name: str, queries: list[dict], fn, workers: int):

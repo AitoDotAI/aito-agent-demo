@@ -1,0 +1,503 @@
+{
+ "benchmark": "banking77 intent classification (77 intents), Aito vs LLMs, paired on one sample",
+ "dataset": {
+  "name": "banking77",
+  "source": "PolyAI, https://github.com/PolyAI-LDN/task-specific-datasets",
+  "license": "CC BY 4.0",
+  "train": 10003,
+  "test": 3080,
+  "test_scored": 3073,
+  "excluded_test_texts_also_in_train": 7,
+  "labels": 77
+ },
+ "sample": {
+  "per_intent": 8,
+  "n": 616,
+  "seed": 77,
+  "note": "every arm is scored on these same queries, so the comparisons are paired"
+ },
+ "measured_at": "2026-09-30T08:48:16+00:00",
+ "arms": {
+  "aito": {
+   "n": 616,
+   "right": 518,
+   "accuracy": 0.8409,
+   "ci95": [
+    0.8099,
+    0.8677
+   ],
+   "latency_ms": {
+    "p50": 67.3,
+    "p95": 124.5,
+    "mean": 75.3
+   },
+   "llm": {
+    "calls_per_query": 0.0,
+    "tokens_per_query": 0,
+    "usd_per_1000_queries": 0.0
+   }
+  },
+  "aito_llm.gpt-5-mini": {
+   "n": 616,
+   "right": 535,
+   "accuracy": 0.8685,
+   "ci95": [
+    0.8395,
+    0.8929
+   ],
+   "latency_ms": {
+    "p50": 1953.5,
+    "p95": 3601.0,
+    "mean": 2118.0
+   },
+   "llm": {
+    "calls_per_query": 1.0,
+    "tokens_per_query": 579,
+    "input_tokens_per_query": 543,
+    "output_tokens_per_query": 36,
+    "usd_per_1000_queries": 0.207,
+    "invalid_label_answers": 1,
+    "rate_limit_backoff_ms_total": 1034000
+   }
+  },
+  "aito_llm.gpt-5.4": {
+   "n": 616,
+   "right": 562,
+   "accuracy": 0.9123,
+   "ci95": [
+    0.8874,
+    0.9322
+   ],
+   "latency_ms": {
+    "p50": 1312.7,
+    "p95": 2804.3,
+    "mean": 1496.3
+   },
+   "llm": {
+    "calls_per_query": 1.0,
+    "tokens_per_query": 587,
+    "input_tokens_per_query": 543,
+    "output_tokens_per_query": 44,
+    "usd_per_1000_queries": null,
+    "invalid_label_answers": 0,
+    "rate_limit_backoff_ms_total": 0
+   }
+  },
+  "llm_rag.gpt-5-mini": {
+   "n": 616,
+   "right": 582,
+   "accuracy": 0.9448,
+   "ci95": [
+    0.9239,
+    0.9602
+   ],
+   "latency_ms": {
+    "p50": 1935.4,
+    "p95": 3546.3,
+    "mean": 2069.0
+   },
+   "llm": {
+    "calls_per_query": 1.0,
+    "tokens_per_query": 684,
+    "input_tokens_per_query": 658,
+    "output_tokens_per_query": 26,
+    "usd_per_1000_queries": 0.216,
+    "invalid_label_answers": 0,
+    "rate_limit_backoff_ms_total": 828000
+   }
+  },
+  "llm_rag.gpt-5.4": {
+   "n": 616,
+   "right": 586,
+   "accuracy": 0.9513,
+   "ci95": [
+    0.9313,
+    0.9657
+   ],
+   "latency_ms": {
+    "p50": 1277.7,
+    "p95": 2397.7,
+    "mean": 1409.8
+   },
+   "llm": {
+    "calls_per_query": 1.0,
+    "tokens_per_query": 692,
+    "input_tokens_per_query": 658,
+    "output_tokens_per_query": 34,
+    "usd_per_1000_queries": null,
+    "invalid_label_answers": 0,
+    "rate_limit_backoff_ms_total": 0
+   }
+  },
+  "llm_zero.gpt-5-mini": {
+   "n": 616,
+   "right": 482,
+   "accuracy": 0.7825,
+   "ci95": [
+    0.7482,
+    0.8132
+   ],
+   "latency_ms": {
+    "p50": 1857.9,
+    "p95": 3670.1,
+    "mean": 2020.1
+   },
+   "llm": {
+    "calls_per_query": 1.0,
+    "tokens_per_query": 493,
+    "input_tokens_per_query": 448,
+    "output_tokens_per_query": 45,
+    "usd_per_1000_queries": 0.202,
+    "invalid_label_answers": 0,
+    "rate_limit_backoff_ms_total": 932000
+   }
+  },
+  "llm_zero.gpt-5.4": {
+   "n": 616,
+   "right": 522,
+   "accuracy": 0.8474,
+   "ci95": [
+    0.8169,
+    0.8736
+   ],
+   "latency_ms": {
+    "p50": 1340.5,
+    "p95": 2841.1,
+    "mean": 1533.2
+   },
+   "llm": {
+    "calls_per_query": 1.0,
+    "tokens_per_query": 500,
+    "input_tokens_per_query": 448,
+    "output_tokens_per_query": 52,
+    "usd_per_1000_queries": null,
+    "invalid_label_answers": 0,
+    "rate_limit_backoff_ms_total": 0
+   }
+  }
+ },
+ "aito_full_test": {
+  "n": 3073,
+  "right": 2609,
+  "accuracy": 0.849,
+  "ci95": [
+   0.8359,
+   0.8612
+  ],
+  "top5_contains_answer": {
+   "n": 3073,
+   "right": 2993,
+   "accuracy": 0.974,
+   "ci95": [
+    0.9677,
+    0.979
+   ]
+  },
+  "calibration": {
+   "ece": 0.0177,
+   "bins": [
+    {
+     "bin": "0.0-0.1",
+     "n": 3,
+     "stated": 0.081,
+     "right": 0.0
+    },
+    {
+     "bin": "0.1-0.2",
+     "n": 23,
+     "stated": 0.164,
+     "right": 0.261
+    },
+    {
+     "bin": "0.2-0.3",
+     "n": 70,
+     "stated": 0.254,
+     "right": 0.314
+    },
+    {
+     "bin": "0.3-0.4",
+     "n": 107,
+     "stated": 0.357,
+     "right": 0.43
+    },
+    {
+     "bin": "0.4-0.5",
+     "n": 159,
+     "stated": 0.452,
+     "right": 0.541
+    },
+    {
+     "bin": "0.5-0.6",
+     "n": 197,
+     "stated": 0.552,
+     "right": 0.579
+    },
+    {
+     "bin": "0.6-0.7",
+     "n": 174,
+     "stated": 0.652,
+     "right": 0.707
+    },
+    {
+     "bin": "0.7-0.8",
+     "n": 196,
+     "stated": 0.754,
+     "right": 0.781
+    },
+    {
+     "bin": "0.8-0.9",
+     "n": 278,
+     "stated": 0.857,
+     "right": 0.845
+    },
+    {
+     "bin": "0.9-1.0",
+     "n": 1866,
+     "stated": 0.976,
+     "right": 0.977
+    }
+   ]
+  }
+ },
+ "paired_vs_aito": {
+  "aito_llm.gpt-5-mini": {
+   "only_first_right": 40,
+   "only_second_right": 57,
+   "p": 0.103769
+  },
+  "aito_llm.gpt-5.4": {
+   "only_first_right": 16,
+   "only_second_right": 60,
+   "p": 0.0
+  },
+  "llm_rag.gpt-5-mini": {
+   "only_first_right": 11,
+   "only_second_right": 75,
+   "p": 0.0
+  },
+  "llm_rag.gpt-5.4": {
+   "only_first_right": 9,
+   "only_second_right": 77,
+   "p": 0.0
+  },
+  "llm_zero.gpt-5-mini": {
+   "only_first_right": 88,
+   "only_second_right": 52,
+   "p": 0.002959
+  },
+  "llm_zero.gpt-5.4": {
+   "only_first_right": 54,
+   "only_second_right": 58,
+   "p": 0.776965
+  },
+  "bonferroni_threshold": 0.00833,
+  "note": "only_first_right = Aito right, the other wrong. A p below the threshold is a difference at this n; above it, it is not shown."
+ },
+ "gated": {
+  "aito_then_shortlist_llm.gpt-5-mini": {
+   "planned": true,
+   "threshold_fit_on": 308,
+   "threshold": 0.9,
+   "scored_on": 308,
+   "n": 308,
+   "right": 270,
+   "accuracy": 0.8766,
+   "ci95": [
+    0.8352,
+    0.9088
+   ],
+   "share_calling_llm": 0.403,
+   "aito_only_same_half": {
+    "n": 308,
+    "right": 255,
+    "accuracy": 0.8279,
+    "ci95": [
+     0.7818,
+     0.866
+    ]
+   },
+   "paired_vs_aito_same_half": {
+    "only_first_right": 11,
+    "only_second_right": 26,
+    "p": 0.020074
+   },
+   "fallback_alone_same_half": {
+    "n": 308,
+    "right": 264,
+    "accuracy": 0.8571,
+    "ci95": [
+     0.8137,
+     0.8918
+    ]
+   },
+   "paired_vs_fallback_alone_same_half": {
+    "only_first_right": 4,
+    "only_second_right": 10,
+    "p": 0.179565
+   },
+   "median_latency_ms": 88.5,
+   "p95_latency_ms": 3440.3
+  },
+  "aito_then_shortlist_llm.gpt-5.4": {
+   "planned": true,
+   "threshold_fit_on": 308,
+   "threshold": 0.95,
+   "scored_on": 308,
+   "n": 308,
+   "right": 278,
+   "accuracy": 0.9026,
+   "ci95": [
+    0.8644,
+    0.9309
+   ],
+   "share_calling_llm": 0.497,
+   "aito_only_same_half": {
+    "n": 308,
+    "right": 255,
+    "accuracy": 0.8279,
+    "ci95": [
+     0.7818,
+     0.866
+    ]
+   },
+   "paired_vs_aito_same_half": {
+    "only_first_right": 5,
+    "only_second_right": 28,
+    "p": 6.6e-05
+   },
+   "fallback_alone_same_half": {
+    "n": 308,
+    "right": 278,
+    "accuracy": 0.9026,
+    "ci95": [
+     0.8644,
+     0.9309
+    ]
+   },
+   "paired_vs_fallback_alone_same_half": {
+    "only_first_right": 1,
+    "only_second_right": 1,
+    "p": 1.0
+   },
+   "median_latency_ms": 192.0,
+   "p95_latency_ms": 2692.6
+  },
+  "aito_then_rag_llm.gpt-5-mini": {
+   "planned": false,
+   "threshold_fit_on": 308,
+   "threshold": 0.95,
+   "scored_on": 308,
+   "n": 308,
+   "right": 287,
+   "accuracy": 0.9318,
+   "ci95": [
+    0.898,
+    0.955
+   ],
+   "share_calling_llm": 0.497,
+   "aito_only_same_half": {
+    "n": 308,
+    "right": 255,
+    "accuracy": 0.8279,
+    "ci95": [
+     0.7818,
+     0.866
+    ]
+   },
+   "paired_vs_aito_same_half": {
+    "only_first_right": 6,
+    "only_second_right": 38,
+    "p": 1e-06
+   },
+   "fallback_alone_same_half": {
+    "n": 308,
+    "right": 288,
+    "accuracy": 0.9351,
+    "ci95": [
+     0.9018,
+     0.9576
+    ]
+   },
+   "paired_vs_fallback_alone_same_half": {
+    "only_first_right": 1,
+    "only_second_right": 0,
+    "p": 1.0
+   },
+   "median_latency_ms": 192.0,
+   "p95_latency_ms": 3298.2
+  },
+  "aito_then_rag_llm.gpt-5.4": {
+   "planned": false,
+   "threshold_fit_on": 308,
+   "threshold": 0.9,
+   "scored_on": 308,
+   "n": 308,
+   "right": 287,
+   "accuracy": 0.9318,
+   "ci95": [
+    0.898,
+    0.955
+   ],
+   "share_calling_llm": 0.403,
+   "aito_only_same_half": {
+    "n": 308,
+    "right": 255,
+    "accuracy": 0.8279,
+    "ci95": [
+     0.7818,
+     0.866
+    ]
+   },
+   "paired_vs_aito_same_half": {
+    "only_first_right": 3,
+    "only_second_right": 35,
+    "p": 0.0
+   },
+   "fallback_alone_same_half": {
+    "n": 308,
+    "right": 289,
+    "accuracy": 0.9383,
+    "ci95": [
+     0.9057,
+     0.9602
+    ]
+   },
+   "paired_vs_fallback_alone_same_half": {
+    "only_first_right": 4,
+    "only_second_right": 2,
+    "p": 0.6875
+   },
+   "median_latency_ms": 88.5,
+   "p95_latency_ms": 2270.9
+  }
+ },
+ "prices": {
+  "gpt-5-mini": {
+   "in": 0.25,
+   "out": 2.0,
+   "source": "gpt-5-mini list price, as in src/llm_agent.py (PRICE_IN/PRICE_OUT); check it against your provider"
+  }
+ },
+ "rag_retriever": {
+  "model": "text-embedding-3-large",
+  "dimensions": 256,
+  "training_queries": 10003,
+  "tokens": 136666,
+  "k": 10,
+  "latency_note": "the RAG arm's latency counts the query's embedding call and the LLM call; the vector search itself ran in pure Python here and is left out, since a vector database does it in milliseconds"
+ },
+ "latency_client": "the maintainer's workstation; not a neutral client",
+ "endpoints": {
+  "aito": "shared.aito.ai, Aito v2",
+  "aito_engine": [
+   {
+    "version": "2.11.0",
+    "git": "03b4c2ed76480afd3e3d00dc2541639551400f6c",
+    "first_seen": "2026-09-30T08:48:15Z"
+   }
+  ],
+  "llm": "Azure OpenAI, Sweden Central"
+ },
+ "latency_note": "wall time per query from the machine that ran run.py; Aito's calls ran one at a time, the LLM's with --workers in parallel, each timed on its own. LLM time excludes rate-limit backoff, which is reported per arm",
+ "cost_note": "LLM spend only, at the listed prices. Aito has its own compute and licence cost, which is not LLM spend; say 'no LLM spend / 0 tokens', never '$0'"
+}

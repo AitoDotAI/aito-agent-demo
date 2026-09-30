@@ -13,7 +13,7 @@ import json
 import math
 import sys
 
-from common import DATA, RESULTS, split
+from common import DATA, RESULTS, ROOT, split
 
 EMBED_MODEL = "text-embedding-3-large"
 DIMENSIONS = 256
@@ -42,7 +42,7 @@ def nearest(q: list[float], vectors: list[list[float]], k: int) -> list[int]:
 
 
 def main() -> int:
-    sys.path.insert(0, str(DATA.parent.parent.parent))
+    sys.path.insert(0, str(ROOT))
     import src.config  # noqa: F401  (loads .env for the LLM endpoint, like the rest of the repo)
     from llm import embed
 

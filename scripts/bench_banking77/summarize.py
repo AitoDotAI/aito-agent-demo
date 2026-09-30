@@ -12,6 +12,7 @@ and scored on the other, so it is not fitted to the queries it is scored on.
 from __future__ import annotations
 
 import json
+import os
 import random
 import statistics as st
 import sys
@@ -94,17 +95,26 @@ def main() -> int:
     random.Random(SEED).shuffle(order)
     fit, hold = sorted(order[: len(order) // 2]), sorted(order[len(order) // 2:])
     out["gated"] = {}
+    # planned: Aito when sure, else Aito's shortlist to the LLM. Added after the first results
+    # (post hoc, labelled so): Aito when sure, else LLM + RAG. Neither makes a call of its own.
     for name, coop in arms.items():
-        if not name.startswith("aito_llm."):
+        if not name.startswith(("aito_llm.", "llm_rag.")):
             continue
         best = max(THRESHOLDS, key=lambda t: (sum(gated(aito, coop, fit, t)), -t))
         right = gated(aito, coop, hold, best)
         calls = sum(aito[q]["p"] < best for q in hold) / len(hold)
-        out["gated"][name.replace("aito_llm.", "")] = {
+        kind, model = name.split(".", 1)
+        out["gated"][f"aito_then_{'shortlist_llm' if kind == 'aito_llm' else 'rag_llm'}.{model}"] = {
+            "planned": kind == "aito_llm",
             "threshold_fit_on": len(fit), "threshold": best, "scored_on": len(hold), **share(right),
             "share_calling_llm": round(calls, 3),
             "aito_only_same_half": share([aito[q]["pred"] == aito[q]["gold"] for q in hold]),
-            "paired_vs_aito_same_half": mcnemar([aito[q]["pred"] == aito[q]["gold"] for q in hold], right)}
+            "paired_vs_aito_same_half": mcnemar([aito[q]["pred"] == aito[q]["gold"] for q in hold], right),
+            # against the LLM arm it falls back to, alone on the same half: what gating costs in accuracy
+            "fallback_alone_same_half": share([coop[q]["pred"] == coop[q]["gold"] for q in hold]),
+            "paired_vs_fallback_alone_same_half": mcnemar([coop[q]["pred"] == coop[q]["gold"] for q in hold], right),
+            "median_latency_ms": pct([aito[q]["ms"] if aito[q]["p"] >= best else coop[q]["ms"] for q in hold], 0.5),
+            "p95_latency_ms": pct([aito[q]["ms"] if aito[q]["p"] >= best else coop[q]["ms"] for q in hold], 0.95)}
 
     out["prices"] = PRICES
     emb = RESULTS / "embedding.json"
@@ -113,6 +123,11 @@ def main() -> int:
                                 "latency_note": ("the RAG arm's latency counts the query's embedding call and the "
                                                  "LLM call; the vector search itself ran in pure Python here and is "
                                                  "left out, since a vector database does it in milliseconds")}
+    out["latency_client"] = os.environ.get("BENCH_CLIENT", "the maintainer's workstation; not a neutral client")
+    engine = RUNS / "engine.json"
+    out["endpoints"] = {"aito": "shared.aito.ai, Aito v2",
+                        "aito_engine": json.loads(engine.read_text()) if engine.exists() else None,
+                        "llm": "Azure OpenAI, Sweden Central"}
     out["latency_note"] = ("wall time per query from the machine that ran run.py; Aito's calls ran one at a time, "
                            "the LLM's with --workers in parallel, each timed on its own. LLM time excludes "
                            "rate-limit backoff, which is reported per arm")
