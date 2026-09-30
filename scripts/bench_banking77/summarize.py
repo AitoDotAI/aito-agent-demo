@@ -184,9 +184,17 @@ def main() -> int:
                                                                if RECORDED else "unknown: set BENCH_CLIENT")
     engine = RUNS / "engine.json"
     # recorded by run.py with the answers; a summary needs no credentials
-    recorded = RUNS / "endpoints.json"
-    where = json.loads(recorded.read_text()) if recorded.exists() else {"aito": "unknown", "llm": "unknown"}
-    out["endpoints"] = {"aito": where["aito"],
+    recorded = json.loads((RUNS / "endpoints.json").read_text()) if (RUNS / "endpoints.json").exists() else {}
+    # arms recorded before per-arm tracking share the file's top-level endpoints
+    from run import uses
+    per_arm = {a: recorded.get("per_arm", {}).get(a, {k: recorded[k] for k in sorted(uses(a)) if k in recorded})
+               for a in arms}
+
+    def distinct(key):
+        vals = sorted({e[key] for e in per_arm.values() if e.get(key)})
+        return vals[0] if len(vals) == 1 else (vals or ["unknown"])
+    where = {"aito": distinct("aito"), "llm": distinct("llm")}
+    out["endpoints"] = {"aito": where["aito"], "per_arm": per_arm,
                         "aito_engine": json.loads(engine.read_text()) if engine.exists() else None,
                         "llm": where["llm"]}
     out["latency_note"] = ("wall time per query from the machine that ran run.py; Aito's calls ran one at a time, "

@@ -156,3 +156,14 @@ def test_a_content_filter_error_does_not_change_the_settings_for_later_calls(mon
     with pytest.raises(BadRequestError):
         llm.ask("m2", "s", "filtered text")             # a content filter fails the call, it does not fall back
     assert llm._settled == {"m": {"max_completion_tokens": 1500}}
+
+
+def test_endpoints_are_recorded_per_arm_and_never_relabel_other_arms(tmp_path):
+    import run
+    f = tmp_path / "endpoints.json"
+    f.write_text(json.dumps({"aito": "shared.aito.ai, Aito v2", "llm": "Azure OpenAI, sweden"}))   # an older record
+    run.record_endpoints(f, "llm_zero.gpt-9", {"aito": None, "llm": "OpenAI"})                     # an outsider's LLM-only run
+    saved = json.loads(f.read_text())
+    assert saved["per_arm"] == {"llm_zero.gpt-9": {"llm": "OpenAI"}}
+    assert saved["aito"] == "shared.aito.ai, Aito v2"       # the recorded runs' endpoints are untouched
+    assert run.uses("aito") == {"aito"} and run.uses("aito_llm.m") == {"aito", "llm"} and run.uses("llm_rag.m") == {"llm"}

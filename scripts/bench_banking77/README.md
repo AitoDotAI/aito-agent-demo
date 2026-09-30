@@ -92,8 +92,8 @@ export BANKING77_ENV=master      # run.py and ./do's load check then read master
 ```
 
 Nothing but your own keys is needed: the data comes from PolyAI's and Clinc's
-public repositories, and `summarize.py` works on the committed runs with no
-credentials at all. Runs are resumable:
+public repositories, and after `fetch.py`, `summarize.py` works on the committed runs
+with no credentials at all. Runs are resumable:
 re-running `./do bench-banking77` continues where it stopped. The run files keep
 every answer, so any number can be recomputed or re-cut without calling a model
 again.

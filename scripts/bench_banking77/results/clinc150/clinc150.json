@@ -17,7 +17,7 @@
   "note": "every arm is scored on these same queries, so the comparisons are paired"
  },
  "measured_at": "2026-09-30T09:22:14+00:00",
- "summarized_at": "2026-09-30T11:41:09+00:00",
+ "summarized_at": "2026-09-30T12:36:25+00:00",
  "run_files_last_written": {
   "aito": "2026-09-30T11:34:11+00:00",
   "aito_full": "2026-09-30T11:34:11+00:00",
@@ -1276,6 +1276,37 @@
  "latency_client": "the maintainer's workstation; not a neutral client",
  "endpoints": {
   "aito": "shared.aito.ai, Aito v2",
+  "per_arm": {
+   "aito": {
+    "aito": "shared.aito.ai, Aito v2"
+   },
+   "aito_llm.gpt-5-mini": {
+    "aito": "shared.aito.ai, Aito v2",
+    "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
+   },
+   "aito_llm.gpt-6-luna": {
+    "aito": "shared.aito.ai, Aito v2",
+    "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
+   },
+   "llm_rag.gpt-5-mini": {
+    "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
+   },
+   "llm_rag.gpt-5.4": {
+    "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
+   },
+   "llm_rag.gpt-6-luna": {
+    "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
+   },
+   "llm_zero.gpt-5-mini": {
+    "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
+   },
+   "llm_zero.gpt-5.4": {
+    "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
+   },
+   "llm_zero.gpt-6-luna": {
+    "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
+   }
+  },
   "aito_engine": [
    {
     "version": "2.11.0",
