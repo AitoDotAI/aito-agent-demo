@@ -238,8 +238,88 @@ def test_each_step_gets_exactly_its_upstream_inputs(parallel):
     assert by_target["action"]["category"] == "cat-v"
 
 
-def test_an_error_in_a_parallel_call_surfaces():
+def test_one_failing_step_degrades_and_the_rest_stand():
+    """An Aito error on one step (e.g. the engine's mergeSampleFreqs 500) blanks that
+    step and sends the ticket to a person; the other steps still show."""
     q = env.load_incoming()
     t = q["tickets"][q["order"][0]]
-    with pytest.raises(app_module.AitoError, match="503 on resolution"):
-        env.envelope(_Tagged(fail_on="resolution"), t, q["steps"].get(t["ticket_id"], []), parallel=True)
+    out = env.envelope(_Tagged(fail_on="resolution"), t, q["steps"].get(t["ticket_id"], []), parallel=True)
+    res = next(s for s in out["steps"] if s["key"] == "resolution")
+    assert out["degraded"] == ["resolution"] and out["gate"] == "human"
+    assert res["value"] is None and res["correct"] is None and "could not answer" in res["note"]
+    assert all(s.get("error") is None for s in out["steps"] if s["key"] != "resolution")
+
+
+def test_your_own_words_carry_no_truth(monkeypatch):
+    """Edited text keeps the sender but not what happened to the real ticket."""
+    c = TestClient(app_module.app)
+    monkeypatch.setitem(app_module._support_state, "checked", 1e18)
+    monkeypatch.setitem(app_module._support_state, "loaded", True)
+    monkeypatch.setattr(app_module, "_support_aito", _Fake())
+    tid = env.load_incoming()["order"][0]
+    r = c.get("/api/support/envelope", params={"ticket_id": tid, "text": "What's the weather in Oulu tomorrow?"}).json()
+    assert r["edited"] is True and r["ticket"]["text"].startswith("What's the weather")
+    assert all(s["truth"] is None and s["correct"] is None and s.get("happened") is None for s in r["steps"])
+    same = c.get("/api/support/envelope", params={"ticket_id": tid, "text": env.load_incoming()["tickets"][tid]["text"]})
+    assert same.json()["edited"] is False
+    assert c.get("/api/support/envelope", params={"ticket_id": tid, "text": "x" * 601}).status_code == 422
+
+
+# ── from the review of #21/#25 ──
+
+def test_the_client_ip_is_the_hop_our_proxies_added_not_the_first(monkeypatch):
+    from starlette.requests import Request
+    def req(xff):
+        return Request({"type": "http", "headers": [(b"x-forwarded-for", xff.encode())], "client": ("10.0.0.9", 1)})
+    monkeypatch.setattr(app_module, "_PROXY_HOPS", 2)
+    # client-sent junk, then the real client (added by Azure's front end), then the front end (added by nginx)
+    assert app_module._client_ip(req("1.1.1.1, 2.2.2.2, 203.0.113.7, 10.1.2.3")) == "203.0.113.7"
+    assert app_module._client_ip(req("203.0.113.7")) == "203.0.113.7"
+
+
+def test_visitor_text_envelopes_are_rate_limited(monkeypatch):
+    c = TestClient(app_module.app)
+    monkeypatch.setattr(app_module, "_rl_hits", {})
+    monkeypatch.setattr(app_module, "_ENVELOPE_TEXT_PER_MIN", 2)
+    codes = [c.get("/api/support/envelope", params={"ticket_id": "SUP-nope", "text": f"hi {i}"},
+                   headers={"x-forwarded-for": "5.5.5.5"}).status_code for i in range(3)]
+    assert codes == [404, 404, 429]
+    # the held-out tickets themselves stay unthrottled
+    assert c.get("/api/support/envelope", params={"ticket_id": "SUP-nope"}, headers={"x-forwarded-for": "5.5.5.5"}).status_code == 404
+
+
+def test_a_degraded_envelope_is_not_cached(monkeypatch):
+    monkeypatch.setitem(app_module._support_state, "checked", 1e18)
+    monkeypatch.setitem(app_module._support_state, "loaded", True)
+    monkeypatch.setattr(app_module, "_envelopes", {})
+    monkeypatch.setattr(app_module, "_support_aito", _Tagged(fail_on="resolution"))
+    tid = env.load_incoming()["order"][0]
+    out = app_module._envelope_for(tid, None)
+    assert out["degraded"] == ["resolution"] and app_module._envelopes == {}
+    monkeypatch.setattr(app_module, "_support_aito", _Tagged())
+    assert app_module._envelope_for(tid, None)["degraded"] == [] and len(app_module._envelopes) == 1
+
+
+def test_stronger_reads_are_capped_and_llm_errors_are_503(monkeypatch):
+    import threading
+    from openai import APIStatusError
+    c = TestClient(app_module.app)
+    monkeypatch.setitem(app_module._support_state, "checked", 1e18)
+    monkeypatch.setitem(app_module._support_state, "loaded", True)
+    monkeypatch.setattr(app_module, "_rl_hits", {})
+    monkeypatch.setattr(app_module, "_support_aito", _Fake())
+    tid = env.load_incoming()["order"][0]
+    slots = threading.BoundedSemaphore(1)
+    monkeypatch.setattr(app_module, "_STRONG_SLOTS", slots)
+    slots.acquire()                                    # another reader holds the only slot
+    r = c.post("/api/support/reply", json={"ticket_id": tid, "stronger": True})
+    assert r.status_code == 503 and "busy" in r.json()["detail"]
+    slots.release()
+
+    import src.support_reply as SR
+    def boom(*a, **k):
+        raise APIStatusError("denied", response=__import__("httpx").Response(401, request=__import__("httpx").Request("POST", "http://x")), body=None)
+    monkeypatch.setattr(SR, "draft_reply", boom)
+    r = c.post("/api/support/reply", json={"ticket_id": tid, "stronger": True})
+    assert r.status_code == 503
+    assert slots.acquire(blocking=False)               # the slot was released after the error

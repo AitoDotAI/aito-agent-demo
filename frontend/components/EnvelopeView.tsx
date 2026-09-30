@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { BenchPanel, ReplyPanel, SUPPORT_REPLY_CSS } from "@/components/SupportReply";
 
 type Alt = { value: string; p: number };
 type Case = { ticket_id: string; text: string; resolution: string; nps_after: string };
@@ -20,7 +21,15 @@ type Step = {
 type Envelope = {
   ticket: { ticket_id: string; created_at: string; text: string; sender_domain: string; channel: string };
   steps: Step[]; gate: "auto" | "assist" | "human"; aito_calls: number; aito_ms: number; wall_ms: number;
+  edited?: boolean;
 };
+
+/* tickets the desk's history doesn't cover, to try in the sender's place */
+const UNFAMILIAR = [
+  "What's the weather like in Oulu tomorrow?",
+  "hi, it doesn't work again",
+  "Can you send us your ISO 27001 certificate for our vendor review?",
+];
 type Incoming = { ticket_id: string; created_at: string; text: string; channel: string };
 
 const pct = (p: number | null) => (p == null ? "" : `${Math.round(p * 100)}%`);
@@ -37,6 +46,10 @@ export function EnvelopeView() {
   const [sel, setSel] = useState<string | null>(null);
   const [env, setEnv] = useState<Envelope | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [text, setText] = useState<string | null>(null);      // the words being run, when not the ticket's own
+  const [editing, setEditing] = useState<string | null>(null); // the textarea, while open
+
+  const pick = (id: string) => { setSel(id); setText(null); setEditing(null); };
 
   useEffect(() => {
     apiFetch<{ tickets: Incoming[] }>("/api/support/incoming")
@@ -48,11 +61,12 @@ export function EnvelopeView() {
     if (!sel) return;
     let live = true;
     setEnv(null); setErr(null);
-    apiFetch<Envelope>(`/api/support/envelope?ticket_id=${sel}`)
+    const q = new URLSearchParams({ ticket_id: sel, ...(text != null ? { text } : {}) });
+    apiFetch<Envelope>(`/api/support/envelope?${q}`)
       .then((r) => { if (live) setEnv(r); })
       .catch((e) => { if (live) setErr(String(e?.message ?? e)); });
     return () => { live = false; };
-  }, [sel]);
+  }, [sel, text]);
 
   const scored = env ? env.steps.filter((s) => s.correct !== null) : [];
   const right = scored.filter((s) => s.correct).length;
@@ -71,7 +85,7 @@ export function EnvelopeView() {
         <div className="ev-queue">
           <div className="ev-ql">Incoming queue · newest {queue.length} of {queued}</div>
           {queue.map((t) => (
-            <button key={t.ticket_id} className={t.ticket_id === sel ? "on" : ""} onClick={() => setSel(t.ticket_id)}>
+            <button key={t.ticket_id} className={t.ticket_id === sel ? "on" : ""} onClick={() => pick(t.ticket_id)}>
               <span className="ev-qt">{t.text}</span>
               <span className="ev-qm">{t.ticket_id} · {t.channel} · {t.created_at.slice(5, 16).replace("T", " ")}</span>
             </button>
@@ -84,14 +98,35 @@ export function EnvelopeView() {
           {env && (
             <>
               <div className="ev-ticket">
-                <div className="ev-tt">{env.ticket.text}</div>
-                <div className="ev-tm">{env.ticket.ticket_id} · from {env.ticket.sender_domain} · {env.ticket.channel}</div>
+                {editing == null ? (
+                  <>
+                    <div className="ev-tt">{env.ticket.text}</div>
+                    <div className="ev-tm">
+                      {env.edited ? "your words" : env.ticket.ticket_id} · from {env.ticket.sender_domain} · {env.ticket.channel}
+                      <button className="ev-edit" onClick={() => setEditing(env.ticket.text)}>try your own words</button>
+                      {env.edited && <button className="ev-edit" onClick={() => setText(null)}>back to the real ticket</button>}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <textarea className="ev-ta" value={editing} maxLength={600} rows={3} onChange={(e) => setEditing(e.target.value)} />
+                    <div className="ev-presets">
+                      <span>unfamiliar ones:</span>
+                      {UNFAMILIAR.map((u) => <button key={u} onClick={() => setEditing(u)}>{u}</button>)}
+                    </div>
+                    <div className="ev-tm">
+                      same sender, your words: nothing happened to them, so no step is scored
+                      <button className="ev-edit on" disabled={!editing.trim()} onClick={() => { setText(editing.trim()); setEditing(null); }}>run the envelope</button>
+                      <button className="ev-edit" onClick={() => setEditing(null)}>cancel</button>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="ev-sum">
                 <span><b>{env.aito_calls}</b> Aito calls</span>
                 <span><b>{env.wall_ms.toLocaleString()} ms</b> for all of them, seen from this server</span>
                 <span className={`ev-gate ${env.gate}`}>{GATE[env.gate]}</span>
-                <span><b>{right} of {scored.length}</b> decisions match what happened</span>
+                {scored.length > 0 && <span><b>{right} of {scored.length}</b> decisions match what happened</span>}
               </div>
               <div className="ev-steps">
                 {env.steps.map((s, i) => (
@@ -138,6 +173,8 @@ export function EnvelopeView() {
                   </div>
                 ))}
               </div>
+              <ReplyPanel ticketId={env.ticket.ticket_id} text={env.edited ? env.ticket.text : null} gate={env.gate} />
+              <BenchPanel />
               <div className="rc-foot">
                 Synthetic data (the support fixture), labelled as such; its planted effects are measured in
                 scripts/support_fixture. Each prediction may only use the inputs listed for its target, so nothing
@@ -147,7 +184,7 @@ export function EnvelopeView() {
           )}
         </div>
       </div>
-      <style>{CSS}</style>
+      <style>{CSS + SUPPORT_REPLY_CSS}</style>
     </div>
   );
 }
@@ -163,7 +200,12 @@ const CSS = `
 .ev .ev-qm{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--rc-faint)}
 .ev .ev-ticket{background:var(--rc-card);border:1px solid var(--rc-line);border-left:3px solid var(--purple);border-radius:12px;padding:14px 16px}
 .ev .ev-tt{font-size:15px;line-height:1.45;color:var(--rc-ink)}
-.ev .ev-tm{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--rc-faint);margin-top:6px}
+.ev .ev-tm{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--rc-faint);margin-top:6px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.ev .ev-edit{font-family:inherit;font-size:10.5px;background:none;border:1px solid var(--rc-line);border-radius:6px;padding:2px 8px;cursor:pointer;color:var(--purple)}
+.ev .ev-edit.on{background:var(--purple);color:#fff;border-color:var(--purple)}
+.ev .ev-ta{width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;line-height:1.45;border:1px solid var(--rc-line);border-radius:8px;padding:8px 10px;resize:vertical}
+.ev .ev-presets{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px;font-size:11px;color:var(--rc-faint)}
+.ev .ev-presets button{font-family:inherit;font-size:11.5px;background:#f1eee8;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;color:var(--rc-ink2)}
 .ev .ev-sum{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin:12px 2px;font-size:12.5px;color:var(--rc-ink2)}
 .ev .ev-gate{font-family:'JetBrains Mono',monospace;font-size:10.5px;padding:3px 8px;border-radius:6px}
 .ev .ev-gate.auto{background:#e7f4ec;color:var(--g)}.ev .ev-gate.assist{background:#fbf1d8;color:#6f561c}.ev .ev-gate.human{background:#fbe4d8;color:var(--r)}

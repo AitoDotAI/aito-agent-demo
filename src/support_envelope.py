@@ -19,7 +19,7 @@ import json
 import time
 from pathlib import Path
 
-from src.aito_client import AitoClient
+from src.aito_client import AitoClient, AitoError
 
 INCOMING = Path(__file__).resolve().parent / "data" / "support_incoming.json"
 
@@ -119,6 +119,21 @@ def guarded_recommend(aito: AitoClient, table: str, where: dict, field: str, goa
     return _ranked(aito.recommend(table, where, field, goal, limit=limit).get("hits") or [], where, t0)
 
 
+def _soft(fn):
+    """One step's Aito call, where an Aito error blanks that step instead of failing the
+    ticket: the page shows the other steps, and this one as unanswered. A LeakError is a
+    bug in the caller and still raises."""
+    def call(*args, **kw):
+        t0 = time.perf_counter()
+        try:
+            return fn(*args, **kw)
+        except AitoError as e:
+            print(f"[support] {getattr(fn, '__name__', 'step')} degraded: {e} {str(e.body)[:200]}")
+            return {"value": None, "p": None, "alternatives": [], "inputs": [], "error": str(e),
+                    "ms": round((time.perf_counter() - t0) * 1000)}
+    return call
+
+
 def _p_of(result: dict, value: str) -> float | None:
     """The $p a prediction gave one value, whether it ranked first or not."""
     if result.get("value") == value:
@@ -193,6 +208,8 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: b
     entries: dict[str, dict] = {}
 
     def entry(key, title, op, result, truth=None, note=None):
+        if result.get("error"):
+            truth, note = None, "Aito could not answer this step just now, so nothing is suggested"
         entries[key] = {"key": key, "title": title, "op": op, **result, "truth": truth,
                         "correct": (result.get("value") == truth) if truth is not None else None, "note": note}
         return entries[key]
@@ -204,6 +221,7 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: b
 
     pool = ThreadPoolExecutor(max_workers=8) if parallel else None
     run = pool if pool else _Now()
+    g, g_rec = _soft(guarded), _soft(guarded_recommend)
     try:
         # 1. who: in a B2B desk the sender is a known contact, so the account is a lookup;
         # only a new address is inferred, from the domain it writes from
@@ -225,32 +243,39 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: b
         known = {**intake, **acct, **({"contact": contact} if contact else {})}
 
         # needs only the account: start these now, alongside the product -> category chain
-        f_similar = run.submit(lambda: timed_query(table="support_tickets", where=acct or None,
-                                                   select=["ticket_id", "text", "resolution", "nps_after"],
-                                                   order_by={"$similarity": {"text": ticket["text"]}}, limit=3))
-        f_rec = run.submit(guarded_recommend, aito, "support_tickets", {**acct, "repeat_30d": ticket["repeat_30d"]},
+        def similar_cases():
+            try:
+                return timed_query(table="support_tickets", where=acct or None,
+                                   select=["ticket_id", "text", "resolution", "nps_after"],
+                                   order_by={"$similarity": {"text": ticket["text"]}}, limit=3)
+            except AitoError:
+                return None, 0
+        f_similar = run.submit(similar_cases)
+        f_rec = run.submit(g_rec, aito, "support_tickets", {**acct, "repeat_30d": ticket["repeat_30d"]},
                            "recovery", {"nps_after": "promoter"})
-        f_ups = run.submit(guarded, aito, "support_tickets", {"adoption_band": ticket["adoption_band"], **acct,
+        f_ups = run.submit(g, aito, "support_tickets", {"adoption_band": ticket["adoption_band"], **acct,
                                                               "upsell_offered": "yes"}, "upsell_accepted", 2)
-        f_base = run.submit(base_rates, aito)
+        f_base = run.submit(_soft_base, aito)
 
         # 2. which product: a shortlist from the text and the account's own products;
         # later steps use its top pick, so a wrong pick shows up downstream too
-        prod = guarded(aito, "support_tickets", known, "product", 3, why)
+        prod = g(aito, "support_tickets", known, "product", 3, why)
         e = entry("product", "Which product?", "_predict product  ·  top 3", prod, ticket["product"])
-        e["correct"], e["shortlist"] = ticket["product"] in [prod["value"]] + [a["value"] for a in prod["alternatives"]], True
+        e["shortlist"] = True
+        if ticket["product"] is not None and not prod.get("error"):
+            e["correct"] = ticket["product"] in [prod["value"]] + [a["value"] for a in prod["alternatives"]]
         known = {**known, **({"product": prod["value"]} if prod["value"] else {})}
 
-        cat = guarded(aito, "support_tickets", known, "category", 3, why)
+        cat = g(aito, "support_tickets", known, "category", 3, why)
         entry("category", "What is it about?", "_predict category", cat, ticket["category"])
         triaged = {**known, **({"category": cat["value"]} if cat["value"] is not None else {})}
 
-        f_pri = run.submit(guarded, aito, "support_tickets", triaged, "priority", 3, why)
-        f_res = run.submit(guarded, aito, "support_tickets", triaged, "resolution", 3, why)
-        f_kb = run.submit(guarded, aito, "support_tickets", triaged, "kb_article")
+        f_pri = run.submit(g, aito, "support_tickets", triaged, "priority", 3, why)
+        f_res = run.submit(g, aito, "support_tickets", triaged, "resolution", 3, why)
+        f_kb = run.submit(g, aito, "support_tickets", triaged, "kb_article")
         # the first step reads the ticket's own words through the link: which fix a bug
         # needs (crash or wrong data) is in the text, not in the category
-        f_first = run.submit(guarded, aito, "support_steps",
+        f_first = run.submit(g, aito, "support_steps",
                              {"previous_action": "start", "ticket.text": ticket["text"],
                               **({"category": cat["value"]} if cat["value"] is not None else {})}, "action", 3, why)
 
@@ -258,7 +283,7 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: b
         entry("priority", "How urgent?", "_predict priority", pri, ticket["priority"])
         # risks, not decisions: a probability against the base rate, shown with what happened,
         # never scored right or wrong on one ticket
-        f_risk = run.submit(guarded, aito, "support_tickets",
+        f_risk = run.submit(g, aito, "support_tickets",
                             {**triaged, **({"priority": pri["value"]} if pri["value"] is not None else {})}, "nps_after", 3)
 
         res = f_res.result()
@@ -268,7 +293,8 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: b
         entry("kb", "Which article helps?", "_predict kb_article", f_kb.result(), ticket["kb_article"])
         similar, ms = f_similar.result()
         entry("similar", "How did this account's similar tickets end?", "_query orderBy $similarity",
-              {"value": None, "p": None, "alternatives": [], "inputs": ["text", "customer"], "ms": ms, "cases": similar})
+              {"value": None, "p": None, "alternatives": [], "inputs": ["text", "customer"], "ms": ms,
+               "cases": similar or [], **({"error": "similarity query failed"} if similar is None else {})})
         # scored against the fix's first real action: asking for details or waiting is a detour, not a plan
         real = [s["action"] for s in true_steps if s["action"] not in DETOURS]
         entry("first_step", "Where to start?", "_predict next action", f_first.result(), real[0] if real else None)
@@ -291,9 +317,20 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: b
             pool.shutdown(wait=False, cancel_futures=True)
 
     steps = [entries[k] for k in ORDER]
+    failed = [s for s in steps if s.get("error")]
+    if len(failed) > len(steps) // 2:
+        # not one flaky step but Aito failing: say so, rather than show a page of blanks
+        raise AitoError(f"Aito failed on {len(failed)} of {len(steps)} steps: {failed[0]['error']}")
     return {"ticket": {k: ticket[k] for k in ("ticket_id", "created_at", "text", "sender_domain", "channel")},
-            "steps": steps, "gate": gate, "aito_calls": len(steps), "aito_ms": sum(s["ms"] for s in steps),
+            "steps": steps, "gate": gate, "degraded": [s["key"] for s in steps if s.get("error")], "aito_calls": len(steps), "aito_ms": sum(s["ms"] for s in steps),
             "wall_ms": round((time.perf_counter() - t_start) * 1000)}
+
+
+def _soft_base(aito: AitoClient) -> dict:
+    try:
+        return base_rates(aito)
+    except AitoError:
+        return {"detractor": None, "upsell_yes": None}
 
 
 #: the order the view shows the steps in

@@ -71,6 +71,62 @@ The resolution console and `$p` gate, the tool shortlist, the handoff queue, the
 neighbourhood (PR #13), the rules review (PR #14), the agent guards against invented inputs and
 figures (PR #11), and the shared agent loop (`src/agent_core.py`).
 
+## The LLM's half: the reply, and tickets Aito doesn't know
+
+Built on phase 1 (src/support_reply.py, the Reply panel on the Support agent page). Aito decides;
+the LLM writes. The recorded comparison (scripts/support_fixture/compare_modes.py) found the LLM adds
+little to the structured decisions, so it is used where Aito can't help:
+
+- **Routine** (Aito's resolution passed its gate): gpt-5-mini writes the reply from the decided
+  facts only, and first says whether the ticket's own words support them. That check is the second
+  opinion on Aito's known overconfidence on off-topic and vague text.
+- **Unfamiliar** (Aito unsure, or the writer said the facts don't fit): the LLM reads the ticket with
+  Aito's shortlists and the account's similar past tickets, says what the customer wants, picks an
+  allowed resolution or none, and drafts for a person. Never sent automatically. A button asks
+  gpt-6-luna for a closer read; it took 58 to 100 s per call when measured on 2026-09-29, so it is
+  not the default.
+- **Guards, in code:** no refund, credit or discount the decisions don't include; no figure the
+  facts don't contain; no article but the decided one; no link or domain but those in that article
+  and a fixed allow-list (the support portal), an invariant whatever the model judged; anything that moves money goes to a person.
+- **Your own words:** the page can run the envelope on edited text from the same sender (no truth,
+  nothing scored), which is how a visitor sees an unfamiliar ticket handled.
+
+**Hardening for a public page:** the reply route has its own per-IP limit (6 a minute), a daily
+LLM token budget for all visitors together (past it, drafting pauses and Aito's decisions stand), a
+600-character cap on visitor text, and the ticket fenced as data. A ticket that tries to instruct the
+AI is never auto-sent, on either of two reads: a pattern in code, or the writer's own flag. The
+gpt-6-luna read has a hard 120 s limit with a visible wait and a cancel. An Aito error on one step
+blanks that step (the engine's mergeSampleFreqs 500, td-20260929182755894024) instead of failing the
+ticket; more than half the steps failing is reported as Aito being down.
+
+**After review (2026-09-30):** the figure guard checks whole numbers the facts state (an article id
+no longer vouches for "24 hours"), catches number words and business days, and a new deadlines guard
+stops promised times ("tomorrow", "next week", "immediately"). Links are parsed as hosts and must be
+exactly an allowed host or a subdomain of one. `fits` must be a literal yes. The rate limit keys on the
+client address our proxies added (RATE_LIMIT_PROXY_HOPS, default 2: Azure's front end, then nginx),
+not the first X-Forwarded-For entry, which a client can set; visitor-text envelopes are limited too;
+at most two gpt-6-luna reads run at once; the budget reserves tokens before each call. Re-checked
+offline on the recorded run's 14 auto-sent real replies, 1 would now go to a person ("escalate this
+immediately"), so the stricter guards cost about 1 in 14 routine auto-sends.
+
+**The sanity set** (scripts/support_fixture/reply_probes.py, live, 2026-09-29): unfamiliar, vague and
+injection tickets that must never be auto-sent, each run from two real senders, plus 20 real
+held-out tickets.
+
+| run | tuning probes (26) | held-out probes (20) | real tickets Aito was sure of, auto-sent |
+|---|---|---|---|
+| first, before any fix | 21 ok, 3 auto-sent, 2 engine errors | not yet written | 15 of 15 |
+| after fixing on the tuning set (**the honest held-out number**) | 25 ok, 1 auto-sent | **17 ok, 3 auto-sent** | 15 of 15 |
+| after a further prompt fix (tuned on both; not an independent number) | 25 ok, 1 auto-sent | 18 ok, 2 auto-sent | 14 of 15 |
+
+What still gets through: "Hello, can someone call me?" and "Where can I buy a Northwind hoodie?". Aito's
+gate reads both as sure, and gpt-5-mini accepts the decided resolution as an answer, once inventing
+that the article holds a store link. The link guard stops any invented URL, but that draft named no
+URL, only claimed one in prose, which no guard sees; both probes went to core-a as coverage test cases. Prompting has stopped helping here; the structural fix is the
+engine's coverage measure (how much of a ticket's wording Aito has seen), which core-a is building,
+and the page's caveat stays until it lands. Each held-out set is spent once looked at; the next honest
+number needs a fresh one.
+
 ## Phasing
 
 1. **Fixture and read-only envelope.** Generator plus `lifts.py`, loaded to a branch environment by

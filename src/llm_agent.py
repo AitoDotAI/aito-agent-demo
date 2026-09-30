@@ -79,13 +79,13 @@ class LLMResolution:
 
 
 class LLMAgent:
-    def __init__(self) -> None:
+    def __init__(self, deployment: str | None = None) -> None:
         endpoint = os.environ.get("OPENAI_MODEL_URL")
         key = os.environ.get("OPENAI_MODEL_API_KEY")
         if not endpoint or not key:
             raise RuntimeError("OPENAI_MODEL_URL / OPENAI_MODEL_API_KEY not set")
-        self.model = os.environ.get("OPENAI_MODEL_NAME", "gpt-5-mini")
-        self._deployment = os.environ.get("OPENAI_MODEL_DEPLOYMENT", "gpt-5-mini")
+        self.model = deployment or os.environ.get("OPENAI_MODEL_NAME", "gpt-5-mini")
+        self._deployment = deployment or os.environ.get("OPENAI_MODEL_DEPLOYMENT", "gpt-5-mini")
         self._client = AzureOpenAI(
             azure_endpoint=endpoint.rstrip("/"),
             api_key=key,
@@ -101,16 +101,30 @@ class LLMAgent:
             {},
         ]
 
-    def _create(self, base: dict, extra: dict):
+    def _create(self, base: dict, extra: dict, deadline_s: float | None = None):
+        """One completion, retried on transient errors. With `deadline_s`, the whole
+        thing (retries and backoff included) gives up after that many seconds with
+        TimeoutError, and the SDK's own retries are off so they can't outlast it."""
         delay = 1.5
+        end = None if deadline_s is None else time.monotonic() + deadline_s
         for _ in range(5):
+            client = self._client
+            if end is not None:
+                left = end - time.monotonic()
+                if left <= 1:
+                    break
+                client = self._client.with_options(timeout=left, max_retries=0)
             try:
                 t0 = time.perf_counter()
-                resp = self._client.chat.completions.create(**base, **extra)
+                resp = client.chat.completions.create(**base, **extra)
                 return resp, (time.perf_counter() - t0) * 1000
             except _RETRYABLE:
+                if end is not None and time.monotonic() + min(delay, 20.0) >= end:
+                    break
                 time.sleep(min(delay, 20.0))
                 delay *= 2
+        if end is not None:
+            raise TimeoutError(f"{self._deployment} did not answer within {deadline_s:.0f} s")
         raise RuntimeError("transient errors exhausted")
 
     def resolve(self, text: str) -> LLMResolution:
@@ -200,10 +214,16 @@ LLMAgent.pick_tool = _LLMAgent_pick_tool  # type: ignore[attr-defined]
 
 
 _agent: LLMAgent | None = None
+_by_deployment: dict[str, LLMAgent] = {}
 
 
-def get_agent() -> LLMAgent:
+def get_agent(deployment: str | None = None) -> LLMAgent:
+    """The configured agent, or one for a named deployment on the same resource."""
     global _agent
+    if deployment:
+        if deployment not in _by_deployment:
+            _by_deployment[deployment] = LLMAgent(deployment)
+        return _by_deployment[deployment]
     if _agent is None:
         _agent = LLMAgent()
     return _agent
