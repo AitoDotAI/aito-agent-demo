@@ -100,9 +100,9 @@ def _bare_ip(addr: str) -> str:
 
 def _client_ip(request: Request) -> str:
     hops = [h.strip() for h in request.headers.get("x-forwarded-for", "").split(",") if h.strip()]
-    if hops:
-        return _bare_ip(hops[-min(_PROXY_HOPS, len(hops))])
-    return request.client.host if request.client else "anon"
+    ip = _bare_ip(hops[-min(_PROXY_HOPS, len(hops))]) if hops else ""
+    # a malformed entry ("[", ":80") must not put its senders into one shared bucket
+    return ip or (request.client.host if request.client else "anon")
 
 
 def _over_limit(request: Request, key_path: str, limit: int) -> bool:

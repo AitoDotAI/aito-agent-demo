@@ -330,6 +330,8 @@ def test_stronger_reads_are_capped_and_llm_errors_are_503(monkeypatch):
     ("junk, [2001:db8::7]:443, 10.1.2.3", "2001:db8::7"),
     ("junk, 2001:db8::7, 10.1.2.3", "2001:db8::7"),                     # bare IPv6: colons, no port
     ("203.0.113.7", "203.0.113.7"),
+    ("junk, :80, 10.1.2.3", "10.0.0.9"),                                # malformed: the connection's address
+    ("junk, [, 10.1.2.3", "10.0.0.9"),
 ])
 def test_the_client_ip_drops_a_port_so_connections_share_a_bucket(monkeypatch, sent, client):
     from starlette.requests import Request
