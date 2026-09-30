@@ -99,6 +99,7 @@ type Customer = {
   profile: Record<string, unknown>;
   domains: Record<string, { count: number; examples: Record<string, unknown>[] }>;
   graph?: Graph | null; // v2 only: the whole linked neighbourhood in one $refs query
+  why_spotlight?: string; // why this customer was picked (not churned, and its health)
 };
 type Graph = {
   tickets: { count: number; bad_csat: number; channels: number };
@@ -218,7 +219,7 @@ export function CompanyDashboardView() {
 
             {c && (
               <>
-                <div className="sec">Spotlight: an at-risk customer, 360 <span className="op">{c.graph ? "_query · $refs" : "_query · linked"}</span></div>
+                <div className="sec">Spotlight: a current customer at risk, 360{c.why_spotlight ? ` · ${c.why_spotlight}` : ""} <span className="op">{c.graph ? "_query · $refs" : "_query · linked"}</span></div>
                 <div className="spot">
                   <div className="sp-head">
                     <div className="sp-name">{String(prof.name)} <span className="sp-id">{String(prof.customer_id)}</span></div>

@@ -973,8 +973,10 @@ def _tool_find_examples(args: dict) -> dict:
     if domain not in _KPIS and domain not in ("customers",) and domain not in _360_SELECT:
         return {"error": f"unknown domain '{domain}'"}
     where = _seg_where(domain, args)
-    if domain == "customers" and args.get("churned"):
-        where["churned"] = args["churned"]
+    if domain == "customers":
+        for f in ("churned", "health"):
+            if args.get(f):
+                where[f] = args[f]
     sel = (["customer_id", "name", "industry", "size", "plan", "health", "churned"] if domain == "customers"
            else ["customer", *_360_SELECT.get(domain, [])])
     rows = (aito.query(domain, where=where or None, select=sel, limit=6).get("hits") or [])
@@ -1073,10 +1075,17 @@ def company_360(industry: str = "", size: str = "", plan: str = ""):
             if r.get("error"):
                 continue
             kpis.append({"key": kpi, **r})  # key = the kpi id; r["kpi"] is its label
+        # "at risk" means still a customer: someone who has not churned, with the strongest
+        # observable risk (health Red is the largest measured churn driver), else Yellow, else any
         spotlight = None
-        rows = (_tool_find_examples({"domain": "customers", **seg, "churned": "yes"}).get("rows") or [])
-        if rows:
-            spotlight = _tool_customer_360({"customer_id": rows[0].get("customer_id")})
+        for health in ("Red", "Yellow", None):
+            rows = (_tool_find_examples({"domain": "customers", **seg, "churned": "no",
+                                         **({"health": health} if health else {})}).get("rows") or [])
+            if rows:
+                spotlight = _tool_customer_360({"customer_id": rows[0].get("customer_id")})
+                spotlight["why_spotlight"] = (f"a current customer (not churned) with health {health}" if health
+                                              else "a current customer (not churned); none in this segment is Red or Yellow")
+                break
     except AitoError as e:
         raise HTTPException(status_code=502, detail=str(e))
     # the parts that fell back to empty on an Aito error, so a hollow view is visible as one

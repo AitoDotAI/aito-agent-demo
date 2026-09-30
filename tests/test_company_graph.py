@@ -115,3 +115,42 @@ def test_company_360_names_what_fell_back_to_empty(monkeypatch):
     bad = c.get("/api/company-360").json()
     assert bad["degraded"] == [f"causes:{k['key']}" for k in bad["kpis"]] and len(bad["degraded"]) == 6
     assert all(k["causes_unavailable"] for k in bad["kpis"])
+
+
+def test_the_at_risk_spotlight_is_a_current_customer_not_a_churned_one(monkeypatch):
+    """The spotlight is labelled "at risk": it must be someone who has not churned yet,
+    picked for an observable risk (health Red first), and say why."""
+    from fastapi.testclient import TestClient
+    people = [
+        {"customer_id": "ACC-1", "name": "Gone Oy", "health": "Red", "churned": "yes", "size": "SMB", "plan": "Free"},
+        {"customer_id": "ACC-2", "name": "Wobbly Oy", "health": "Red", "churned": "no", "size": "SMB", "plan": "Free"},
+        {"customer_id": "ACC-3", "name": "Fine Oy", "health": "Green", "churned": "no", "size": "SMB", "plan": "Free"},
+    ]
+
+    class _People(_FakeAito):
+        def query(self, table, where=None, select=None, order_by=None, limit=5):
+            if table == "customers" and select != app_module._NEIGHBOURHOOD_SELECT:
+                rows = [p for p in people if all(p.get(k) == v for k, v in (where or {}).items())]
+                return {"hits": rows[:limit], "total": len(rows)}
+            return super().query(table, where, select, order_by, limit)
+
+        def predict(self, *a, **k):
+            return {"hits": [{"feature": "no", "$p": 0.7}, {"feature": "yes", "$p": 0.3}]}
+
+        def relate(self, *a, **k):
+            return {"hits": []}
+
+        relate_on = relate
+
+        def recommend(self, *a, **k):
+            return {"hits": []}
+
+    monkeypatch.setattr(app_module, "aito", _People([HIT]))
+    c = TestClient(app_module.app).get("/api/company-360").json()["customer"]
+    assert c["profile"]["customer_id"] == "ACC-2" and c["profile"]["churned"] == "no"
+    assert "health Red" in c["why_spotlight"]
+    # no current Red customer: the next observable risk, Yellow, not a churned Red one
+    people[1]["churned"] = "yes"
+    people.append({"customer_id": "ACC-4", "name": "Meh Oy", "health": "Yellow", "churned": "no", "size": "SMB", "plan": "Free"})
+    c = TestClient(app_module.app).get("/api/company-360").json()["customer"]
+    assert c["profile"]["customer_id"] == "ACC-4" and "health Yellow" in c["why_spotlight"]
