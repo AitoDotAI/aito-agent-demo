@@ -96,7 +96,7 @@ def llm_arm(model: str, q: dict, allowed: list[str], examples=None, aito=None, e
     from llm import ask, usd
     r = ask(model, SYSTEM, prompt(q, allowed, examples, aito))
     pred = r["answer"].get("intent")
-    return {"pred": pred if pred in allowed else None, "raw": None if pred in allowed else pred,
+    return {"pred": pred if pred in allowed else None, "raw": None if pred in allowed else pred, "params": r["params"],
             "in": r["in"], "out": r["out"], "usd": usd(model, r["in"], r["out"]),
             "llm_ms": r["ms"], "backoff_ms": r["backoff_ms"], "ms": round(r["ms"] + extra_ms, 1)}
 

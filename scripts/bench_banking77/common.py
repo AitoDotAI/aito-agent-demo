@@ -129,7 +129,7 @@ def mcnemar(a: list[bool], b: list[bool]) -> dict:
         return {"only_first_right": 0, "only_second_right": 0, "p": 1.0}
     k = min(only_a, only_b)
     tail = sum(math.comb(n, i) for i in range(k + 1)) / 2 ** n
-    return {"only_first_right": only_a, "only_second_right": only_b, "p": round(min(1.0, 2 * tail), 6)}
+    return {"only_first_right": only_a, "only_second_right": only_b, "p": float(f"{min(1.0, 2 * tail):.3g}")}
 
 
 def ece(pairs: list[tuple[float, bool]], bins: int = 10) -> dict:

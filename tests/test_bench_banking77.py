@@ -122,3 +122,37 @@ def test_the_published_gate_flags_match_how_each_gate_was_decided():
     if clinc.exists():
         g = json.loads(clinc.read_text())["gated"]["aito_then_rag_llm.gpt-5.4"]
         assert g["planned"] is True and g["preregistered"]["commit"] == "f49c5062"
+
+
+def test_a_content_filter_error_does_not_change_the_settings_for_later_calls(monkeypatch):
+    import httpx
+    from types import SimpleNamespace
+    from openai import BadRequestError
+    import llm
+
+    def bad(msg):
+        return BadRequestError(msg, response=httpx.Response(400, request=httpx.Request("POST", "http://x")), body=None)
+
+    seen = []
+
+    class _Client:
+        class chat:
+            class completions:
+                @staticmethod
+                def create(**kw):
+                    seen.append({k: v for k, v in kw.items() if k not in ("model", "messages", "response_format")})
+                    if "filtered" in kw["messages"][1]["content"]:
+                        raise bad("The response was filtered due to the prompt triggering content management policy")
+                    if "reasoning_effort" in kw:
+                        raise bad("Unsupported parameter: 'reasoning_effort'")
+                    msg = SimpleNamespace(content='{"intent": "a"}')
+                    return SimpleNamespace(choices=[SimpleNamespace(message=msg)],
+                                           usage=SimpleNamespace(prompt_tokens=10, completion_tokens=2))
+
+    monkeypatch.setattr(llm, "_client", lambda: _Client)
+    monkeypatch.setattr(llm, "_settled", {})
+    r = llm.ask("m", "s", "hello")                      # unsupported setting: falls back, and records it
+    assert r["params"] == {"max_completion_tokens": 1500}
+    with pytest.raises(BadRequestError):
+        llm.ask("m2", "s", "filtered text")             # a content filter fails the call, it does not fall back
+    assert llm._settled == {"m": {"max_completion_tokens": 1500}}

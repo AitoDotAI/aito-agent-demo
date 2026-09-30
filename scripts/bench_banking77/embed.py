@@ -49,6 +49,11 @@ def main() -> int:
     train, _, _ = split()
     if CACHE.exists():
         print(f"{CACHE.name}: already there")
+        emb = RESULTS / "embedding.json"
+        if not emb.exists():
+            RESULTS.mkdir(parents=True, exist_ok=True)
+            emb.write_text(json.dumps({"model": EMBED_MODEL, "dimensions": DIMENSIONS, "training_queries": len(train),
+                                       "tokens": None, "note": "from a cached index; tokens not recounted"}, indent=1) + "\n")
         return 0
     vectors, tokens = [], 0
     for i in range(0, len(train), 500):

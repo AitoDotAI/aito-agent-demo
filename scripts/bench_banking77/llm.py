@@ -23,6 +23,8 @@ PRICES = {
 }
 #: per-call settings to try in order, for models that reject some of them
 _PARAMS = [{"max_completion_tokens": 1500, "reasoning_effort": "low"}, {"max_completion_tokens": 1500}, {}]
+_UNSUPPORTED = __import__("re").compile(r"unsupported|not supported|unrecognized|unknown parameter|"
+                                       r"extra inputs are not permitted", __import__("re").I)
 _clients: dict = {}
 _settled: dict[str, dict] = {}
 
@@ -62,6 +64,10 @@ def ask(model: str, system: str, user: str) -> dict:
                 backoff += delay * 1000
                 delay = min(delay * 2, 30)
             except BadRequestError as e:
+                # only an unsupported setting moves to the next set; anything else (a content filter,
+                # a bad prompt) fails this call alone, instead of silently changing every later call
+                if not _UNSUPPORTED.search(str(e)):
+                    raise
                 last, resp = e, None
                 break
         else:
@@ -74,7 +80,7 @@ def ask(model: str, system: str, user: str) -> dict:
         except json.JSONDecodeError:
             data = {}
         u = resp.usage
-        return {"answer": data if isinstance(data, dict) else {}, "in": int(u.prompt_tokens),
+        return {"answer": data if isinstance(data, dict) else {}, "params": extra, "in": int(u.prompt_tokens),
                 "out": int(u.completion_tokens), "ms": round(ms, 1), "backoff_ms": round(backoff)}
     raise RuntimeError(f"{model}: every parameter set was rejected: {last}")
 

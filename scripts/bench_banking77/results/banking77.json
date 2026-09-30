@@ -17,19 +17,19 @@
   "note": "every arm is scored on these same queries, so the comparisons are paired"
  },
  "measured_at": "2026-09-30T08:53:00+00:00",
- "summarized_at": "2026-09-30T10:34:53+00:00",
+ "summarized_at": "2026-09-30T11:32:19+00:00",
  "run_files_last_written": {
-  "aito": "2026-09-30T07:57:48+00:00",
-  "aito_full": "2026-09-30T07:57:48+00:00",
-  "aito_llm.gpt-5-mini": "2026-09-30T08:46:37+00:00",
-  "aito_llm.gpt-5.4": "2026-09-30T08:46:14+00:00",
-  "aito_llm.gpt-6-luna": "2026-09-30T10:34:04+00:00",
-  "llm_rag.gpt-5-mini": "2026-09-30T08:21:17+00:00",
-  "llm_rag.gpt-5.4": "2026-09-30T08:42:34+00:00",
-  "llm_rag.gpt-6-luna": "2026-09-30T10:31:43+00:00",
-  "llm_zero.gpt-5-mini": "2026-09-30T08:09:08+00:00",
-  "llm_zero.gpt-5.4": "2026-09-30T08:37:26+00:00",
-  "llm_zero.gpt-6-luna": "2026-09-30T10:28:49+00:00"
+  "aito": "2026-09-30T11:31:18+00:00",
+  "aito_full": "2026-09-30T11:31:18+00:00",
+  "aito_llm.gpt-5-mini": "2026-09-30T11:31:18+00:00",
+  "aito_llm.gpt-5.4": "2026-09-30T11:31:18+00:00",
+  "aito_llm.gpt-6-luna": "2026-09-30T11:31:18+00:00",
+  "llm_rag.gpt-5-mini": "2026-09-30T11:31:18+00:00",
+  "llm_rag.gpt-5.4": "2026-09-30T11:31:18+00:00",
+  "llm_rag.gpt-6-luna": "2026-09-30T11:31:18+00:00",
+  "llm_zero.gpt-5-mini": "2026-09-30T11:31:18+00:00",
+  "llm_zero.gpt-5.4": "2026-09-30T11:31:18+00:00",
+  "llm_zero.gpt-6-luna": "2026-09-30T11:31:18+00:00"
  },
  "arms": {
   "aito": {
@@ -48,7 +48,8 @@
    "llm": {
     "calls_per_query": 0.0,
     "tokens_per_query": 0,
-    "usd_per_1000_queries": 0.0
+    "usd_per_1000_queries": null,
+    "llm_spend": "none: no LLM calls (Aito has its own compute and licence cost)"
    }
   },
   "aito_llm.gpt-5-mini": {
@@ -346,47 +347,47 @@
   "aito_llm.gpt-5-mini": {
    "only_first_right": 40,
    "only_second_right": 57,
-   "p": 0.103769
+   "p": 0.104
   },
   "aito_llm.gpt-5.4": {
    "only_first_right": 16,
    "only_second_right": 60,
-   "p": 0.0
+   "p": 3.85e-07
   },
   "aito_llm.gpt-6-luna": {
    "only_first_right": 15,
    "only_second_right": 49,
-   "p": 2.4e-05
+   "p": 2.44e-05
   },
   "llm_rag.gpt-5-mini": {
    "only_first_right": 11,
    "only_second_right": 75,
-   "p": 0.0
+   "p": 7.37e-13
   },
   "llm_rag.gpt-5.4": {
    "only_first_right": 9,
    "only_second_right": 77,
-   "p": 0.0
+   "p": 1.34e-14
   },
   "llm_rag.gpt-6-luna": {
    "only_first_right": 11,
    "only_second_right": 76,
-   "p": 0.0
+   "p": 4.21e-13
   },
   "llm_zero.gpt-5-mini": {
    "only_first_right": 88,
    "only_second_right": 52,
-   "p": 0.002959
+   "p": 0.00296
   },
   "llm_zero.gpt-5.4": {
    "only_first_right": 54,
    "only_second_right": 58,
-   "p": 0.776965
+   "p": 0.777
   },
   "llm_zero.gpt-6-luna": {
    "only_first_right": 65,
    "only_second_right": 60,
-   "p": 0.720673
+   "p": 0.721
   },
   "bonferroni_threshold": 0.00556,
   "note": "only_first_right = Aito right, the other wrong. A p below the threshold is a difference at this n; above it, it is not shown."
@@ -419,7 +420,7 @@
    "paired_vs_aito_same_half": {
     "only_first_right": 11,
     "only_second_right": 26,
-    "p": 0.020074
+    "p": 0.0201
    },
    "fallback_alone_same_half": {
     "n": 308,
@@ -433,7 +434,7 @@
    "paired_vs_fallback_alone_same_half": {
     "only_first_right": 4,
     "only_second_right": 10,
-    "p": 0.179565
+    "p": 0.18
    },
    "vs_each_arm_same_half": {
     "aito": {
@@ -447,7 +448,7 @@
      "paired": {
       "only_first_right": 26,
       "only_second_right": 11,
-      "p": 0.020074
+      "p": 0.0201
      }
     },
     "aito_llm.gpt-5-mini": {
@@ -461,7 +462,7 @@
      "paired": {
       "only_first_right": 10,
       "only_second_right": 4,
-      "p": 0.179565
+      "p": 0.18
      }
     },
     "aito_llm.gpt-5.4": {
@@ -475,7 +476,7 @@
      "paired": {
       "only_first_right": 7,
       "only_second_right": 15,
-      "p": 0.133801
+      "p": 0.134
      }
     },
     "aito_llm.gpt-6-luna": {
@@ -489,7 +490,7 @@
      "paired": {
       "only_first_right": 10,
       "only_second_right": 12,
-      "p": 0.831812
+      "p": 0.832
      }
     },
     "llm_rag.gpt-5-mini": {
@@ -545,7 +546,7 @@
      "paired": {
       "only_first_right": 36,
       "only_second_right": 6,
-      "p": 3e-06
+      "p": 2.83e-06
      }
     },
     "llm_zero.gpt-5.4": {
@@ -559,7 +560,7 @@
      "paired": {
       "only_first_right": 18,
       "only_second_right": 7,
-      "p": 0.043285
+      "p": 0.0433
      }
     },
     "llm_zero.gpt-6-luna": {
@@ -608,7 +609,7 @@
    "paired_vs_aito_same_half": {
     "only_first_right": 5,
     "only_second_right": 28,
-    "p": 6.6e-05
+    "p": 6.62e-05
    },
    "fallback_alone_same_half": {
     "n": 308,
@@ -636,7 +637,7 @@
      "paired": {
       "only_first_right": 28,
       "only_second_right": 5,
-      "p": 6.6e-05
+      "p": 6.62e-05
      }
     },
     "aito_llm.gpt-5-mini": {
@@ -650,7 +651,7 @@
      "paired": {
       "only_first_right": 19,
       "only_second_right": 5,
-      "p": 0.006611
+      "p": 0.00661
      }
     },
     "aito_llm.gpt-5.4": {
@@ -678,7 +679,7 @@
      "paired": {
       "only_first_right": 11,
       "only_second_right": 5,
-      "p": 0.210114
+      "p": 0.21
      }
     },
     "llm_rag.gpt-5-mini": {
@@ -692,7 +693,7 @@
      "paired": {
       "only_first_right": 7,
       "only_second_right": 17,
-      "p": 0.063915
+      "p": 0.0639
      }
     },
     "llm_rag.gpt-5.4": {
@@ -706,7 +707,7 @@
      "paired": {
       "only_first_right": 6,
       "only_second_right": 17,
-      "p": 0.03469
+      "p": 0.0347
      }
     },
     "llm_rag.gpt-6-luna": {
@@ -720,7 +721,7 @@
      "paired": {
       "only_first_right": 7,
       "only_second_right": 16,
-      "p": 0.09314
+      "p": 0.0931
      }
     },
     "llm_zero.gpt-5-mini": {
@@ -734,7 +735,7 @@
      "paired": {
       "only_first_right": 40,
       "only_second_right": 2,
-      "p": 0.0
+      "p": 4.11e-10
      }
     },
     "llm_zero.gpt-5.4": {
@@ -762,7 +763,7 @@
      "paired": {
       "only_first_right": 27,
       "only_second_right": 3,
-      "p": 8e-06
+      "p": 8.43e-06
      }
     }
    },
@@ -839,7 +840,7 @@
      "paired": {
       "only_first_right": 19,
       "only_second_right": 9,
-      "p": 0.087159
+      "p": 0.0872
      }
     },
     "aito_llm.gpt-5.4": {
@@ -853,7 +854,7 @@
      "paired": {
       "only_first_right": 5,
       "only_second_right": 9,
-      "p": 0.42395
+      "p": 0.424
      }
     },
     "aito_llm.gpt-6-luna": {
@@ -881,7 +882,7 @@
      "paired": {
       "only_first_right": 6,
       "only_second_right": 20,
-      "p": 0.009355
+      "p": 0.00936
      }
     },
     "llm_rag.gpt-5.4": {
@@ -895,7 +896,7 @@
      "paired": {
       "only_first_right": 5,
       "only_second_right": 20,
-      "p": 0.004077
+      "p": 0.00408
      }
     },
     "llm_rag.gpt-6-luna": {
@@ -909,7 +910,7 @@
      "paired": {
       "only_first_right": 6,
       "only_second_right": 19,
-      "p": 0.014633
+      "p": 0.0146
      }
     },
     "llm_zero.gpt-5-mini": {
@@ -923,7 +924,7 @@
      "paired": {
       "only_first_right": 41,
       "only_second_right": 7,
-      "p": 1e-06
+      "p": 6.24e-07
      }
     },
     "llm_zero.gpt-5.4": {
@@ -986,7 +987,7 @@
    "paired_vs_aito_same_half": {
     "only_first_right": 6,
     "only_second_right": 38,
-    "p": 1e-06
+    "p": 9.43e-07
    },
    "fallback_alone_same_half": {
     "n": 308,
@@ -1014,7 +1015,7 @@
      "paired": {
       "only_first_right": 38,
       "only_second_right": 6,
-      "p": 1e-06
+      "p": 9.43e-07
      }
     },
     "aito_llm.gpt-5-mini": {
@@ -1028,7 +1029,7 @@
      "paired": {
       "only_first_right": 28,
       "only_second_right": 5,
-      "p": 6.6e-05
+      "p": 6.62e-05
      }
     },
     "aito_llm.gpt-5.4": {
@@ -1042,7 +1043,7 @@
      "paired": {
       "only_first_right": 17,
       "only_second_right": 8,
-      "p": 0.107752
+      "p": 0.108
      }
     },
     "aito_llm.gpt-6-luna": {
@@ -1112,7 +1113,7 @@
      "paired": {
       "only_first_right": 51,
       "only_second_right": 4,
-      "p": 0.0
+      "p": 2.05e-11
      }
     },
     "llm_zero.gpt-5.4": {
@@ -1126,7 +1127,7 @@
      "paired": {
       "only_first_right": 34,
       "only_second_right": 6,
-      "p": 8e-06
+      "p": 8.36e-06
      }
     },
     "llm_zero.gpt-6-luna": {
@@ -1140,13 +1141,13 @@
      "paired": {
       "only_first_right": 38,
       "only_second_right": 5,
-      "p": 0.0
+      "p": 2.5e-07
      }
     }
    },
    "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
    "median_latency_ms": 192.0,
-   "p95_latency_ms": 3298.2
+   "p95_latency_ms": 3367.5
   },
   "aito_then_rag_llm.gpt-5.4": {
    "planned": false,
@@ -1175,7 +1176,7 @@
    "paired_vs_aito_same_half": {
     "only_first_right": 3,
     "only_second_right": 35,
-    "p": 0.0
+    "p": 6.68e-08
    },
    "fallback_alone_same_half": {
     "n": 308,
@@ -1189,7 +1190,7 @@
    "paired_vs_fallback_alone_same_half": {
     "only_first_right": 4,
     "only_second_right": 2,
-    "p": 0.6875
+    "p": 0.688
    },
    "vs_each_arm_same_half": {
     "aito": {
@@ -1203,7 +1204,7 @@
      "paired": {
       "only_first_right": 35,
       "only_second_right": 3,
-      "p": 0.0
+      "p": 6.68e-08
      }
     },
     "aito_llm.gpt-5-mini": {
@@ -1217,7 +1218,7 @@
      "paired": {
       "only_first_right": 28,
       "only_second_right": 5,
-      "p": 6.6e-05
+      "p": 6.62e-05
      }
     },
     "aito_llm.gpt-5.4": {
@@ -1231,7 +1232,7 @@
      "paired": {
       "only_first_right": 16,
       "only_second_right": 7,
-      "p": 0.09314
+      "p": 0.0931
      }
     },
     "aito_llm.gpt-6-luna": {
@@ -1245,7 +1246,7 @@
      "paired": {
       "only_first_right": 19,
       "only_second_right": 4,
-      "p": 0.002599
+      "p": 0.0026
      }
     },
     "llm_rag.gpt-5-mini": {
@@ -1273,7 +1274,7 @@
      "paired": {
       "only_first_right": 2,
       "only_second_right": 4,
-      "p": 0.6875
+      "p": 0.688
      }
     },
     "llm_rag.gpt-6-luna": {
@@ -1301,7 +1302,7 @@
      "paired": {
       "only_first_right": 51,
       "only_second_right": 4,
-      "p": 0.0
+      "p": 2.05e-11
      }
     },
     "llm_zero.gpt-5.4": {
@@ -1315,7 +1316,7 @@
      "paired": {
       "only_first_right": 33,
       "only_second_right": 5,
-      "p": 4e-06
+      "p": 4.26e-06
      }
     },
     "llm_zero.gpt-6-luna": {
@@ -1329,13 +1330,13 @@
      "paired": {
       "only_first_right": 37,
       "only_second_right": 4,
-      "p": 0.0
+      "p": 1.03e-07
      }
     }
    },
    "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
    "median_latency_ms": 88.5,
-   "p95_latency_ms": 2270.9
+   "p95_latency_ms": 2359.2
   },
   "aito_then_rag_llm.gpt-6-luna": {
    "planned": false,
@@ -1364,7 +1365,7 @@
    "paired_vs_aito_same_half": {
     "only_first_right": 5,
     "only_second_right": 37,
-    "p": 0.0
+    "p": 4.43e-07
    },
    "fallback_alone_same_half": {
     "n": 308,
@@ -1392,7 +1393,7 @@
      "paired": {
       "only_first_right": 37,
       "only_second_right": 5,
-      "p": 0.0
+      "p": 4.43e-07
      }
     },
     "aito_llm.gpt-5-mini": {
@@ -1406,7 +1407,7 @@
      "paired": {
       "only_first_right": 28,
       "only_second_right": 5,
-      "p": 6.6e-05
+      "p": 6.62e-05
      }
     },
     "aito_llm.gpt-5.4": {
@@ -1420,7 +1421,7 @@
      "paired": {
       "only_first_right": 16,
       "only_second_right": 7,
-      "p": 0.09314
+      "p": 0.0931
      }
     },
     "aito_llm.gpt-6-luna": {
@@ -1434,7 +1435,7 @@
      "paired": {
       "only_first_right": 21,
       "only_second_right": 6,
-      "p": 0.005925
+      "p": 0.00592
      }
     },
     "llm_rag.gpt-5-mini": {
@@ -1490,7 +1491,7 @@
      "paired": {
       "only_first_right": 50,
       "only_second_right": 3,
-      "p": 0.0
+      "p": 5.52e-12
      }
     },
     "llm_zero.gpt-5.4": {
@@ -1504,7 +1505,7 @@
      "paired": {
       "only_first_right": 34,
       "only_second_right": 6,
-      "p": 8e-06
+      "p": 8.36e-06
      }
     },
     "llm_zero.gpt-6-luna": {
@@ -1518,13 +1519,13 @@
      "paired": {
       "only_first_right": 38,
       "only_second_right": 5,
-      "p": 0.0
+      "p": 2.5e-07
      }
     }
    },
    "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
    "median_latency_ms": 192.0,
-   "p95_latency_ms": 1573.1
+   "p95_latency_ms": 1642.2
   }
  },
  "prices": {
@@ -1552,7 +1553,7 @@
     "first_seen": "2026-09-30T08:48:15Z"
    }
   ],
-  "llm": "Azure OpenAI, Sweden Central"
+  "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
  },
  "latency_note": "wall time per query from the machine that ran run.py; Aito's calls ran one at a time, the LLM's with --workers in parallel, each timed on its own. LLM time excludes rate-limit backoff, which is reported per arm",
  "cost_note": "LLM spend only, at the listed prices. Aito has its own compute and licence cost, which is not LLM spend; say 'no LLM spend / 0 tokens', never '$0'"

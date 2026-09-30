@@ -17,18 +17,18 @@
   "note": "every arm is scored on these same queries, so the comparisons are paired"
  },
  "measured_at": "2026-09-30T09:22:14+00:00",
- "summarized_at": "2026-09-30T10:34:52+00:00",
+ "summarized_at": "2026-09-30T11:32:20+00:00",
  "run_files_last_written": {
-  "aito": "2026-09-30T09:14:23+00:00",
-  "aito_full": "2026-09-30T09:14:23+00:00",
-  "aito_llm.gpt-5-mini": "2026-09-30T10:19:08+00:00",
-  "aito_llm.gpt-6-luna": "2026-09-30T10:26:22+00:00",
-  "llm_rag.gpt-5-mini": "2026-09-30T10:34:22+00:00",
-  "llm_rag.gpt-5.4": "2026-09-30T09:21:59+00:00",
-  "llm_rag.gpt-6-luna": "2026-09-30T10:24:11+00:00",
-  "llm_zero.gpt-5-mini": "2026-09-30T09:56:10+00:00",
-  "llm_zero.gpt-5.4": "2026-09-30T09:18:06+00:00",
-  "llm_zero.gpt-6-luna": "2026-09-30T10:21:21+00:00"
+  "aito": "2026-09-30T11:31:18+00:00",
+  "aito_full": "2026-09-30T11:31:18+00:00",
+  "aito_llm.gpt-5-mini": "2026-09-30T11:31:18+00:00",
+  "aito_llm.gpt-6-luna": "2026-09-30T11:31:18+00:00",
+  "llm_rag.gpt-5-mini": "2026-09-30T11:31:18+00:00",
+  "llm_rag.gpt-5.4": "2026-09-30T11:31:18+00:00",
+  "llm_rag.gpt-6-luna": "2026-09-30T11:31:18+00:00",
+  "llm_zero.gpt-5-mini": "2026-09-30T11:31:18+00:00",
+  "llm_zero.gpt-5.4": "2026-09-30T11:31:18+00:00",
+  "llm_zero.gpt-6-luna": "2026-09-30T11:31:18+00:00"
  },
  "arms": {
   "aito": {
@@ -47,7 +47,8 @@
    "llm": {
     "calls_per_query": 0.0,
     "tokens_per_query": 0,
-    "usd_per_1000_queries": 0.0
+    "usd_per_1000_queries": null,
+    "llm_spend": "none: no LLM calls (Aito has its own compute and licence cost)"
    }
   },
   "aito_llm.gpt-5-mini": {
@@ -322,27 +323,27 @@
   "aito_llm.gpt-5-mini": {
    "only_first_right": 9,
    "only_second_right": 57,
-   "p": 0.0
+   "p": 1.18e-09
   },
   "aito_llm.gpt-6-luna": {
    "only_first_right": 5,
    "only_second_right": 60,
-   "p": 0.0
+   "p": 4.87e-13
   },
   "llm_rag.gpt-5-mini": {
    "only_first_right": 6,
    "only_second_right": 71,
-   "p": 0.0
+   "p": 3.42e-15
   },
   "llm_rag.gpt-5.4": {
    "only_first_right": 1,
    "only_second_right": 72,
-   "p": 0.0
+   "p": 1.57e-20
   },
   "llm_rag.gpt-6-luna": {
    "only_first_right": 2,
    "only_second_right": 72,
-   "p": 0.0
+   "p": 2.94e-19
   },
   "llm_zero.gpt-5-mini": {
    "only_first_right": 31,
@@ -352,12 +353,12 @@
   "llm_zero.gpt-5.4": {
    "only_first_right": 17,
    "only_second_right": 68,
-   "p": 0.0
+   "p": 2.18e-08
   },
   "llm_zero.gpt-6-luna": {
    "only_first_right": 23,
    "only_second_right": 68,
-   "p": 3e-06
+   "p": 2.52e-06
   },
   "bonferroni_threshold": 0.00625,
   "note": "only_first_right = Aito right, the other wrong. A p below the threshold is a difference at this n; above it, it is not shown."
@@ -404,7 +405,7 @@
    "paired_vs_fallback_alone_same_half": {
     "only_first_right": 7,
     "only_second_right": 2,
-    "p": 0.179688
+    "p": 0.18
    },
    "vs_each_arm_same_half": {
     "aito": {
@@ -432,7 +433,7 @@
      "paired": {
       "only_first_right": 2,
       "only_second_right": 7,
-      "p": 0.179688
+      "p": 0.18
      }
     },
     "aito_llm.gpt-6-luna": {
@@ -446,7 +447,7 @@
      "paired": {
       "only_first_right": 5,
       "only_second_right": 12,
-      "p": 0.143463
+      "p": 0.143
      }
     },
     "llm_rag.gpt-5-mini": {
@@ -502,7 +503,7 @@
      "paired": {
       "only_first_right": 11,
       "only_second_right": 13,
-      "p": 0.83882
+      "p": 0.839
      }
     },
     "llm_zero.gpt-5.4": {
@@ -516,7 +517,7 @@
      "paired": {
       "only_first_right": 6,
       "only_second_right": 14,
-      "p": 0.115318
+      "p": 0.115
      }
     },
     "llm_zero.gpt-6-luna": {
@@ -530,7 +531,7 @@
      "paired": {
       "only_first_right": 9,
       "only_second_right": 14,
-      "p": 0.404873
+      "p": 0.405
      }
     }
    },
@@ -565,7 +566,7 @@
    "paired_vs_aito_same_half": {
     "only_first_right": 1,
     "only_second_right": 22,
-    "p": 6e-06
+    "p": 5.72e-06
    },
    "fallback_alone_same_half": {
     "n": 300,
@@ -579,7 +580,7 @@
    "paired_vs_fallback_alone_same_half": {
     "only_first_right": 6,
     "only_second_right": 2,
-    "p": 0.289062
+    "p": 0.289
    },
    "vs_each_arm_same_half": {
     "aito": {
@@ -593,7 +594,7 @@
      "paired": {
       "only_first_right": 22,
       "only_second_right": 1,
-      "p": 6e-06
+      "p": 5.72e-06
      }
     },
     "aito_llm.gpt-5-mini": {
@@ -607,7 +608,7 @@
      "paired": {
       "only_first_right": 8,
       "only_second_right": 10,
-      "p": 0.814529
+      "p": 0.815
      }
     },
     "aito_llm.gpt-6-luna": {
@@ -621,7 +622,7 @@
      "paired": {
       "only_first_right": 2,
       "only_second_right": 6,
-      "p": 0.289062
+      "p": 0.289
      }
     },
     "llm_rag.gpt-5-mini": {
@@ -635,7 +636,7 @@
      "paired": {
       "only_first_right": 2,
       "only_second_right": 13,
-      "p": 0.007385
+      "p": 0.00739
      }
     },
     "llm_rag.gpt-5.4": {
@@ -663,7 +664,7 @@
      "paired": {
       "only_first_right": 1,
       "only_second_right": 13,
-      "p": 0.001831
+      "p": 0.00183
      }
     },
     "llm_zero.gpt-5-mini": {
@@ -691,7 +692,7 @@
      "paired": {
       "only_first_right": 6,
       "only_second_right": 11,
-      "p": 0.332306
+      "p": 0.332
      }
     },
     "llm_zero.gpt-6-luna": {
@@ -705,7 +706,7 @@
      "paired": {
       "only_first_right": 9,
       "only_second_right": 11,
-      "p": 0.823803
+      "p": 0.824
      }
     }
    },
@@ -740,7 +741,7 @@
    "paired_vs_aito_same_half": {
     "only_first_right": 0,
     "only_second_right": 26,
-    "p": 0.0
+    "p": 2.98e-08
    },
    "fallback_alone_same_half": {
     "n": 300,
@@ -754,7 +755,7 @@
    "paired_vs_fallback_alone_same_half": {
     "only_first_right": 7,
     "only_second_right": 1,
-    "p": 0.070312
+    "p": 0.0703
    },
    "vs_each_arm_same_half": {
     "aito": {
@@ -768,7 +769,7 @@
      "paired": {
       "only_first_right": 26,
       "only_second_right": 0,
-      "p": 0.0
+      "p": 2.98e-08
      }
     },
     "aito_llm.gpt-5-mini": {
@@ -782,7 +783,7 @@
      "paired": {
       "only_first_right": 10,
       "only_second_right": 7,
-      "p": 0.629059
+      "p": 0.629
      }
     },
     "aito_llm.gpt-6-luna": {
@@ -810,7 +811,7 @@
      "paired": {
       "only_first_right": 1,
       "only_second_right": 7,
-      "p": 0.070312
+      "p": 0.0703
      }
     },
     "llm_rag.gpt-5.4": {
@@ -824,7 +825,7 @@
      "paired": {
       "only_first_right": 1,
       "only_second_right": 8,
-      "p": 0.039062
+      "p": 0.0391
      }
     },
     "llm_rag.gpt-6-luna": {
@@ -838,7 +839,7 @@
      "paired": {
       "only_first_right": 2,
       "only_second_right": 9,
-      "p": 0.06543
+      "p": 0.0654
      }
     },
     "llm_zero.gpt-5-mini": {
@@ -852,7 +853,7 @@
      "paired": {
       "only_first_right": 14,
       "only_second_right": 8,
-      "p": 0.286279
+      "p": 0.286
      }
     },
     "llm_zero.gpt-5.4": {
@@ -880,19 +881,20 @@
      "paired": {
       "only_first_right": 12,
       "only_second_right": 9,
-      "p": 0.663624
+      "p": 0.664
      }
     }
    },
    "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
    "median_latency_ms": 73.9,
-   "p95_latency_ms": 2684.3
+   "p95_latency_ms": 2761.0
   },
   "aito_then_rag_llm.gpt-5.4": {
    "planned": true,
    "preregistered": {
     "file": "PREREGISTRATION.md + gate_rule.json",
-    "commit": "f49c5062"
+    "commit": "f49c5062",
+    "addendum_commit": "020a2d2c (the per-dataset prompt phrase)"
    },
    "status": "pre-registered",
    "threshold_fit_on": 300,
@@ -918,7 +920,7 @@
    "paired_vs_aito_same_half": {
     "only_first_right": 0,
     "only_second_right": 26,
-    "p": 0.0
+    "p": 2.98e-08
    },
    "fallback_alone_same_half": {
     "n": 300,
@@ -932,7 +934,7 @@
    "paired_vs_fallback_alone_same_half": {
     "only_first_right": 7,
     "only_second_right": 0,
-    "p": 0.015625
+    "p": 0.0156
    },
    "vs_each_arm_same_half": {
     "aito": {
@@ -946,7 +948,7 @@
      "paired": {
       "only_first_right": 26,
       "only_second_right": 0,
-      "p": 0.0
+      "p": 2.98e-08
      }
     },
     "aito_llm.gpt-5-mini": {
@@ -960,7 +962,7 @@
      "paired": {
       "only_first_right": 11,
       "only_second_right": 8,
-      "p": 0.647606
+      "p": 0.648
      }
     },
     "aito_llm.gpt-6-luna": {
@@ -988,7 +990,7 @@
      "paired": {
       "only_first_right": 2,
       "only_second_right": 8,
-      "p": 0.109375
+      "p": 0.109
      }
     },
     "llm_rag.gpt-5.4": {
@@ -1002,7 +1004,7 @@
      "paired": {
       "only_first_right": 0,
       "only_second_right": 7,
-      "p": 0.015625
+      "p": 0.0156
      }
     },
     "llm_rag.gpt-6-luna": {
@@ -1016,7 +1018,7 @@
      "paired": {
       "only_first_right": 1,
       "only_second_right": 8,
-      "p": 0.039062
+      "p": 0.0391
      }
     },
     "llm_zero.gpt-5-mini": {
@@ -1030,7 +1032,7 @@
      "paired": {
       "only_first_right": 14,
       "only_second_right": 8,
-      "p": 0.286279
+      "p": 0.286
      }
     },
     "llm_zero.gpt-5.4": {
@@ -1058,13 +1060,13 @@
      "paired": {
       "only_first_right": 11,
       "only_second_right": 8,
-      "p": 0.647606
+      "p": 0.648
      }
     }
    },
    "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
    "median_latency_ms": 73.9,
-   "p95_latency_ms": 1806.3
+   "p95_latency_ms": 1876.7
   },
   "aito_then_rag_llm.gpt-6-luna": {
    "planned": false,
@@ -1093,7 +1095,7 @@
    "paired_vs_aito_same_half": {
     "only_first_right": 0,
     "only_second_right": 26,
-    "p": 0.0
+    "p": 2.98e-08
    },
    "fallback_alone_same_half": {
     "n": 300,
@@ -1107,7 +1109,7 @@
    "paired_vs_fallback_alone_same_half": {
     "only_first_right": 8,
     "only_second_right": 1,
-    "p": 0.039062
+    "p": 0.0391
    },
    "vs_each_arm_same_half": {
     "aito": {
@@ -1121,7 +1123,7 @@
      "paired": {
       "only_first_right": 26,
       "only_second_right": 0,
-      "p": 0.0
+      "p": 2.98e-08
      }
     },
     "aito_llm.gpt-5-mini": {
@@ -1135,7 +1137,7 @@
      "paired": {
       "only_first_right": 11,
       "only_second_right": 8,
-      "p": 0.647606
+      "p": 0.648
      }
     },
     "aito_llm.gpt-6-luna": {
@@ -1163,7 +1165,7 @@
      "paired": {
       "only_first_right": 2,
       "only_second_right": 8,
-      "p": 0.109375
+      "p": 0.109
      }
     },
     "llm_rag.gpt-5.4": {
@@ -1177,7 +1179,7 @@
      "paired": {
       "only_first_right": 0,
       "only_second_right": 7,
-      "p": 0.015625
+      "p": 0.0156
      }
     },
     "llm_rag.gpt-6-luna": {
@@ -1191,7 +1193,7 @@
      "paired": {
       "only_first_right": 1,
       "only_second_right": 8,
-      "p": 0.039062
+      "p": 0.0391
      }
     },
     "llm_zero.gpt-5-mini": {
@@ -1205,7 +1207,7 @@
      "paired": {
       "only_first_right": 14,
       "only_second_right": 8,
-      "p": 0.286279
+      "p": 0.286
      }
     },
     "llm_zero.gpt-5.4": {
@@ -1233,13 +1235,13 @@
      "paired": {
       "only_first_right": 11,
       "only_second_right": 8,
-      "p": 0.647606
+      "p": 0.648
      }
     }
    },
    "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
    "median_latency_ms": 73.9,
-   "p95_latency_ms": 1150.5
+   "p95_latency_ms": 1222.9
   }
  },
  "preregistered_verdict": {
@@ -1249,7 +1251,7 @@
   "accuracy_kept": false,
   "calls_saved": true,
   "gate_minus_fallback": -0.0233,
-  "ci95": [
+  "ci95_wald_paired": [
    -0.0404,
    -0.0063
   ],
@@ -1281,7 +1283,7 @@
     "first_seen": "2026-09-30T09:08:49Z"
    }
   ],
-  "llm": "Azure OpenAI, Sweden Central"
+  "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
  },
  "latency_note": "wall time per query from the machine that ran run.py; Aito's calls ran one at a time, the LLM's with --workers in parallel, each timed on its own. LLM time excludes rate-limit backoff, which is reported per arm",
  "cost_note": "LLM spend only, at the listed prices. Aito has its own compute and licence cost, which is not LLM spend; say 'no LLM spend / 0 tokens', never '$0'"

@@ -69,6 +69,10 @@ cmd_bench_banking77() {
   # fetch (pinned sha256) -> check the Aito load -> embed for RAG -> run every arm -> summarize.
   # Resumable: re-running continues where it stopped. The load itself is a separate, explicit step.
   local b=scripts/bench_banking77
+  if [ -z "${BANKING77_RESULTS:-}" ]; then
+    say "note: no BANKING77_RESULTS given, so the runs resume from the committed answers in $b/results/;"
+    say "      to measure afresh, set BANKING77_RESULTS to an empty directory (see $b/README.md)"
+  fi
   python3 "$b/fetch.py"
   uv run --with 'aitoai>=1.0' python "$b/load.py" --check || return 1
   uv run python "$b/embed.py"

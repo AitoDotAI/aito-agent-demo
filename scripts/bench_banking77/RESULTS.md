@@ -55,9 +55,9 @@ queries).
 | Aito, else shortlist → gpt-5-mini (planned) | 87.7% | 85.7% | 40% | 0.09 s · 3.4 s |
 | Aito, else shortlist → gpt-5.4 (planned) | 90.3% | 90.3% | 50% | 0.19 s · 2.7 s |
 | Aito, else shortlist → gpt-6-luna (model added later) | 89.0% | 88.3% | 50% | 0.19 s · 1.7 s |
-| Aito, else RAG → gpt-5-mini (**post hoc**) | 93.2% | 93.5% | 50% | 0.19 s · 3.3 s |
-| Aito, else RAG → gpt-5.4 (**post hoc**) | 93.2% | 93.8% | 40% | 0.09 s · 2.3 s |
-| Aito, else RAG → gpt-6-luna (**post hoc**) | 93.2% | 93.2% | 50% | 0.19 s · 1.6 s |
+| Aito, else RAG → gpt-5-mini (**post hoc**) | 93.2% | 93.5% | 50% | 0.19 s · 3.4 s |
+| Aito, else RAG → gpt-5.4 (**post hoc**) | 93.2% | 93.8% | 40% | 0.09 s · 2.4 s |
+| Aito, else RAG → gpt-6-luna (model added later) | 93.2% | 93.2% | 50% | 0.19 s · 1.6 s |
 
 No gate is distinguishable from its fallback alone (paired p 0.18–1.0). So a
 gate keeps the LLM's accuracy while 50–60% of messages are answered by Aito in
@@ -157,7 +157,8 @@ probes this cheaply, with metrics fixed before the first run
     1 verbatim continuation in 300 ("Who accepts" → "this card?"). The first three
     words matched in 0–4%.
   - Listing the intent labels: 0–2 of banking77's 77 and 0–12 of CLINC150's 150
-    exactly. The hits are generic names any model would guess (`book_flight`,
+    exactly (gpt-5-mini's 0 on CLINC150 is an empty answer, not a list that missed).
+    The hits are generic names any model would guess (`book_flight`,
     `pay_bill`, `tell_joke`, `change_pin`), not the datasets' idiosyncratic ones
     (e.g. banking77's `Refund_not_showing_up`).
 

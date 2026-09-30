@@ -6,7 +6,7 @@ Bonferroni threshold for the number of comparisons made. Accuracy has 95%
 Wilson intervals. The gated arm's threshold is chosen on one half of the sample
 and scored on the other, so it is not fitted to the queries it is scored on.
 
-    python3 scripts/bench_banking77/summarize.py
+    uv run python scripts/bench_banking77/summarize.py        (it imports llm.py, which needs openai)
 """
 
 from __future__ import annotations
@@ -19,10 +19,12 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from common import CFG, DATASET, RESULTS, SEED, ece, jsonl, labels, mcnemar, pct, sample, share, split
+from common import CFG, DATASET, RESULTS, ROOT, SEED, ece, jsonl, labels, mcnemar, pct, sample, share, split
 from llm import PRICES
 
 RUNS = RESULTS / "runs"
+#: our recorded runs (the committed results/), as opposed to someone's rerun into another directory
+RECORDED = not os.environ.get("BANKING77_RESULTS")
 #: when each dataset's first results were measured (their summaries are re-run as arms are added)
 FIRST_MEASURED = {"banking77": "2026-09-30T08:53:00+00:00", "clinc150": "2026-09-30T09:22:14+00:00"}
 #: the frozen gate rule (PREREGISTRATION.md); the code below implements exactly it
@@ -49,7 +51,8 @@ def arm_stats(rows: list[dict], qids: list[str]) -> dict:
                       "invalid_label_answers": sum(r["pred"] is None for r in rs),
                       "rate_limit_backoff_ms_total": sum(r.get("backoff_ms", 0) for r in rs)}
     else:
-        out["llm"] = {"calls_per_query": 0.0, "tokens_per_query": 0, "usd_per_1000_queries": 0.0}
+        out["llm"] = {"calls_per_query": 0.0, "tokens_per_query": 0, "usd_per_1000_queries": None,
+                      "llm_spend": "none: no LLM calls (Aito has its own compute and licence cost)"}
     return out
 
 
@@ -82,7 +85,7 @@ def main() -> int:
                     "labels": len(labels(train))},
         "sample": {"per_intent": len(picked) // len(labels(train)), "n": len(picked), "seed": SEED,
                    "note": "every arm is scored on these same queries, so the comparisons are paired"},
-        "measured_at": FIRST_MEASURED.get(DATASET) or datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "measured_at": (FIRST_MEASURED.get(DATASET) if RECORDED else None) or datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "summarized_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "run_files_last_written": {p.stem: datetime.fromtimestamp(p.stat().st_mtime, timezone.utc).isoformat(timespec="seconds")
                                    for p in sorted(RUNS.glob("*.jsonl"))},
@@ -122,7 +125,8 @@ def main() -> int:
             "planned": (kind == "aito_llm" and model in FIRST_RUN_MODELS) if DATASET == "banking77"
                        else name == RULE["clinc150_fallback"],
             "preregistered": (None if DATASET == "banking77" or name != RULE["clinc150_fallback"] else
-                              {"file": "PREREGISTRATION.md + gate_rule.json", "commit": PREREG_COMMIT}),
+                              {"file": "PREREGISTRATION.md + gate_rule.json", "commit": PREREG_COMMIT,
+                               "addendum_commit": "020a2d2c (the per-dataset prompt phrase)"}),
             "status": ("pre-registered" if DATASET != "banking77" and name == RULE["clinc150_fallback"] else
                        "planned" if DATASET == "banking77" and kind == "aito_llm" and model in FIRST_RUN_MODELS else
                        "post hoc: found after the first results" if DATASET == "banking77" and model in FIRST_RUN_MODELS else
@@ -143,8 +147,11 @@ def main() -> int:
                 for other, rows in arms.items()},
             "vs_each_arm_note": ("descriptive: one paired McNemar per arm, not corrected for the number of "
                                  "comparisons; only_first_right = the gate right, the arm wrong"),
-            "median_latency_ms": pct([aito[q]["ms"] if aito[q]["p"] >= best else coop[q]["ms"] for q in hold], 0.5),
-            "p95_latency_ms": pct([aito[q]["ms"] if aito[q]["p"] >= best else coop[q]["ms"] for q in hold], 0.95)}
+            # the fallback ran after Aito's call: the shortlist arm's time already includes it, RAG's does not
+            "median_latency_ms": pct([aito[q]["ms"] if aito[q]["p"] >= best else
+                                      coop[q]["ms"] + (aito[q]["ms"] if kind == "llm_rag" else 0) for q in hold], 0.5),
+            "p95_latency_ms": pct([aito[q]["ms"] if aito[q]["p"] >= best else
+                                   coop[q]["ms"] + (aito[q]["ms"] if kind == "llm_rag" else 0) for q in hold], 0.95)}
 
     # the pre-registered test (PREREGISTRATION.md, gate_rule.json), on any dataset but banking77
     if DATASET != "banking77":
@@ -162,7 +169,7 @@ def main() -> int:
             out["preregistered_verdict"] = {
                 "rule": "gate_rule.json", "fallback": fb, "threshold": g["threshold"],
                 "accuracy_kept": kept, "calls_saved": saved,
-                "gate_minus_fallback": round(diff, 4), "ci95": [round(diff - 1.96 * se, 4), round(diff + 1.96 * se, 4)],
+                "gate_minus_fallback": round(diff, 4), "ci95_wald_paired": [round(diff - 1.96 * se, 4), round(diff + 1.96 * se, 4)],
                 "share_calling_llm": g["share_calling_llm"],
                 "status": "confirmed" if kept and saved else "not confirmed"}
 
@@ -173,11 +180,16 @@ def main() -> int:
                                 "latency_note": ("the RAG arm's latency counts the query's embedding call and the "
                                                  "LLM call; the vector search itself ran in pure Python here and is "
                                                  "left out, since a vector database does it in milliseconds")}
-    out["latency_client"] = os.environ.get("BENCH_CLIENT", "the maintainer's workstation; not a neutral client")
+    out["latency_client"] = os.environ.get("BENCH_CLIENT") or ("the maintainer's workstation; not a neutral client"
+                                                               if RECORDED else "unknown: set BENCH_CLIENT")
     engine = RUNS / "engine.json"
-    out["endpoints"] = {"aito": "shared.aito.ai, Aito v2",
+    from urllib.parse import urlparse
+    sys.path.insert(0, str(ROOT))
+    from src.config import load_config  # the repo's configuration, for the endpoint hosts
+    llm_url = os.environ.get("OPENAI_MODEL_URL")
+    out["endpoints"] = {"aito": f"{urlparse(load_config().aito_url).hostname}, Aito v2",
                         "aito_engine": json.loads(engine.read_text()) if engine.exists() else None,
-                        "llm": "Azure OpenAI, Sweden Central"}
+                        "llm": f"Azure OpenAI, {urlparse(llm_url).hostname}" if llm_url else "OpenAI"}
     out["latency_note"] = ("wall time per query from the machine that ran run.py; Aito's calls ran one at a time, "
                            "the LLM's with --workers in parallel, each timed on its own. LLM time excludes "
                            "rate-limit backoff, which is reported per arm")
