@@ -296,14 +296,14 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
         <div className="rc-body">
           {/* KPIs */}
           <div className="rc-kpis">
-            <div className="rc-kpi"><div className="kl">Aito · predict-first</div><div className="kv t">{aitoMs != null ? `${aitoMs.toFixed(0)}ms` : "—"}</div><div className="ks">two _predict calls · $0 LLM</div></div>
+            <div className="rc-kpi"><div className="kl">Aito · predict-first</div><div className="kv t">{aitoMs != null ? `${aitoMs.toFixed(0)}ms` : "—"}</div><div className="ks">two _predict calls · 0 LLM tokens</div></div>
             <div className="rc-kpi"><div className="kl">LLM agent · live</div><div className="kv p">{llmLoading ? `${(llmElapsed / 1000).toFixed(1)}s` : llmMs != null ? `${(llmMs / 1000).toFixed(1)}s` : llmErr ? "n/a" : "—"}</div><div className="ks">{llm ? `${llm.tokens} tokens` : "gpt-5-mini, one call"}</div></div>
             <div className="rc-kpi"><div className="kl">Speed-up</div><div className="kv t">{speedup ? `${speedup}×` : "—"}</div><div className="ks">Aito vs one agent call</div></div>
-            <div className="rc-kpi"><div className="kl">LLM cost / resolution</div><div className="kv">{llm ? `$${llm.cost_usd.toFixed(5)}` : "—"}</div><div className="ks"><span style={{ color: "var(--turq)", fontWeight: 700 }}>Aito $0</span> · per ticket</div></div>
+            <div className="rc-kpi"><div className="kl">LLM cost / resolution</div><div className="kv">{llm ? `$${llm.cost_usd.toFixed(5)}` : "—"}</div><div className="ks"><span style={{ color: "var(--turq)", fontWeight: 700 }}>Aito: no LLM spend</span> · per ticket</div></div>
           </div>
 
           <div className="rc-h">Same ticket, two engines</div>
-          <div className="rc-sub">The <b>LLM agent</b> reasons the resolution out on every ticket, seconds and tokens. <code>aito._predict</code> reads the <b>intent</b> and the one parameter it needs straight from history, two calls, sub-second, $0, with a calibrated <b>why</b>. Watch the response rates live.</div>
+          <div className="rc-sub">The <b>LLM agent</b> reasons the resolution out on every ticket, seconds and tokens. <code>aito._predict</code> reads the <b>intent</b> and the one parameter it needs straight from history, two calls, sub-second, no LLM spend, with a calibrated <b>why</b>. Watch the response rates live.</div>
 
           {/* intake */}
           <div className="rc-ctl">

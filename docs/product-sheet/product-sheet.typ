@@ -137,7 +137,7 @@ actions are gated: it drafts the email, it never sends.
 #v(6pt)
 #text(size: 9pt, fill: muted)[
   Toolbox on/off · grounded numbers vs flagged guesses · 4 Aito calls in ~0.8 s,
-  \$0 · the LLM call reasons; Aito supplies the facts.
+  no LLM spend · the LLM call reasons; Aito supplies the facts.
 ]
 
 #v(0.6cm)
@@ -189,7 +189,7 @@ the per-prediction `$why` pattern used across the Aito demos:
 
 The same ticket, two engines, side by side. An LLM agent reasons the resolution out
 on every ticket — seconds and tokens. `aito._predict` reads the intent and the one
-parameter it needs straight from history — two calls, sub-second, \$0, with a
+parameter it needs straight from history — two calls, sub-second, no LLM spend, with a
 calibrated `$why`. A confident hit is served instantly (a cache hit); a miss falls
 through to the LLM, whose answer becomes the next cache entry. The `$p` gate routes
 the unsure ones to a human, and anything sensitive (refund, cancel) is gated regardless.
@@ -207,7 +207,7 @@ otherwise reach for.
 #v(0.3cm)
 #grid(
   columns: (1fr, 1fr, 1fr), gutter: 10pt,
-  feature("Shortlisting holds at scale", "Embedding-retrieval shortlist degrades as the catalog grows; Aito holds and hands the LLM ~16× fewer tokens for the same pick.", icon: "01"),
+  feature("Shortlisting holds at scale", "Embedding-retrieval shortlist degrades as the catalog grows; Aito holds and hands the LLM ~17× fewer input tokens, and a better pick (20/20 vs 13–15/20).", icon: "01"),
   feature("~9–10× lower latency", "A 6-step LLM resolution chains to ≈22 s; Aito predicts in parallel in ~0.15 s — resolved before the agent clears step one.", icon: "02"),
   feature("Right context-memory", "Vector search picks the wrong customer's memory 86% of the time; Aito conditions on structure and recovers what the text can't identify.", icon: "03"),
 )
