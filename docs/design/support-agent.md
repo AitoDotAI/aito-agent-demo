@@ -99,6 +99,16 @@ gpt-6-luna read has a hard 120 s limit with a visible wait and a cancel. An Aito
 blanks that step (the engine's mergeSampleFreqs 500, td-20260929182755894024) instead of failing the
 ticket; more than half the steps failing is reported as Aito being down.
 
+**After review (2026-09-30):** the figure guard checks whole numbers the facts state (an article id
+no longer vouches for "24 hours"), catches number words and business days, and a new deadlines guard
+stops promised times ("tomorrow", "next week", "immediately"). Links are parsed as hosts and must be
+exactly an allowed host or a subdomain of one. `fits` must be a literal yes. The rate limit keys on the
+client address our proxies added (RATE_LIMIT_PROXY_HOPS, default 2: Azure's front end, then nginx),
+not the first X-Forwarded-For entry, which a client can set; visitor-text envelopes are limited too;
+at most two gpt-6-luna reads run at once; the budget reserves tokens before each call. Re-checked
+offline on the recorded run's 14 auto-sent real replies, 1 would now go to a person ("escalate this
+immediately"), so the stricter guards cost about 1 in 14 routine auto-sends.
+
 **The sanity set** (scripts/support_fixture/reply_probes.py, live, 2026-09-29): unfamiliar, vague and
 injection tickets that must never be auto-sent, each run from two real senders, plus 20 real
 held-out tickets.

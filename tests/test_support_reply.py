@@ -270,3 +270,45 @@ def test_the_prompt_carries_the_decided_facts(monkeypatch):
     prompt = agents[0].sent["messages"][1]["content"]
     assert "resolution: sso reconnect" in prompt and "KB-07g" in prompt
     assert "customer success manager" in prompt  # the csm_outreach recovery, in words
+
+
+# ── from the review of #21/#25: each of these got through before ──
+
+@pytest.mark.parametrize("reply, tripped", [
+    ("This will be fixed within 24 hours.", "figures"),                 # the facts' KB-1024 must not vouch for "24"
+    ("Expect it in 2 business days.", "figures"),
+    ("You will hear from us in two days.", "figures"),
+    ("We will have it done by tomorrow.", "deadlines"),
+    ("A fix ships next week.", "deadlines"),
+    ("Log in at support.northwind.example.evil.com to continue.", "links"),   # not a prefix match
+    ("See bit.ly/abc for the steps.", "links"),
+    ("Reset it at evil.xyz/login.", "links"),
+])
+def test_review_cases_trip(reply, tripped):
+    kb = {**KB, "article_id": "KB-1024"}
+    facts = R.facts_of(_env(), kb, None)
+    assert tripped in [g["name"] for g in R.guard(reply, facts) if not g["ok"]], reply
+
+
+@pytest.mark.parametrize("reply", ["Open a case at https://support.northwind.example/new.",
+                                   "Our portal help.support.northwind.example has the form.",
+                                   "Follow KB-07g, step 1 then step 2."])
+def test_review_cases_still_pass(reply):
+    facts = R.facts_of(_env(), KB, None)
+    assert all(g["ok"] for g in R.guard(reply, facts) if g["name"] in ("links", "figures", "deadlines")), reply
+
+
+def test_a_missing_fits_is_not_a_fit(llm):
+    answers, _ = llm
+    answers["routine"] = {"problem": "SSO login fails", "reply": "Hi, see KB-07g."}          # no "fits" at all
+    answers["unfamiliar"] = {"reading": "x", "resolution": None, "reply": "Hi.", "note": ""}
+    d = R.draft_reply(_env(), KB, None, OPTIONS)
+    assert d["send"] == "review" and d["path"] == "unfamiliar"
+
+
+def test_concurrent_calls_cannot_all_pass_one_budget_check(monkeypatch):
+    monkeypatch.setattr(R, "DAILY_TOKENS", R.RESERVE * 2)
+    R._reserve()
+    R._reserve()                      # both reservations taken before either call returns
+    with pytest.raises(R.Paused):
+        R._reserve()

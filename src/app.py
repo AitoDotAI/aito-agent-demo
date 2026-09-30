@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
 import time
 from pathlib import Path
 
@@ -72,9 +73,8 @@ async def aito_latency_headers(request: Request, call_next):
 # ── Rate limit: the live LLM endpoints are public and paid per call ──
 #
 # Aito predictions are cheap and stay unthrottled; the gpt-5-mini routes get a
-# light per-IP sliding-window cap as abuse insurance (nginx forwards the real
-# client IP in X-Forwarded-For). In-memory is fine — one uvicorn process, and a
-# demo doesn't need a shared store.
+# light per-IP sliding-window cap as abuse insurance. In-memory is fine — one
+# uvicorn process, and a demo doesn't need a shared store.
 _LLM_PATHS = {"/api/resolve-llm", "/api/route", "/api/sales-agent/chat", "/api/company-agent/chat",
               "/api/support/reply"}
 _RL_MAX = 20          # requests
@@ -82,27 +82,44 @@ _RL_MAX = 20          # requests
 _RL_MAX_BY_PATH = {"/api/support/reply": 6}
 _RL_WINDOW = 60.0     # seconds
 _rl_hits: dict[str, list[float]] = {}
+#: proxies that APPEND to X-Forwarded-For in front of the app: Azure's front end, then
+#: nginx ($proxy_add_x_forwarded_for). Entries left of those are whatever the client sent,
+#: so the client is the entry that many hops from the right, never the first one.
+_PROXY_HOPS = int(os.environ.get("RATE_LIMIT_PROXY_HOPS", "2"))
+
+
+def _client_ip(request: Request) -> str:
+    hops = [h.strip() for h in request.headers.get("x-forwarded-for", "").split(",") if h.strip()]
+    if hops:
+        return hops[-min(_PROXY_HOPS, len(hops))]
+    return request.client.host if request.client else "anon"
+
+
+def _over_limit(request: Request, key_path: str, limit: int) -> bool:
+    """Record one hit for this client on key_path; True when it is over `limit` a minute."""
+    now = time.monotonic()
+    key = f"{_client_ip(request)} {key_path}"
+    recent = [t for t in _rl_hits.get(key, []) if now - t < _RL_WINDOW]
+    if len(recent) >= limit:
+        return True
+    recent.append(now)
+    _rl_hits[key] = recent
+    if len(_rl_hits) > 5000:  # bound memory: drop anyone with no live hits
+        for k in [k for k, v in list(_rl_hits.items()) if not any(now - t < _RL_WINDOW for t in v)]:
+            _rl_hits.pop(k, None)
+    return False
 
 
 @app.middleware("http")
 async def rate_limit_llm(request: Request, call_next):
-    if request.url.path in _LLM_PATHS:
-        fwd = request.headers.get("x-forwarded-for", "")
-        ip = fwd.split(",")[0].strip() or (request.client.host if request.client else "anon")
-        now = time.monotonic()
-        key = f"{ip} {request.url.path}" if request.url.path in _RL_MAX_BY_PATH else ip
-        recent = [t for t in _rl_hits.get(key, []) if now - t < _RL_WINDOW]
-        if len(recent) >= _RL_MAX_BY_PATH.get(request.url.path, _RL_MAX):
+    path = request.url.path
+    if path in _LLM_PATHS:
+        if _over_limit(request, path if path in _RL_MAX_BY_PATH else "llm", _RL_MAX_BY_PATH.get(path, _RL_MAX)):
             from fastapi.responses import JSONResponse
             return JSONResponse(
                 {"detail": "Too many AI requests from your network. Give it a few seconds."},
                 status_code=429,
             )
-        recent.append(now)
-        _rl_hits[key] = recent
-        if len(_rl_hits) > 5000:  # bound memory: drop anyone with no live hits
-            for k in [k for k, v in _rl_hits.items() if not any(now - t < _RL_WINDOW for t in v)]:
-                _rl_hits.pop(k, None)
     return await call_next(request)
 
 
@@ -1164,24 +1181,33 @@ def _envelope_for(ticket_id: str, text: str | None) -> dict:
     if not _support_loaded():
         raise HTTPException(status_code=503, detail="The support fixture is not loaded in this environment yet.")
     key = (id(_support_client()), ticket_id, None if ticket["customer"] is not None else ticket["text"])
-    if key not in _envelopes:
-        try:
-            out = envelope(_support_client(), ticket, steps)
-        except AitoError as e:
-            raise HTTPException(status_code=502, detail=str(e))
-        out["edited"] = key[2] is not None
-        if out["edited"]:
-            for s in out["steps"]:
-                if "happened" in s:
-                    s["happened"] = None
+    cached = _envelopes.get(key)
+    if cached is not None:
+        return cached
+    try:
+        out = envelope(_support_client(), ticket, steps)
+    except AitoError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    out["edited"] = key[2] is not None
+    if out["edited"]:
+        for s in out["steps"]:
+            if "happened" in s:
+                s["happened"] = None
+    if not out.get("degraded"):  # a step that failed once is retried next time, not remembered
         if len(_envelopes) > 500:
             _envelopes.clear()
         _envelopes[key] = out
-    return _envelopes[key]
+    return out
+
+
+#: visitor-written text runs ~11 uncached Aito calls; this caps it per client
+_ENVELOPE_TEXT_PER_MIN = 10
 
 
 @app.get("/api/support/envelope")
-def support_envelope(ticket_id: str, text: str | None = None):
+def support_envelope(request: Request, ticket_id: str, text: str | None = None):
+    if text is not None and _over_limit(request, "/api/support/envelope?text", _ENVELOPE_TEXT_PER_MIN):
+        raise HTTPException(status_code=429, detail="Too many of your own tickets in a minute. Give it a few seconds.")
     return _envelope_for(ticket_id, text)
 
 
@@ -1189,6 +1215,11 @@ class ReplyRequest(_BaseModel):
     ticket_id: str
     text: str | None = None
     stronger: bool = False
+
+
+#: the stronger model's reads can hold a worker for up to 120 s: at most this many at once,
+#: so they can't use up the thread pool the rest of the app (and /health) runs on
+_STRONG_SLOTS = threading.BoundedSemaphore(int(os.environ.get("SUPPORT_STRONG_CONCURRENCY", "2")))
 
 
 @app.post("/api/support/reply")
@@ -1206,13 +1237,19 @@ def support_reply(req: ReplyRequest):
         except AitoError as e:
             raise HTTPException(status_code=502, detail=str(e))
         kb = hits[0] if hits else None
+    from openai import OpenAIError
     options = sorted({t["resolution"] for t in load_incoming()["tickets"].values()})
+    if req.stronger and not _STRONG_SLOTS.acquire(blocking=False):
+        raise HTTPException(status_code=503, detail="The stronger model is busy with other readers. Try again in a minute.")
     try:
         return draft_reply(env, kb, step["customer"].get("contact"), options, stronger=req.stronger)
     except TimeoutError as e:
         raise HTTPException(status_code=504, detail=f"{e}. The earlier read stands.")
-    except RuntimeError as e:
-        raise HTTPException(status_code=503, detail=f"The LLM is not available: {e}")
+    except (RuntimeError, OpenAIError) as e:
+        raise HTTPException(status_code=503, detail=f"The LLM is not available: {type(e).__name__}")
+    finally:
+        if req.stronger:
+            _STRONG_SLOTS.release()
 
 
 _BENCH = Path(__file__).resolve().parent.parent / "scripts" / "support_fixture" / "results" / "compare_modes.json"

@@ -28,7 +28,7 @@ import os
 import re
 import threading
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime, timezone
 
 from openai import BadRequestError
 
@@ -53,23 +53,49 @@ class Paused(Exception):
     """Today's LLM budget for replies is used up."""
 
 
+#: tokens held against the budget while a call runs, then settled to the real count; a call
+#: that fails keeps its reservation (it may still have been billed)
+RESERVE = 2500
+
+
+def _today() -> date:
+    return datetime.now(timezone.utc).date()
+
+
 def _budget_left() -> int:
     with _spent_lock:
-        if _spent["day"] != date.today():
-            _spent.update(day=date.today(), tokens=0)
+        if _spent["day"] != _today():
+            _spent.update(day=_today(), tokens=0)
         return DAILY_TOKENS - _spent["tokens"]
 
 
-def _spend(tokens: int) -> None:
+def _reserve() -> None:
+    """Hold RESERVE tokens before a call, atomically, so concurrent calls can't all pass one check."""
     with _spent_lock:
-        _spent["tokens"] += tokens
+        if _spent["day"] != _today():
+            _spent.update(day=_today(), tokens=0)
+        if DAILY_TOKENS - _spent["tokens"] <= 0:
+            raise Paused()
+        _spent["tokens"] += RESERVE
+
+
+def _settle(tokens: int) -> None:
+    with _spent_lock:
+        _spent["tokens"] += tokens - RESERVE
 
 #: what counts as promising money, and the decisions that allow it
 _MONEY = re.compile(r"\b(refund\w*|reimburs\w*|credit(?:ed|s)?(?!\s*card)|compensat\w*|discount\w*|money back|waive\w*|free of charge|\d+\s*%\s*off)\b", re.I)
 MONEY_RESOLUTIONS = {"refund"}
 MONEY_RECOVERIES = {"apology_credit"}
-_FIGURE = re.compile(r"(?<![\w-])(\d+(?:[.,]\d+)?)\s*(%|eur|€|\$|usd|days?|hours?|h\b|minutes?|mins?)"
-                     r"|(?:[€$£]|eur\s|usd\s)\s*(\d+(?:[.,]\d+)?)", re.I)
+#: a number with a unit, or a currency amount; the number must be one the facts contain
+_UNITS = r"(?:%|eur|€|\$|usd|(?:business |working )?(?:days?|hours?|weeks?|months?|years?|minutes?|mins?|seconds?|secs?)|h\b)"
+_NUMBER_WORDS = r"(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|forty-eight|a few|several|a couple of)"
+_FIGURE = re.compile(rf"(?<![\w-])(\d+(?:[.,]\d+)?)\s*{_UNITS}|(?:[€$£]|eur\s|usd\s)\s*(\d+(?:[.,]\d+)?)"
+                     rf"|\b({_NUMBER_WORDS})\s+{_UNITS}", re.I)
+#: a promised time; the facts never contain one, so any is invented
+_DEADLINE = re.compile(r"\b(?:tomorrow|tonight|next (?:week|month|business day|working day)|within (?:the |an? )?"
+                       r"(?:hour|day|week|business day)|by (?:end of (?:day|the day|the week|business)|eod|"
+                       r"monday|tuesday|wednesday|thursday|friday|saturday|sunday)|asap|right away|immediately)\b", re.I)
 #: a ticket that talks to the AI rather than to support: never auto-sent, whatever the model says
 _INJECTION = re.compile(r"ignore (all |any |the )?(previous|prior|above|earlier|your)|disregard (all |the |your )?"
                         r"(previous|prior|above|instructions)|system prompt|you are now|new instructions|"
@@ -77,7 +103,7 @@ _INJECTION = re.compile(r"ignore (all |any |the )?(previous|prior|above|earlier|
                         r"<\s*/?\s*(ticket|admin|system|assistant|user|instructions?)\b", re.I)
 _KB = re.compile(r"\bKB-\d+\w*\b")
 #: links and bare domains ("shop.northwind.com", "www.x.io/y"); an e-mail address counts as its domain
-_LINK = re.compile(r"(?:https?://|www\.)[^\s<>()\"']+|\b(?:[a-z0-9-]+\.)+(?:com|net|org|io|ai|fi|eu|co|app|example|shop|store)\b[^\s<>()\"']*", re.I)
+_LINK = re.compile(r"(?:https?://)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?::\d+)?(?:/[^\s<>()\"']*)?", re.I)
 #: the only links an auto-sent reply may carry besides those in the selected article
 ALLOWED_LINKS = [u.strip().lower() for u in
                  os.environ.get("SUPPORT_REPLY_ALLOWED_LINKS", "support.northwind.example").split(",") if u.strip()]
@@ -148,8 +174,7 @@ def _usd_total(calls: list[dict]) -> float | None:
 
 
 def _ask(model: str, system: str, user: str, deadline_s: float | None = None) -> tuple[dict, dict]:
-    if _budget_left() <= 0:
-        raise Paused()
+    _reserve()
     agent = get_agent(model)
     base = {"model": agent._deployment, "response_format": {"type": "json_object"},
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
@@ -167,7 +192,7 @@ def _ask(model: str, system: str, user: str, deadline_s: float | None = None) ->
             data = {}
         u = resp.usage
         i, o = int(u.prompt_tokens), int(u.completion_tokens)
-        _spend(i + o)
+        _settle(i + o)
         return (data if isinstance(data, dict) else {}), {"model": model, "input_tokens": i, "output_tokens": o,
                                                           "ms": round(ms), "usd": _usd(model, i, o)}
     raise RuntimeError(f"{model}: all param sets rejected: {last}")
@@ -224,23 +249,32 @@ def guard(reply: str, facts: dict, resolution: str | None = None) -> list[dict]:
     resolution = resolution if resolution is not None else facts.get("resolution")
     money_ok = resolution in MONEY_RESOLUTIONS or facts.get("recovery") in MONEY_RECOVERIES
     money = sorted({m.group(0).lower() for m in _MONEY.finditer(reply)})
-    source = json.dumps(facts)
-    figures = [m.group(0).strip() for m in _FIGURE.finditer(reply) if (m.group(1) or m.group(3)) not in source]
+    # the numbers the facts state, as whole numbers, not as substrings of ids ("KB-1024" states no 1024)
+    stated = {n for k, v in facts.items() if k != "article" for n in re.findall(r"(?<![\w-])\d+(?:[.,]\d+)?(?![\w-])", str(v))}
+    stated |= set(re.findall(r"(?<![\w-])\d+(?:[.,]\d+)?(?![\w-])", str((facts.get("article") or {}).get("steps", ""))))
+    figures = [m.group(0).strip() for m in _FIGURE.finditer(reply)
+               if m.group(3) or (m.group(1) or m.group(2)) not in stated]
+    deadlines = sorted({m.group(0).lower() for m in _DEADLINE.finditer(reply)})
     allowed_kb = (facts.get("article") or {}).get("id")
     article = json.dumps(facts.get("article") or {}).lower()
 
     def _host(link: str) -> str:
-        return re.sub(r"^(https?://)?(www\.)?", "", link.lower()).rstrip(".,;:!?")
+        return re.sub(r"^(https?://)?(www\.)?", "", link.lower()).split("/")[0].split(":")[0].rstrip(".")
 
+    def _allowed(host: str) -> bool:  # exactly an allowed host, or a subdomain of one; never a prefix match
+        return any(host == a or host.endswith("." + a) for a in ALLOWED_LINKS)
+
+    article_hosts = {_host(m.group(0)) for m in _LINK.finditer(article)}
     links = sorted({m.group(0).rstrip(".,;:!?") for m in _LINK.finditer(reply)
-                    if not any(_host(m.group(0)).startswith(a) for a in ALLOWED_LINKS)
-                    and _host(m.group(0)) not in article})
+                    if not _allowed(_host(m.group(0))) and _host(m.group(0)) not in article_hosts})
     kbs = sorted({k for k in _KB.findall(reply) if k != allowed_kb})
     return [
         {"name": "money", "ok": money_ok or not money,
          "detail": None if money_ok or not money else f"promises {', '.join(money)}, which the decisions don't include"},
         {"name": "figures", "ok": not figures,
          "detail": f"states {', '.join(figures)}, which no fact contains" if figures else None},
+        {"name": "deadlines", "ok": not deadlines,
+         "detail": f"promises {', '.join(deadlines)}, which no fact contains" if deadlines else None},
         {"name": "article", "ok": not kbs,
          "detail": f"cites {', '.join(kbs)}, not the decided article" if kbs else None},
         {"name": "links", "ok": not links,
@@ -262,7 +296,7 @@ def routine(env: dict, facts: dict, contact: dict | None) -> Draft:
     data, call = _ask(ROUTINE_MODEL, _ROUTINE, f"{_ticket_block(env, contact)}\n\nFacts:\n{_facts_text(facts)}")
     problem = str(data.get("problem") or "").strip()
     # the model's yes is not enough: it must also name a problem the customer described
-    fits = data.get("fits") is not False and bool(problem)
+    fits = data.get("fits") is True and bool(problem)  # a missing or non-boolean answer is not a yes
     reply = plain_dashes(str(data.get("reply") or ""))
     d = Draft("routine", ROUTINE_MODEL, reply, "review", fits=fits, problem=problem or None,
               addresses_ai=data.get("addresses_ai") is True, calls=[call])
