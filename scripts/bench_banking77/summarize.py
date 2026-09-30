@@ -23,9 +23,13 @@ from common import CFG, DATASET, RESULTS, SEED, ece, jsonl, labels, mcnemar, pct
 from llm import PRICES
 
 RUNS = RESULTS / "runs"
+#: when each dataset's first results were measured (their summaries are re-run as arms are added)
+FIRST_MEASURED = {"banking77": "2026-09-30T08:53:00+00:00", "clinc150": "2026-09-30T09:22:14+00:00"}
 #: the frozen gate rule (PREREGISTRATION.md); the code below implements exactly it
 RULE = json.loads((Path(__file__).resolve().parent / "gate_rule.json").read_text())
 THRESHOLDS = RULE["thresholds"]
+#: banking77's first run, whose shortlist gates were planned before any result
+FIRST_RUN_MODELS = {"gpt-5-mini", "gpt-5.4"}
 #: the commit that froze the rule, before any CLINC150 load or model call
 PREREG_COMMIT = "f49c5062"
 
@@ -78,7 +82,10 @@ def main() -> int:
                     "labels": len(labels(train))},
         "sample": {"per_intent": len(picked) // len(labels(train)), "n": len(picked), "seed": SEED,
                    "note": "every arm is scored on these same queries, so the comparisons are paired"},
-        "measured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "measured_at": FIRST_MEASURED.get(DATASET) or datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "summarized_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "run_files_last_written": {p.stem: datetime.fromtimestamp(p.stat().st_mtime, timezone.utc).isoformat(timespec="seconds")
+                                   for p in sorted(RUNS.glob("*.jsonl"))},
         "arms": {name: arm_stats(rows, picked) for name, rows in arms.items()},
     }
     if len(full) >= len(test):
@@ -112,9 +119,15 @@ def main() -> int:
         out["gated"][f"aito_then_{'shortlist_llm' if kind == 'aito_llm' else 'rag_llm'}.{model}"] = {
             # banking77: the shortlist gate was planned, the RAG gate found after the first results.
             # Elsewhere the gate on the rule's fallback arm was fixed in advance (PREREGISTRATION.md).
-            "planned": kind == "aito_llm" if DATASET == "banking77" else name == RULE["clinc150_fallback"],
+            "planned": (kind == "aito_llm" and model in FIRST_RUN_MODELS) if DATASET == "banking77"
+                       else name == RULE["clinc150_fallback"],
             "preregistered": (None if DATASET == "banking77" or name != RULE["clinc150_fallback"] else
                               {"file": "PREREGISTRATION.md + gate_rule.json", "commit": PREREG_COMMIT}),
+            "status": ("pre-registered" if DATASET != "banking77" and name == RULE["clinc150_fallback"] else
+                       "planned" if DATASET == "banking77" and kind == "aito_llm" and model in FIRST_RUN_MODELS else
+                       "post hoc: found after the first results" if DATASET == "banking77" and model in FIRST_RUN_MODELS else
+                       "not planned: model added after the first results, same gate rule" if DATASET == "banking77" else
+                       "not pre-registered: arm added after the pre-registered run, same frozen gate rule"),
             "threshold_fit_on": len(fit), "threshold": best, "scored_on": len(hold), **share(right),
             "share_calling_llm": round(calls, 3),
             "aito_only_same_half": share([aito[q]["pred"] == aito[q]["gold"] for q in hold]),

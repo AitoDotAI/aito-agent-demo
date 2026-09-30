@@ -17,6 +17,20 @@
   "note": "every arm is scored on these same queries, so the comparisons are paired"
  },
  "measured_at": "2026-09-30T08:53:00+00:00",
+ "summarized_at": "2026-09-30T10:34:53+00:00",
+ "run_files_last_written": {
+  "aito": "2026-09-30T07:57:48+00:00",
+  "aito_full": "2026-09-30T07:57:48+00:00",
+  "aito_llm.gpt-5-mini": "2026-09-30T08:46:37+00:00",
+  "aito_llm.gpt-5.4": "2026-09-30T08:46:14+00:00",
+  "aito_llm.gpt-6-luna": "2026-09-30T10:34:04+00:00",
+  "llm_rag.gpt-5-mini": "2026-09-30T08:21:17+00:00",
+  "llm_rag.gpt-5.4": "2026-09-30T08:42:34+00:00",
+  "llm_rag.gpt-6-luna": "2026-09-30T10:31:43+00:00",
+  "llm_zero.gpt-5-mini": "2026-09-30T08:09:08+00:00",
+  "llm_zero.gpt-5.4": "2026-09-30T08:37:26+00:00",
+  "llm_zero.gpt-6-luna": "2026-09-30T10:28:49+00:00"
+ },
  "arms": {
   "aito": {
    "n": 616,
@@ -83,6 +97,29 @@
     "rate_limit_backoff_ms_total": 0
    }
   },
+  "aito_llm.gpt-6-luna": {
+   "n": 616,
+   "right": 552,
+   "accuracy": 0.8961,
+   "ci95": [
+    0.8695,
+    0.9178
+   ],
+   "latency_ms": {
+    "p50": 888.4,
+    "p95": 1654.6,
+    "mean": 986.0
+   },
+   "llm": {
+    "calls_per_query": 1.0,
+    "tokens_per_query": 586,
+    "input_tokens_per_query": 543,
+    "output_tokens_per_query": 42,
+    "usd_per_1000_queries": null,
+    "invalid_label_answers": 0,
+    "rate_limit_backoff_ms_total": 0
+   }
+  },
   "llm_rag.gpt-5-mini": {
    "n": 616,
    "right": 582,
@@ -129,6 +166,29 @@
     "rate_limit_backoff_ms_total": 0
    }
   },
+  "llm_rag.gpt-6-luna": {
+   "n": 616,
+   "right": 583,
+   "accuracy": 0.9464,
+   "ci95": [
+    0.9257,
+    0.9616
+   ],
+   "latency_ms": {
+    "p50": 897.8,
+    "p95": 1731.2,
+    "mean": 1023.6
+   },
+   "llm": {
+    "calls_per_query": 1.0,
+    "tokens_per_query": 686,
+    "input_tokens_per_query": 658,
+    "output_tokens_per_query": 28,
+    "usd_per_1000_queries": null,
+    "invalid_label_answers": 0,
+    "rate_limit_backoff_ms_total": 0
+   }
+  },
   "llm_zero.gpt-5-mini": {
    "n": 616,
    "right": 482,
@@ -170,6 +230,29 @@
     "tokens_per_query": 500,
     "input_tokens_per_query": 448,
     "output_tokens_per_query": 52,
+    "usd_per_1000_queries": null,
+    "invalid_label_answers": 0,
+    "rate_limit_backoff_ms_total": 0
+   }
+  },
+  "llm_zero.gpt-6-luna": {
+   "n": 616,
+   "right": 513,
+   "accuracy": 0.8328,
+   "ci95": [
+    0.8013,
+    0.8602
+   ],
+   "latency_ms": {
+    "p50": 866.8,
+    "p95": 1444.6,
+    "mean": 937.6
+   },
+   "llm": {
+    "calls_per_query": 1.0,
+    "tokens_per_query": 502,
+    "input_tokens_per_query": 448,
+    "output_tokens_per_query": 54,
     "usd_per_1000_queries": null,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 0
@@ -270,6 +353,11 @@
    "only_second_right": 60,
    "p": 0.0
   },
+  "aito_llm.gpt-6-luna": {
+   "only_first_right": 15,
+   "only_second_right": 49,
+   "p": 2.4e-05
+  },
   "llm_rag.gpt-5-mini": {
    "only_first_right": 11,
    "only_second_right": 75,
@@ -278,6 +366,11 @@
   "llm_rag.gpt-5.4": {
    "only_first_right": 9,
    "only_second_right": 77,
+   "p": 0.0
+  },
+  "llm_rag.gpt-6-luna": {
+   "only_first_right": 11,
+   "only_second_right": 76,
    "p": 0.0
   },
   "llm_zero.gpt-5-mini": {
@@ -290,13 +383,19 @@
    "only_second_right": 58,
    "p": 0.776965
   },
-  "bonferroni_threshold": 0.00833,
+  "llm_zero.gpt-6-luna": {
+   "only_first_right": 65,
+   "only_second_right": 60,
+   "p": 0.720673
+  },
+  "bonferroni_threshold": 0.00556,
   "note": "only_first_right = Aito right, the other wrong. A p below the threshold is a difference at this n; above it, it is not shown."
  },
  "gated": {
   "aito_then_shortlist_llm.gpt-5-mini": {
    "planned": true,
    "preregistered": null,
+   "status": "planned",
    "threshold_fit_on": 308,
    "threshold": 0.9,
    "scored_on": 308,
@@ -379,6 +478,20 @@
       "p": 0.133801
      }
     },
+    "aito_llm.gpt-6-luna": {
+     "n": 308,
+     "right": 272,
+     "accuracy": 0.8831,
+     "ci95": [
+      0.8424,
+      0.9144
+     ],
+     "paired": {
+      "only_first_right": 10,
+      "only_second_right": 12,
+      "p": 0.831812
+     }
+    },
     "llm_rag.gpt-5-mini": {
      "n": 308,
      "right": 288,
@@ -405,6 +518,20 @@
       "only_first_right": 3,
       "only_second_right": 22,
       "p": 0.000157
+     }
+    },
+    "llm_rag.gpt-6-luna": {
+     "n": 308,
+     "right": 287,
+     "accuracy": 0.9318,
+     "ci95": [
+      0.898,
+      0.955
+     ],
+     "paired": {
+      "only_first_right": 4,
+      "only_second_right": 21,
+      "p": 0.000911
      }
     },
     "llm_zero.gpt-5-mini": {
@@ -434,6 +561,20 @@
       "only_second_right": 7,
       "p": 0.043285
      }
+    },
+    "llm_zero.gpt-6-luna": {
+     "n": 308,
+     "right": 254,
+     "accuracy": 0.8247,
+     "ci95": [
+      0.7783,
+      0.8631
+     ],
+     "paired": {
+      "only_first_right": 24,
+      "only_second_right": 8,
+      "p": 0.007
+     }
     }
    },
    "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
@@ -443,6 +584,7 @@
   "aito_then_shortlist_llm.gpt-5.4": {
    "planned": true,
    "preregistered": null,
+   "status": "planned",
    "threshold_fit_on": 308,
    "threshold": 0.95,
    "scored_on": 308,
@@ -525,6 +667,20 @@
       "p": 1.0
      }
     },
+    "aito_llm.gpt-6-luna": {
+     "n": 308,
+     "right": 272,
+     "accuracy": 0.8831,
+     "ci95": [
+      0.8424,
+      0.9144
+     ],
+     "paired": {
+      "only_first_right": 11,
+      "only_second_right": 5,
+      "p": 0.210114
+     }
+    },
     "llm_rag.gpt-5-mini": {
      "n": 308,
      "right": 288,
@@ -551,6 +707,20 @@
       "only_first_right": 6,
       "only_second_right": 17,
       "p": 0.03469
+     }
+    },
+    "llm_rag.gpt-6-luna": {
+     "n": 308,
+     "right": 287,
+     "accuracy": 0.9318,
+     "ci95": [
+      0.898,
+      0.955
+     ],
+     "paired": {
+      "only_first_right": 7,
+      "only_second_right": 16,
+      "p": 0.09314
      }
     },
     "llm_zero.gpt-5-mini": {
@@ -580,15 +750,219 @@
       "only_second_right": 2,
       "p": 6.6e-05
      }
+    },
+    "llm_zero.gpt-6-luna": {
+     "n": 308,
+     "right": 254,
+     "accuracy": 0.8247,
+     "ci95": [
+      0.7783,
+      0.8631
+     ],
+     "paired": {
+      "only_first_right": 27,
+      "only_second_right": 3,
+      "p": 8e-06
+     }
     }
    },
    "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
    "median_latency_ms": 192.0,
    "p95_latency_ms": 2692.6
   },
+  "aito_then_shortlist_llm.gpt-6-luna": {
+   "planned": false,
+   "preregistered": null,
+   "status": "not planned: model added after the first results, same gate rule",
+   "threshold_fit_on": 308,
+   "threshold": 0.95,
+   "scored_on": 308,
+   "n": 308,
+   "right": 274,
+   "accuracy": 0.8896,
+   "ci95": [
+    0.8497,
+    0.9199
+   ],
+   "share_calling_llm": 0.497,
+   "aito_only_same_half": {
+    "n": 308,
+    "right": 255,
+    "accuracy": 0.8279,
+    "ci95": [
+     0.7818,
+     0.866
+    ]
+   },
+   "paired_vs_aito_same_half": {
+    "only_first_right": 4,
+    "only_second_right": 23,
+    "p": 0.000311
+   },
+   "fallback_alone_same_half": {
+    "n": 308,
+    "right": 272,
+    "accuracy": 0.8831,
+    "ci95": [
+     0.8424,
+     0.9144
+    ]
+   },
+   "paired_vs_fallback_alone_same_half": {
+    "only_first_right": 1,
+    "only_second_right": 3,
+    "p": 0.625
+   },
+   "vs_each_arm_same_half": {
+    "aito": {
+     "n": 308,
+     "right": 255,
+     "accuracy": 0.8279,
+     "ci95": [
+      0.7818,
+      0.866
+     ],
+     "paired": {
+      "only_first_right": 23,
+      "only_second_right": 4,
+      "p": 0.000311
+     }
+    },
+    "aito_llm.gpt-5-mini": {
+     "n": 308,
+     "right": 264,
+     "accuracy": 0.8571,
+     "ci95": [
+      0.8137,
+      0.8918
+     ],
+     "paired": {
+      "only_first_right": 19,
+      "only_second_right": 9,
+      "p": 0.087159
+     }
+    },
+    "aito_llm.gpt-5.4": {
+     "n": 308,
+     "right": 278,
+     "accuracy": 0.9026,
+     "ci95": [
+      0.8644,
+      0.9309
+     ],
+     "paired": {
+      "only_first_right": 5,
+      "only_second_right": 9,
+      "p": 0.42395
+     }
+    },
+    "aito_llm.gpt-6-luna": {
+     "n": 308,
+     "right": 272,
+     "accuracy": 0.8831,
+     "ci95": [
+      0.8424,
+      0.9144
+     ],
+     "paired": {
+      "only_first_right": 3,
+      "only_second_right": 1,
+      "p": 0.625
+     }
+    },
+    "llm_rag.gpt-5-mini": {
+     "n": 308,
+     "right": 288,
+     "accuracy": 0.9351,
+     "ci95": [
+      0.9018,
+      0.9576
+     ],
+     "paired": {
+      "only_first_right": 6,
+      "only_second_right": 20,
+      "p": 0.009355
+     }
+    },
+    "llm_rag.gpt-5.4": {
+     "n": 308,
+     "right": 289,
+     "accuracy": 0.9383,
+     "ci95": [
+      0.9057,
+      0.9602
+     ],
+     "paired": {
+      "only_first_right": 5,
+      "only_second_right": 20,
+      "p": 0.004077
+     }
+    },
+    "llm_rag.gpt-6-luna": {
+     "n": 308,
+     "right": 287,
+     "accuracy": 0.9318,
+     "ci95": [
+      0.898,
+      0.955
+     ],
+     "paired": {
+      "only_first_right": 6,
+      "only_second_right": 19,
+      "p": 0.014633
+     }
+    },
+    "llm_zero.gpt-5-mini": {
+     "n": 308,
+     "right": 240,
+     "accuracy": 0.7792,
+     "ci95": [
+      0.7296,
+      0.8219
+     ],
+     "paired": {
+      "only_first_right": 41,
+      "only_second_right": 7,
+      "p": 1e-06
+     }
+    },
+    "llm_zero.gpt-5.4": {
+     "n": 308,
+     "right": 259,
+     "accuracy": 0.8409,
+     "ci95": [
+      0.7959,
+      0.8775
+     ],
+     "paired": {
+      "only_first_right": 22,
+      "only_second_right": 7,
+      "p": 0.00813
+     }
+    },
+    "llm_zero.gpt-6-luna": {
+     "n": 308,
+     "right": 254,
+     "accuracy": 0.8247,
+     "ci95": [
+      0.7783,
+      0.8631
+     ],
+     "paired": {
+      "only_first_right": 27,
+      "only_second_right": 7,
+      "p": 0.000821
+     }
+    }
+   },
+   "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
+   "median_latency_ms": 192.0,
+   "p95_latency_ms": 1653.9
+  },
   "aito_then_rag_llm.gpt-5-mini": {
    "planned": false,
    "preregistered": null,
+   "status": "post hoc: found after the first results",
    "threshold_fit_on": 308,
    "threshold": 0.95,
    "scored_on": 308,
@@ -671,6 +1045,20 @@
       "p": 0.107752
      }
     },
+    "aito_llm.gpt-6-luna": {
+     "n": 308,
+     "right": 272,
+     "accuracy": 0.8831,
+     "ci95": [
+      0.8424,
+      0.9144
+     ],
+     "paired": {
+      "only_first_right": 22,
+      "only_second_right": 7,
+      "p": 0.00813
+     }
+    },
     "llm_rag.gpt-5-mini": {
      "n": 308,
      "right": 288,
@@ -697,6 +1085,20 @@
       "only_first_right": 1,
       "only_second_right": 3,
       "p": 0.625
+     }
+    },
+    "llm_rag.gpt-6-luna": {
+     "n": 308,
+     "right": 287,
+     "accuracy": 0.9318,
+     "ci95": [
+      0.898,
+      0.955
+     ],
+     "paired": {
+      "only_first_right": 4,
+      "only_second_right": 4,
+      "p": 1.0
      }
     },
     "llm_zero.gpt-5-mini": {
@@ -726,6 +1128,20 @@
       "only_second_right": 6,
       "p": 8e-06
      }
+    },
+    "llm_zero.gpt-6-luna": {
+     "n": 308,
+     "right": 254,
+     "accuracy": 0.8247,
+     "ci95": [
+      0.7783,
+      0.8631
+     ],
+     "paired": {
+      "only_first_right": 38,
+      "only_second_right": 5,
+      "p": 0.0
+     }
     }
    },
    "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
@@ -735,6 +1151,7 @@
   "aito_then_rag_llm.gpt-5.4": {
    "planned": false,
    "preregistered": null,
+   "status": "post hoc: found after the first results",
    "threshold_fit_on": 308,
    "threshold": 0.9,
    "scored_on": 308,
@@ -817,6 +1234,20 @@
       "p": 0.09314
      }
     },
+    "aito_llm.gpt-6-luna": {
+     "n": 308,
+     "right": 272,
+     "accuracy": 0.8831,
+     "ci95": [
+      0.8424,
+      0.9144
+     ],
+     "paired": {
+      "only_first_right": 19,
+      "only_second_right": 4,
+      "p": 0.002599
+     }
+    },
     "llm_rag.gpt-5-mini": {
      "n": 308,
      "right": 288,
@@ -843,6 +1274,20 @@
       "only_first_right": 2,
       "only_second_right": 4,
       "p": 0.6875
+     }
+    },
+    "llm_rag.gpt-6-luna": {
+     "n": 308,
+     "right": 287,
+     "accuracy": 0.9318,
+     "ci95": [
+      0.898,
+      0.955
+     ],
+     "paired": {
+      "only_first_right": 5,
+      "only_second_right": 5,
+      "p": 1.0
      }
     },
     "llm_zero.gpt-5-mini": {
@@ -872,11 +1317,214 @@
       "only_second_right": 5,
       "p": 4e-06
      }
+    },
+    "llm_zero.gpt-6-luna": {
+     "n": 308,
+     "right": 254,
+     "accuracy": 0.8247,
+     "ci95": [
+      0.7783,
+      0.8631
+     ],
+     "paired": {
+      "only_first_right": 37,
+      "only_second_right": 4,
+      "p": 0.0
+     }
     }
    },
    "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
    "median_latency_ms": 88.5,
    "p95_latency_ms": 2270.9
+  },
+  "aito_then_rag_llm.gpt-6-luna": {
+   "planned": false,
+   "preregistered": null,
+   "status": "not planned: model added after the first results, same gate rule",
+   "threshold_fit_on": 308,
+   "threshold": 0.95,
+   "scored_on": 308,
+   "n": 308,
+   "right": 287,
+   "accuracy": 0.9318,
+   "ci95": [
+    0.898,
+    0.955
+   ],
+   "share_calling_llm": 0.497,
+   "aito_only_same_half": {
+    "n": 308,
+    "right": 255,
+    "accuracy": 0.8279,
+    "ci95": [
+     0.7818,
+     0.866
+    ]
+   },
+   "paired_vs_aito_same_half": {
+    "only_first_right": 5,
+    "only_second_right": 37,
+    "p": 0.0
+   },
+   "fallback_alone_same_half": {
+    "n": 308,
+    "right": 287,
+    "accuracy": 0.9318,
+    "ci95": [
+     0.898,
+     0.955
+    ]
+   },
+   "paired_vs_fallback_alone_same_half": {
+    "only_first_right": 1,
+    "only_second_right": 1,
+    "p": 1.0
+   },
+   "vs_each_arm_same_half": {
+    "aito": {
+     "n": 308,
+     "right": 255,
+     "accuracy": 0.8279,
+     "ci95": [
+      0.7818,
+      0.866
+     ],
+     "paired": {
+      "only_first_right": 37,
+      "only_second_right": 5,
+      "p": 0.0
+     }
+    },
+    "aito_llm.gpt-5-mini": {
+     "n": 308,
+     "right": 264,
+     "accuracy": 0.8571,
+     "ci95": [
+      0.8137,
+      0.8918
+     ],
+     "paired": {
+      "only_first_right": 28,
+      "only_second_right": 5,
+      "p": 6.6e-05
+     }
+    },
+    "aito_llm.gpt-5.4": {
+     "n": 308,
+     "right": 278,
+     "accuracy": 0.9026,
+     "ci95": [
+      0.8644,
+      0.9309
+     ],
+     "paired": {
+      "only_first_right": 16,
+      "only_second_right": 7,
+      "p": 0.09314
+     }
+    },
+    "aito_llm.gpt-6-luna": {
+     "n": 308,
+     "right": 272,
+     "accuracy": 0.8831,
+     "ci95": [
+      0.8424,
+      0.9144
+     ],
+     "paired": {
+      "only_first_right": 21,
+      "only_second_right": 6,
+      "p": 0.005925
+     }
+    },
+    "llm_rag.gpt-5-mini": {
+     "n": 308,
+     "right": 288,
+     "accuracy": 0.9351,
+     "ci95": [
+      0.9018,
+      0.9576
+     ],
+     "paired": {
+      "only_first_right": 3,
+      "only_second_right": 4,
+      "p": 1.0
+     }
+    },
+    "llm_rag.gpt-5.4": {
+     "n": 308,
+     "right": 289,
+     "accuracy": 0.9383,
+     "ci95": [
+      0.9057,
+      0.9602
+     ],
+     "paired": {
+      "only_first_right": 1,
+      "only_second_right": 3,
+      "p": 0.625
+     }
+    },
+    "llm_rag.gpt-6-luna": {
+     "n": 308,
+     "right": 287,
+     "accuracy": 0.9318,
+     "ci95": [
+      0.898,
+      0.955
+     ],
+     "paired": {
+      "only_first_right": 1,
+      "only_second_right": 1,
+      "p": 1.0
+     }
+    },
+    "llm_zero.gpt-5-mini": {
+     "n": 308,
+     "right": 240,
+     "accuracy": 0.7792,
+     "ci95": [
+      0.7296,
+      0.8219
+     ],
+     "paired": {
+      "only_first_right": 50,
+      "only_second_right": 3,
+      "p": 0.0
+     }
+    },
+    "llm_zero.gpt-5.4": {
+     "n": 308,
+     "right": 259,
+     "accuracy": 0.8409,
+     "ci95": [
+      0.7959,
+      0.8775
+     ],
+     "paired": {
+      "only_first_right": 34,
+      "only_second_right": 6,
+      "p": 8e-06
+     }
+    },
+    "llm_zero.gpt-6-luna": {
+     "n": 308,
+     "right": 254,
+     "accuracy": 0.8247,
+     "ci95": [
+      0.7783,
+      0.8631
+     ],
+     "paired": {
+      "only_first_right": 38,
+      "only_second_right": 5,
+      "p": 0.0
+     }
+    }
+   },
+   "vs_each_arm_note": "descriptive: one paired McNemar per arm, not corrected for the number of comparisons; only_first_right = the gate right, the arm wrong",
+   "median_latency_ms": 192.0,
+   "p95_latency_ms": 1573.1
   }
  },
  "prices": {
