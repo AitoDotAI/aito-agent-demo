@@ -1,0 +1,2163 @@
+{
+ "what": "first step, category only (before) vs plus the ticket's text through the link (after), with the TRUE category as input, re-run read-only; split from novel_text.py",
+ "measured_at": "2026-09-30T19:53:00+00:00",
+ "engine": {
+  "name": "aitoai",
+  "version": "2.11.0",
+  "gitRevision": "03b4c2ed76480afd3e3d00dc2541639551400f6c",
+  "builtAt": "2026-09-29T04:50:43.457579355Z"
+ },
+ "errors": 0,
+ "groups": {
+  "novel_text": {
+   "n": 134,
+   "before": 0.754,
+   "before_ci95": [
+    0.674,
+    0.819
+   ],
+   "after": 0.896,
+   "after_ci95": [
+    0.832,
+    0.937
+   ],
+   "only_before_right": 11,
+   "only_after_right": 30,
+   "mcnemar_p": 0.0043
+  },
+  "seen_text": {
+   "n": 166,
+   "before": 0.771,
+   "before_ci95": [
+    0.701,
+    0.828
+   ],
+   "after": 1.0,
+   "after_ci95": [
+    0.977,
+    1.0
+   ],
+   "only_before_right": 0,
+   "only_after_right": 38,
+   "mcnemar_p": 0.0
+  },
+  "all": {
+   "n": 300,
+   "before": 0.763,
+   "before_ci95": [
+    0.712,
+    0.808
+   ],
+   "after": 0.953,
+   "after_ci95": [
+    0.923,
+    0.972
+   ],
+   "only_before_right": 11,
+   "only_after_right": 68,
+   "mcnemar_p": 0.0
+  }
+ },
+ "rows": [
+  {
+   "ticket_id": "SUP-11689",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11708",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11715",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11688",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11690",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11696",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11691",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11720",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11702",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11714",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11712",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11687",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11699",
+   "truth": "open_invoice",
+   "before": "verify_charge",
+   "after": "open_invoice",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11692",
+   "truth": "open_invoice",
+   "before": "verify_charge",
+   "after": "open_invoice",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11693",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11700",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11698",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11694",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11713",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11706",
+   "truth": "open_invoice",
+   "before": "verify_charge",
+   "after": "open_invoice",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11721",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11695",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11728",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11750",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11729",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "wait_for_customer",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11743",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11747",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11744",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11736",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11737",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11755",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11748",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11738",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11753",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11725",
+   "truth": "open_invoice",
+   "before": "verify_charge",
+   "after": "open_invoice",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11726",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11733",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11745",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11741",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11735",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11752",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "wait_for_customer",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11740",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11742",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11731",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11732",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11727",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11734",
+   "truth": "verify_charge",
+   "before": "verify_charge",
+   "after": "verify_charge",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11749",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11746",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11754",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11739",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11724",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11730",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11751",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11723",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11757",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11768",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11767",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11771",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11764",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11780",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11762",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11758",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11777",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11770",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11783",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11781",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11769",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11763",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11779",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11776",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11782",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11761",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11760",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11784",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11765",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11766",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11775",
+   "truth": "verify_account",
+   "before": "verify_charge",
+   "after": "verify_account",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11772",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11759",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11785",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11778",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11756",
+   "truth": "open_invoice",
+   "before": "verify_charge",
+   "after": "confirm_with_customer",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11773",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11774",
+   "truth": "open_invoice",
+   "before": "verify_charge",
+   "after": "open_invoice",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11790",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11815",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11809",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11793",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11788",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "open_invoice",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11786",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11798",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11797",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11787",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11789",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11806",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11791",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11801",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11792",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11814",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11800",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "ask_for_details",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11805",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11795",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11803",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11807",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11808",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11813",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11810",
+   "truth": "verify_charge",
+   "before": "verify_charge",
+   "after": "verify_charge",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11816",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11804",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11794",
+   "truth": "verify_charge",
+   "before": "verify_charge",
+   "after": "verify_charge",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11799",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11811",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11796",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11802",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11812",
+   "truth": "verify_account",
+   "before": "verify_charge",
+   "after": "verify_account",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11842",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11847",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11819",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11827",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11817",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11836",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11823",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11820",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11834",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11818",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11841",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11821",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11829",
+   "truth": "open_invoice",
+   "before": "verify_charge",
+   "after": "open_invoice",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11824",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11825",
+   "truth": "open_invoice",
+   "before": "verify_charge",
+   "after": "open_invoice",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11843",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11846",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11828",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11838",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11844",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11822",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11840",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11830",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11837",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11845",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11833",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11831",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "ask_for_details",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11832",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11826",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11835",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11839",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11851",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11852",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11865",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11850",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11857",
+   "truth": "verify_account",
+   "before": "verify_charge",
+   "after": "verify_account",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11860",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11869",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11849",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11862",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11866",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11859",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11858",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11863",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11856",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11861",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11870",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11855",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11848",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11867",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11868",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11854",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11871",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11853",
+   "truth": "verify_charge",
+   "before": "verify_charge",
+   "after": "verify_charge",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11864",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11897",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11873",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11877",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11882",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11896",
+   "truth": "verify_charge",
+   "before": "verify_charge",
+   "after": "verify_charge",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11899",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11876",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11887",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11878",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11900",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11875",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "verify_charge",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11881",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11884",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11885",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11879",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11889",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11880",
+   "truth": "verify_account",
+   "before": "verify_charge",
+   "after": "verify_account",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11892",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11886",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11874",
+   "truth": "verify_account",
+   "before": "verify_charge",
+   "after": "verify_account",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11891",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11898",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "wait_for_customer",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11893",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11895",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11872",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11894",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11890",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11883",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11888",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11916",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11925",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "wait_for_customer",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11902",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11921",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11923",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "ask_for_details",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11931",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11928",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11901",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11904",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11920",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11932",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11912",
+   "truth": "open_invoice",
+   "before": "verify_charge",
+   "after": "open_invoice",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11911",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11906",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11922",
+   "truth": "verify_account",
+   "before": "verify_charge",
+   "after": "verify_account",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11926",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "ask_for_details",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11933",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11935",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11915",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11914",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11927",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11909",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11910",
+   "truth": "verify_account",
+   "before": "verify_charge",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11918",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11924",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11908",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11919",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11903",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "wait_for_customer",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11907",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11929",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11905",
+   "truth": "open_invoice",
+   "before": "verify_charge",
+   "after": "open_invoice",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11913",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11917",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11934",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11936",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11930",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11944",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11937",
+   "truth": "open_invoice",
+   "before": "verify_charge",
+   "after": "open_invoice",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11948",
+   "truth": "verify_account",
+   "before": "verify_charge",
+   "after": "verify_account",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11962",
+   "truth": "verify_account",
+   "before": "verify_charge",
+   "after": "verify_account",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11957",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11963",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11954",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11961",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "wait_for_customer",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11938",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11941",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11942",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11939",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11959",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11958",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11943",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11950",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11955",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11953",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11951",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11960",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11940",
+   "truth": "open_invoice",
+   "before": "verify_charge",
+   "after": "open_invoice",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11952",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11949",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11956",
+   "truth": "verify_account",
+   "before": "verify_charge",
+   "after": "verify_account",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11946",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11945",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11947",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11965",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11991",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11984",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11977",
+   "truth": "verify_account",
+   "before": "verify_charge",
+   "after": "verify_account",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11994",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11964",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11978",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11987",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11973",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11975",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11998",
+   "truth": "verify_charge",
+   "before": "verify_charge",
+   "after": "verify_charge",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11970",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11968",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11992",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11995",
+   "truth": "verify_charge",
+   "before": "verify_charge",
+   "after": "verify_charge",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11980",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11985",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11972",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11997",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11969",
+   "truth": "verify_charge",
+   "before": "verify_charge",
+   "after": "verify_charge",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11979",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11993",
+   "truth": "verify_charge",
+   "before": "verify_charge",
+   "after": "verify_charge",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11976",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11967",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11996",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11983",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11988",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-12000",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11990",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11999",
+   "truth": "reproduce",
+   "before": "reproduce",
+   "after": "reproduce",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11974",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11971",
+   "truth": "verify_charge",
+   "before": "verify_charge",
+   "after": "verify_charge",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11982",
+   "truth": "verify_identity",
+   "before": "verify_admin",
+   "after": "verify_identity",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11981",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "novel_text"
+  },
+  {
+   "ticket_id": "SUP-11989",
+   "truth": "verify_admin",
+   "before": "verify_admin",
+   "after": "verify_admin",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11966",
+   "truth": "check_integration_status",
+   "before": "identify_need",
+   "after": "check_integration_status",
+   "group": "seen_text"
+  },
+  {
+   "ticket_id": "SUP-11986",
+   "truth": "identify_need",
+   "before": "identify_need",
+   "after": "identify_need",
+   "group": "seen_text"
+  }
+ ]
+}
