@@ -323,3 +323,16 @@ def test_stronger_reads_are_capped_and_llm_errors_are_503(monkeypatch):
     r = c.post("/api/support/reply", json={"ticket_id": tid, "stronger": True})
     assert r.status_code == 503
     assert slots.acquire(blocking=False)               # the slot was released after the error
+
+
+@pytest.mark.parametrize("sent, client", [
+    ("junk, 203.0.113.7:51234, 10.1.2.3", "203.0.113.7"),              # App Service's IP:PORT form
+    ("junk, [2001:db8::7]:443, 10.1.2.3", "2001:db8::7"),
+    ("junk, 2001:db8::7, 10.1.2.3", "2001:db8::7"),                     # bare IPv6: colons, no port
+    ("203.0.113.7", "203.0.113.7"),
+])
+def test_the_client_ip_drops_a_port_so_connections_share_a_bucket(monkeypatch, sent, client):
+    from starlette.requests import Request
+    monkeypatch.setattr(app_module, "_PROXY_HOPS", 2)
+    req = Request({"type": "http", "headers": [(b"x-forwarded-for", sent.encode())], "client": ("10.0.0.9", 1)})
+    assert app_module._client_ip(req) == client

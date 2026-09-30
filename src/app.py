@@ -88,10 +88,20 @@ _rl_hits: dict[str, list[float]] = {}
 _PROXY_HOPS = int(os.environ.get("RATE_LIMIT_PROXY_HOPS", "2"))
 
 
+def _bare_ip(addr: str) -> str:
+    """The address without a port: App Service's front end may send "IP:PORT", which would
+    give every TCP connection its own bucket. "[v6]:port" -> "v6"; a bare IPv6 stays as is."""
+    if addr.startswith("["):
+        return addr[1:addr.index("]")] if "]" in addr else addr.strip("[]")
+    if addr.count(":") == 1:
+        return addr.split(":")[0]
+    return addr
+
+
 def _client_ip(request: Request) -> str:
     hops = [h.strip() for h in request.headers.get("x-forwarded-for", "").split(",") if h.strip()]
     if hops:
-        return hops[-min(_PROXY_HOPS, len(hops))]
+        return _bare_ip(hops[-min(_PROXY_HOPS, len(hops))])
     return request.client.host if request.client else "anon"
 
 
