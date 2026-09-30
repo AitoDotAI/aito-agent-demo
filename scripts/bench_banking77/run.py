@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import threading
 import time
@@ -36,11 +37,24 @@ SYSTEM = (f"You classify one customer message from {CFG['domain']} into exactly 
           "allowed list. Answer only JSON: {\"intent\": \"<one allowed label>\"}.")
 
 
+def uses(arm: str) -> set[str]:
+    """Which endpoints an arm's answers come from: aito, aito_full -> Aito; llm_* -> the LLM;
+    aito_llm.* -> both."""
+    return ({"aito"} if arm.startswith("aito") else set()) | ({"llm"} if "." in arm else set())
+
+
+def record_endpoints(path, arm: str, here: dict) -> None:
+    """Record the endpoints this arm's new answers came from, leaving every other arm's record alone."""
+    saved = json.loads(path.read_text()) if path.exists() else {}
+    saved.setdefault("per_arm", {})[arm] = {k: here[k] for k in sorted(uses(arm))}
+    path.write_text(json.dumps(saved, indent=1) + "\n")
+
+
 def _aito():
     from load import COLLECTION, client
     import os
     env = os.environ.get("BANKING77_ENV", DATASET).strip()
-    _, c = client(None if env in ("", "master") else env)
+    _, c = client(None if env.lower() in ("", "master", "env.master") else env)   # the same rule as load.py
     return c, COLLECTION
 
 
@@ -120,6 +134,16 @@ def main() -> int:
     RUNS.mkdir(parents=True, exist_ok=True)
     needs_aito = {"aito_full", "aito", "aito_llm"} & set(args.arms)
     c, coll = _aito() if needs_aito else (None, None)
+    # where each arm's answers came from, recorded per arm and only when the arm writes new
+    # answers, so resuming someone else's recorded run never relabels their endpoints
+    from urllib.parse import urlparse
+    llm_url = os.environ.get("OPENAI_MODEL_URL")
+    here = {"aito": f"{urlparse(c.api_url).hostname}, Aito v2" if c is not None else None,
+            "llm": f"Azure OpenAI, {urlparse(llm_url).hostname}" if llm_url else "OpenAI"}
+
+    def record_endpoints_for(arm: str) -> None:
+        with lock:
+            record_endpoints(RUNS / "endpoints.json", arm, here)
     if c is not None:
         v = c.get_version()
         meta = RUNS / "engine.json"
@@ -136,6 +160,8 @@ def main() -> int:
         done = jsonl(path)
         todo = [q for q in queries if q["qid"] not in done]
         print(f"{name}: {len(done)} done, {len(todo)} to go")
+        if todo:
+            record_endpoints_for(name)
 
         def one(q):
             try:
