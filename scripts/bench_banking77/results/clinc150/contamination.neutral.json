@@ -1,0 +1,1444 @@
+{
+ "dataset": "CLINC150 (in-scope)",
+ "framing": "neutral",
+ "measured_at": "2026-09-30T10:41:01+00:00",
+ "method": [
+  "banking77 (2020) and CLINC150 (2019) are public, so they may be in the models'\ntraining data, which would flatter the LLM arms compared with a company's own,\nprivate data. Two probes, no retrieval, no labels given:",
+  "1. Label recall: \"list the intent labels of <dataset>\". Scored as the share of the\n   true labels named exactly (case-insensitive), and how many named labels are\n   not real ones.\n2. Completion: the first half of a held-out test message (by words); the model\n   continues it. Scored as the share completed verbatim (normalised), and the\n   share whose first three continued words match.",
+  "The metrics were fixed before the first run. A high verbatim rate shows\nmemorisation. A low one doesn't rule it out, since the models may know the data\nwithout reproducing it word for word."
+ ],
+ "models": {
+  "gpt-5.4": {
+   "label_recall": {
+    "true_labels": 150,
+    "named": 154,
+    "exact_hits": 8,
+    "recall": 0.053,
+    "named_not_real": 146,
+    "tokens": 725
+   },
+   "label_hits": [
+    "book_flight",
+    "book_hotel",
+    "flip_coin",
+    "pay_bill",
+    "play_music",
+    "roll_dice",
+    "schedule_meeting",
+    "tell_joke"
+   ],
+   "completion": {
+    "n": 50,
+    "refused_or_empty": 3,
+    "verbatim": 0,
+    "verbatim_share": 0.0,
+    "first3_share": 0.02
+   },
+   "completions": [
+    {
+     "qid": "t2837",
+     "head": "i placed an order",
+     "tail": "and i need it tracked",
+     "got": " but haven't received it yet",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2475",
+     "head": "please tell me the",
+     "tail": "types of pets you have",
+     "got": " weather today",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0736",
+     "head": "get me a table for",
+     "tail": "five at itta bena at three",
+     "got": " two at a nearby restaurant tonight",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1699",
+     "head": "do i have any",
+     "tail": "calendar entries for march 8th",
+     "got": " meetings today",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t4494",
+     "head": "how come",
+     "tail": "i got declined",
+     "got": " the sky is blue",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0947",
+     "head": "i need to know the",
+     "tail": "name that you have for me",
+     "got": " weather for tomorrow",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0565",
+     "head": "start calling me",
+     "tail": "jake from now on",
+     "got": " Alex",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3910",
+     "head": "can i redeem",
+     "tail": "my points on gas",
+     "got": " my reward points for cash?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1383",
+     "head": "yes, ai,",
+     "tail": "that is correct",
+     "got": " I need your help with something.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2350",
+     "head": "what is the",
+     "tail": "calorie content in bananas",
+     "got": " weather today",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1040",
+     "head": "how much was",
+     "tail": "my last target trip",
+     "got": " the Louisiana Purchase",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t4362",
+     "head": "can you please",
+     "tail": "tell me my income",
+     "got": " help me",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3767",
+     "head": "can i fly from atlanta to",
+     "tail": "san francisco for less than 100 dollars",
+     "got": "new york",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0346",
+     "head": "is it possible to",
+     "tail": "talk to you in mandarin",
+     "got": "recover deleted text messages?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3806",
+     "head": "i need to know",
+     "tail": "what's on my shopping list",
+     "got": " the weather tomorrow",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2451",
+     "head": "where can i find",
+     "tail": "routing number for pnc",
+     "got": " the nearest atm",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t4238",
+     "head": "can you book a car rental",
+     "tail": "today to new york city to philadelphia",
+     "got": " for me?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3398",
+     "head": "is a visa necessary",
+     "tail": "for traveling to south africa",
+     "got": " to travel to the United States from the UK?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1542",
+     "head": "how do i",
+     "tail": "make you talk faster",
+     "got": "change my password",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3745",
+     "head": "what do you like",
+     "tail": "to do besides work",
+     "got": " to do for fun?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1889",
+     "head": "can i make",
+     "tail": "a car maintenance appointment",
+     "got": " a reservation",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3387",
+     "head": "stop",
+     "tail": "processing",
+     "got": "",
+     "refused_or_empty": true,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2962",
+     "head": "what song",
+     "tail": "is this one",
+     "got": " is this?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3236",
+     "head": "show me",
+     "tail": "my location",
+     "got": " the weather",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1452",
+     "head": "tell me about",
+     "tail": "my health benefits",
+     "got": " yourself",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3378",
+     "head": "can you",
+     "tail": "cancel that request",
+     "got": " help me?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2713",
+     "head": "am i in",
+     "tail": "charge of you",
+     "got": " love?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1387",
+     "head": "that's",
+     "tail": "right",
+     "got": " not what I asked",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0745",
+     "head": "a table for two needs to be reserved",
+     "tail": "for 7:00pm at olive garden using the name michael",
+     "got": " for tonight at 7 pm.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1702",
+     "head": "what's on my",
+     "tail": "calendar for march 20th",
+     "got": "calendar today?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3086",
+     "head": "give me a list",
+     "tail": "of ingredients for making pasta",
+     "got": " of things to do when I'm bored",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1768",
+     "head": "what is the solution",
+     "tail": "to sixty times thirty",
+     "got": " to this problem?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0653",
+     "head": "what can you do",
+     "tail": "to make yourself useful",
+     "got": "",
+     "refused_or_empty": true,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0115",
+     "head": "what's the",
+     "tail": "meaning of naff",
+     "got": " weather like today?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2662",
+     "head": "i need to know how",
+     "tail": "long until the next day off",
+     "got": " to write a resume",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2432",
+     "head": "tell me my routing number",
+     "tail": "at my bank, community trust",
+     "got": " for my bank account",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3482",
+     "head": "how do i get",
+     "tail": "to the train by foot",
+     "got": " a passport",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3447",
+     "head": "if i travel abroad,",
+     "tail": "do i need vaccinations",
+     "got": "will my phone still work?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1203",
+     "head": "how is my",
+     "tail": "credit score numberwise",
+     "got": " day looking?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3347",
+     "head": "go into whisper mode",
+     "tail": "until the plane lands",
+     "got": "",
+     "refused_or_empty": true,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0692",
+     "head": "how do i",
+     "tail": "do an oil change",
+     "got": " reset my password",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3602",
+     "head": "hey, how do",
+     "tail": "i call your attention",
+     "got": " I reset my password?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0328",
+     "head": "tell me",
+     "tail": "fun science facts",
+     "got": " a joke",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0804",
+     "head": "i have a reservation for strip house",
+     "tail": "for jennifer that i'd like to confirm",
+     "got": " tonight at 8 pm",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0875",
+     "head": "which company",
+     "tail": "made you",
+     "got": " owns Instagram",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2528",
+     "head": "for this car what kind",
+     "tail": "of fuel does it take",
+     "got": " of gas does it take",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2088",
+     "head": "please set up",
+     "tail": "a reminder for me",
+     "got": " a reminder for tomorrow at 9 AM",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": true
+    },
+    {
+     "qid": "t0541",
+     "head": "please start",
+     "tail": "calling me bob",
+     "got": " a timer for 10 minutes",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3263",
+     "head": "how does",
+     "tail": "the weather feel",
+     "got": " photosynthesis work?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t4124",
+     "head": "i need you to cancel my",
+     "tail": "reservation for smith at the williams diner",
+     "got": "subscription",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    }
+   ]
+  },
+  "gpt-5-mini": {
+   "label_recall": {
+    "true_labels": 150,
+    "named": 0,
+    "exact_hits": 0,
+    "recall": 0.0,
+    "named_not_real": 0,
+    "tokens": 1553
+   },
+   "label_hits": [],
+   "completion": {
+    "n": 50,
+    "refused_or_empty": 0,
+    "verbatim": 0,
+    "verbatim_share": 0.0,
+    "first3_share": 0.02
+   },
+   "completions": [
+    {
+     "qid": "t2837",
+     "head": "i placed an order",
+     "tail": "and i need it tracked",
+     "got": "i placed an order yesterday but haven’t received a confirmation email — can you check the status or provide a tracking number?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2475",
+     "head": "please tell me the",
+     "tail": "types of pets you have",
+     "got": "time",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0736",
+     "head": "get me a table for",
+     "tail": "five at itta bena at three",
+     "got": "two at 7 tonight",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1699",
+     "head": "do i have any",
+     "tail": "calendar entries for march 8th",
+     "got": "unread messages?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t4494",
+     "head": "how come",
+     "tail": "i got declined",
+     "got": "my phone won't charge?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0947",
+     "head": "i need to know the",
+     "tail": "name that you have for me",
+     "got": " weather for tomorrow",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0565",
+     "head": "start calling me",
+     "tail": "jake from now on",
+     "got": " by my nickname Alex from now on.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3910",
+     "head": "can i redeem",
+     "tail": "my points on gas",
+     "got": "my gift card online or do I need to go to a store?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1383",
+     "head": "yes, ai,",
+     "tail": "that is correct",
+     "got": " can you remind me to call the doctor at 3 PM tomorrow and add it to my calendar?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2350",
+     "head": "what is the",
+     "tail": "calorie content in bananas",
+     "got": "weather like today?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1040",
+     "head": "how much was",
+     "tail": "my last target trip",
+     "got": "the total?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t4362",
+     "head": "can you please",
+     "tail": "tell me my income",
+     "got": "help me with something?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3767",
+     "head": "can i fly from atlanta to",
+     "tail": "san francisco for less than 100 dollars",
+     "got": "new york tomorrow?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0346",
+     "head": "is it possible to",
+     "tail": "talk to you in mandarin",
+     "got": " cancel my subscription?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3806",
+     "head": "i need to know",
+     "tail": "what's on my shopping list",
+     "got": " how to reset my password on my account",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2451",
+     "head": "where can i find",
+     "tail": "routing number for pnc",
+     "got": " a good restaurant near me?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t4238",
+     "head": "can you book a car rental",
+     "tail": "today to new york city to philadelphia",
+     "got": "for me for next Friday (pickup around 10 AM) through the following Monday (drop-off around 4 PM) at LAX, compact/economy automatic, with GPS and unlimited mileage, and please use my default payment method",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3398",
+     "head": "is a visa necessary",
+     "tail": "for traveling to south africa",
+     "got": "to travel to the United States for tourism?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1542",
+     "head": "how do i",
+     "tail": "make you talk faster",
+     "got": "reset my password?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3745",
+     "head": "what do you like",
+     "tail": "to do besides work",
+     "got": " to do for fun?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1889",
+     "head": "can i make",
+     "tail": "a car maintenance appointment",
+     "got": " a reservation for dinner tonight?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3387",
+     "head": "stop",
+     "tail": "processing",
+     "got": " sending me messages.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2962",
+     "head": "what song",
+     "tail": "is this one",
+     "got": " is this?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3236",
+     "head": "show me",
+     "tail": "my location",
+     "got": "the weather for today.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1452",
+     "head": "tell me about",
+     "tail": "my health benefits",
+     "got": "yourself",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3378",
+     "head": "can you",
+     "tail": "cancel that request",
+     "got": "help me with something?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2713",
+     "head": "am i in",
+     "tail": "charge of you",
+     "got": " the right place for this appointment?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1387",
+     "head": "that's",
+     "tail": "right",
+     "got": " great, thanks!",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0745",
+     "head": "a table for two needs to be reserved",
+     "tail": "for 7:00pm at olive garden using the name michael",
+     "got": "for tomorrow at 7 PM under the name Johnson. Can you also request a window seat and note it's our anniversary?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1702",
+     "head": "what's on my",
+     "tail": "calendar for march 20th",
+     "got": " calendar?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3086",
+     "head": "give me a list",
+     "tail": "of ingredients for making pasta",
+     "got": " of things to do this weekend",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1768",
+     "head": "what is the solution",
+     "tail": "to sixty times thirty",
+     "got": " to this problem?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0653",
+     "head": "what can you do",
+     "tail": "to make yourself useful",
+     "got": " for me?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0115",
+     "head": "what's the",
+     "tail": "meaning of naff",
+     "got": "weather like today?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2662",
+     "head": "i need to know how",
+     "tail": "long until the next day off",
+     "got": "to reset my password on my email account",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2432",
+     "head": "tell me my routing number",
+     "tail": "at my bank, community trust",
+     "got": " for Bank of America — I’m setting up direct deposit and need the routing number for my account.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3482",
+     "head": "how do i get",
+     "tail": "to the train by foot",
+     "got": " to sleep at night?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3447",
+     "head": "if i travel abroad,",
+     "tail": "do i need vaccinations",
+     "got": " do I need a visa, what documents should I bring, and will my phone and bank cards work?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": true
+    },
+    {
+     "qid": "t1203",
+     "head": "how is my",
+     "tail": "credit score numberwise",
+     "got": "credit score?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3347",
+     "head": "go into whisper mode",
+     "tail": "until the plane lands",
+     "got": "and speak in a whisper so only I can hear you.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0692",
+     "head": "how do i",
+     "tail": "do an oil change",
+     "got": "reset my password?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3602",
+     "head": "hey, how do",
+     "tail": "i call your attention",
+     "got": "I reset my password?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0328",
+     "head": "tell me",
+     "tail": "fun science facts",
+     "got": "a joke.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0804",
+     "head": "i have a reservation for strip house",
+     "tail": "for jennifer that i'd like to confirm",
+     "got": "can you cancel it for me? the reservation is for tonight at 7pm under the name Johnson.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0875",
+     "head": "which company",
+     "tail": "made you",
+     "got": " makes the iPhone?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2528",
+     "head": "for this car what kind",
+     "tail": "of fuel does it take",
+     "got": "of oil should I use and what viscosity is recommended?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2088",
+     "head": "please set up",
+     "tail": "a reminder for me",
+     "got": " a meeting with John for tomorrow at 10 AM and invite the design team",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0541",
+     "head": "please start",
+     "tail": "calling me bob",
+     "got": " the timer for 10 minutes.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3263",
+     "head": "how does",
+     "tail": "the weather feel",
+     "got": "it work?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t4124",
+     "head": "i need you to cancel my",
+     "tail": "reservation for smith at the williams diner",
+     "got": "subscription.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    }
+   ]
+  },
+  "gpt-6-luna": {
+   "label_recall": {
+    "true_labels": 150,
+    "named": 150,
+    "exact_hits": 12,
+    "recall": 0.08,
+    "named_not_real": 138,
+    "tokens": 1335
+   },
+   "label_hits": [
+    "book_flight",
+    "book_hotel",
+    "cancel",
+    "cancel_reservation",
+    "goodbye",
+    "greeting",
+    "make_call",
+    "pay_bill",
+    "play_music",
+    "repeat",
+    "report_fraud",
+    "tell_joke"
+   ],
+   "completion": {
+    "n": 50,
+    "refused_or_empty": 1,
+    "verbatim": 0,
+    "verbatim_share": 0.0,
+    "first3_share": 0.0
+   },
+   "completions": [
+    {
+     "qid": "t2837",
+     "head": "i placed an order",
+     "tail": "and i need it tracked",
+     "got": " and it hasn't arrived yet. Can you help me track it?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2475",
+     "head": "please tell me the",
+     "tail": "types of pets you have",
+     "got": " weather",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0736",
+     "head": "get me a table for",
+     "tail": "five at itta bena at three",
+     "got": "two at 7 pm tonight",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1699",
+     "head": "do i have any",
+     "tail": "calendar entries for march 8th",
+     "got": " appointments today?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t4494",
+     "head": "how come",
+     "tail": "i got declined",
+     "got": " the sky is blue?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0947",
+     "head": "i need to know the",
+     "tail": "name that you have for me",
+     "got": " weather",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0565",
+     "head": "start calling me",
+     "tail": "jake from now on",
+     "got": " Alex from now on.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3910",
+     "head": "can i redeem",
+     "tail": "my points on gas",
+     "got": " my points for cash?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1383",
+     "head": "yes, ai,",
+     "tail": "that is correct",
+     "got": " can you help me with that?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2350",
+     "head": "what is the",
+     "tail": "calorie content in bananas",
+     "got": " meaning of life?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1040",
+     "head": "how much was",
+     "tail": "my last target trip",
+     "got": " the total?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t4362",
+     "head": "can you please",
+     "tail": "tell me my income",
+     "got": " help me?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3767",
+     "head": "can i fly from atlanta to",
+     "tail": "san francisco for less than 100 dollars",
+     "got": " New York?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0346",
+     "head": "is it possible to",
+     "tail": "talk to you in mandarin",
+     "got": " get a refund for my order?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3806",
+     "head": "i need to know",
+     "tail": "what's on my shopping list",
+     "got": " how to",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2451",
+     "head": "where can i find",
+     "tail": "routing number for pnc",
+     "got": " the nearest public library?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t4238",
+     "head": "can you book a car rental",
+     "tail": "today to new york city to philadelphia",
+     "got": " for me?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3398",
+     "head": "is a visa necessary",
+     "tail": "for traveling to south africa",
+     "got": " to travel to the United States?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1542",
+     "head": "how do i",
+     "tail": "make you talk faster",
+     "got": " reset my password?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3745",
+     "head": "what do you like",
+     "tail": "to do besides work",
+     "got": " to do?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1889",
+     "head": "can i make",
+     "tail": "a car maintenance appointment",
+     "got": " money online?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3387",
+     "head": "stop",
+     "tail": "processing",
+     "got": "",
+     "refused_or_empty": true,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2962",
+     "head": "what song",
+     "tail": "is this one",
+     "got": " is this?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3236",
+     "head": "show me",
+     "tail": "my location",
+     "got": " how to make a simple pasta dish",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1452",
+     "head": "tell me about",
+     "tail": "my health benefits",
+     "got": " yourself",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3378",
+     "head": "can you",
+     "tail": "cancel that request",
+     "got": " help me with something?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2713",
+     "head": "am i in",
+     "tail": "charge of you",
+     "got": " love?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1387",
+     "head": "that's",
+     "tail": "right",
+     "got": " great, thank you!",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0745",
+     "head": "a table for two needs to be reserved",
+     "tail": "for 7:00pm at olive garden using the name michael",
+     "got": " at an Italian restaurant for tonight at 7 PM.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1702",
+     "head": "what's on my",
+     "tail": "calendar for march 20th",
+     "got": " calendar today?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3086",
+     "head": "give me a list",
+     "tail": "of ingredients for making pasta",
+     "got": " of ideas for a fun weekend",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1768",
+     "head": "what is the solution",
+     "tail": "to sixty times thirty",
+     "got": " to this problem?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0653",
+     "head": "what can you do",
+     "tail": "to make yourself useful",
+     "got": " for me?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0115",
+     "head": "what's the",
+     "tail": "meaning of naff",
+     "got": " weather like today?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2662",
+     "head": "i need to know how",
+     "tail": "long until the next day off",
+     "got": " to reset my password.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2432",
+     "head": "tell me my routing number",
+     "tail": "at my bank, community trust",
+     "got": " for my bank account",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3482",
+     "head": "how do i get",
+     "tail": "to the train by foot",
+     "got": " a refund?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3447",
+     "head": "if i travel abroad,",
+     "tail": "do i need vaccinations",
+     "got": " will my phone work there?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t1203",
+     "head": "how is my",
+     "tail": "credit score numberwise",
+     "got": " day going?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3347",
+     "head": "go into whisper mode",
+     "tail": "until the plane lands",
+     "got": " and keep your replies quiet and gentle for the rest of our conversation.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0692",
+     "head": "how do i",
+     "tail": "do an oil change",
+     "got": " reset my password?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3602",
+     "head": "hey, how do",
+     "tail": "i call your attention",
+     "got": " I",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0328",
+     "head": "tell me",
+     "tail": "fun science facts",
+     "got": " a joke",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0804",
+     "head": "i have a reservation for strip house",
+     "tail": "for jennifer that i'd like to confirm",
+     "got": " tonight at 7:30, but I need to change it to 8:00. Can you help me?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0875",
+     "head": "which company",
+     "tail": "made you",
+     "got": " makes the iPhone?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2528",
+     "head": "for this car what kind",
+     "tail": "of fuel does it take",
+     "got": " of oil does it take?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t2088",
+     "head": "please set up",
+     "tail": "a reminder for me",
+     "got": " a meeting with the team for tomorrow afternoon.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t0541",
+     "head": "please start",
+     "tail": "calling me bob",
+     "got": " a timer for 10 minutes.",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t3263",
+     "head": "how does",
+     "tail": "the weather feel",
+     "got": " this work?",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    },
+    {
+     "qid": "t4124",
+     "head": "i need you to cancel my",
+     "tail": "reservation for smith at the williams diner",
+     "got": " subscription",
+     "refused_or_empty": false,
+     "verbatim": false,
+     "first3": false
+    }
+   ]
+  }
+ }
+}

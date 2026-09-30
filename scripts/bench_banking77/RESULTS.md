@@ -141,3 +141,26 @@ way. With a RAG fallback, the gate scored 95.3% against RAG alone's 97.3%
   that it keeps RAG's accuracy did not replicate: on CLINC150 it lost 2.3 points
   while cutting LLM calls by 73%. Whether that trade is worth it depends on the
   cost of a call and of an error; the data does not decide it.
+
+## Have the LLMs memorised these datasets?
+
+Both datasets are public (banking77 2020, CLINC150 2019), so they may be in the
+models' training data, which would flatter the LLM arms. `contamination.py`
+probes this cheaply, with metrics fixed before the first run
+(`results/*/contamination.*.json`):
+
+- **Named framing** (the prompt names the dataset): the models mostly refused
+  ("can't reproduce a copyrighted dataset") and listed no labels. Inconclusive.
+- **Neutral framing** (the prompt doesn't name it; written after the refusals,
+  same metrics):
+  - Completing the first half of 50 held-out test messages per model and dataset:
+    1 verbatim continuation in 300 ("Who accepts" → "this card?"). The first three
+    words matched in 0–4%.
+  - Listing the intent labels: 0–2 of banking77's 77 and 0–12 of CLINC150's 150
+    exactly. The hits are generic names any model would guess (`book_flight`,
+    `pay_bill`, `tell_joke`, `change_pin`), not the datasets' idiosyncratic ones
+    (e.g. banking77's `Refund_not_showing_up`).
+
+No sign of verbatim memorisation. That does not rule out that the models saw the
+data in training and generalise from it; a private or freshly written dataset is
+the stronger test.
