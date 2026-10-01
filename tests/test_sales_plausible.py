@@ -44,3 +44,27 @@ def test_win_odds_come_with_the_counted_base_rate(monkeypatch):
     monkeypatch.setitem(A._BASE_WIN_CACHE, "at", 0.0)
     r = A._tool_win_odds({"industry": "SaaS"})
     assert (r["win_probability"], r["base_win_rate"], r["times_the_base"]) == (0.5, 0.2, 2.5)
+
+
+def test_the_reseed_keeps_the_live_tables_engine_and_types():
+    """Rows change; the table's own schema (its engine included) is what gets recreated."""
+    live = {"type": "table", "engine": "v2", "columns": {c: {"type": "String"} for c in ("a", "b")}}
+    sent = {}
+
+    class _H:
+        def get(self, path):
+            body = {"schema": {"t": live}} if path == "/schema" else sent.get("schema", {})
+            return type("R", (), {"json": lambda self: body, "status_code": 200})()
+
+        def delete(self, path):
+            return type("R", (), {"status_code": 200})()
+
+        def put(self, path, json):
+            sent["schema"] = json
+            return type("R", (), {"status_code": 200})()
+
+        def post(self, path, json):
+            return type("R", (), {"status_code": 200, "json": lambda self: {"total": 2}, "text": ""})()
+
+    S._upload(_H(), "t", {"type": "table", "columns": {"a": {}, "b": {}}}, [{}, {}])
+    assert sent["schema"] is live                                  # the live schema, engine and all
