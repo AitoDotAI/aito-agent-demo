@@ -18,6 +18,7 @@ and /api/schema can stay verbatim across demos.
 from __future__ import annotations
 
 import logging
+import functools
 import os
 import threading
 import time
@@ -27,6 +28,7 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel as _BaseModel
 
+from src import query_log
 from src.aito_client import AitoClient, AitoError
 from src.config import load_config
 
@@ -61,6 +63,7 @@ app = FastAPI(
 @app.middleware("http")
 async def aito_latency_headers(request: Request, call_next):
     aito.last_call = None
+    query_log.start()  # this request's Aito queries, for the side panel (see _with_queries)
     response: Response = await call_next(request)
     if aito.last_call:
         call = aito.last_call
@@ -131,6 +134,18 @@ async def rate_limit_llm(request: Request, call_next):
                 status_code=429,
             )
     return await call_next(request)
+
+
+def _with_queries(fn):
+    """Return the Aito queries a route sent as `_queries`, so its side panel shows the
+    query actually sent (src/query_log.py). Body, op, path and env only; no credentials."""
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        out = fn(*args, **kwargs)
+        if isinstance(out, dict) and "_queries" not in out:
+            out = {**out, "_queries": query_log.current()}
+        return out
+    return wrapper
 
 
 # ── Health ────────────────────────────────────────────────────────
@@ -272,6 +287,7 @@ def _top_and_alts(resp: dict, k: int = 3):
 
 
 @app.get("/api/resolve")
+@_with_queries
 def resolve(text: str, sender: str = ""):
     """Resolve a support ticket via Aito `_predict`: predict the intent, then the
     one structured parameter that intent needs — both from `{text, sender_domain}`,
@@ -391,6 +407,7 @@ _AUTO_GATE, _ASSIST_GATE = 0.85, 0.65
 
 
 @app.get("/api/handoff")
+@_with_queries
 def handoff():
     """Triage an incoming queue by Aito's calibrated confidence: auto-resolve the
     sure ones, assist the medium, and hand the rest to a human — with Aito's
@@ -434,6 +451,7 @@ _CATALOG_BY_NAME = {t["name"]: t for t in _CATALOG}
 
 
 @app.post("/api/route")
+@_with_queries
 def route(req: LLMText):
     """Augmentation demo (short-listing). Aito `_predict` shortlists the few tools
     that history says are relevant; the SAME LLM then picks — once over the whole
@@ -515,6 +533,7 @@ def _win_drivers(raw_why, k: int = 3):
 
 
 @app.get("/api/opportunity")
+@_with_queries
 def opportunity(industry: str = "SaaS", client_size: str = "Mid-market", service_line: str = "Data Platform",
                 deal_size_band: str = "L", region: str = "Helsinki", lead_source: str = "Inbound",
                 complexity: str = "Medium", team_seniority: str = "balanced", relationship: str = "New logo",
@@ -1113,6 +1132,7 @@ async def company_agent_chat(request: Request):
 
 
 @app.get("/api/company-360")
+@_with_queries
 def company_360(industry: str = "", size: str = "", plan: str = ""):
     """The 360 Dashboard — Aito called DIRECTLY (no agent), like the Opportunity
     Assistant. For a customer segment: every KPI with its current rate, the lever
@@ -1155,6 +1175,7 @@ _GOV_CACHE: dict[str, dict] = {}  # the decision logs are static seed data: mine
 
 
 @app.get("/api/governance/rules")
+@_with_queries
 def governance_rules(log: str = "resolutions"):
     from src.governance import LOGS, mine_rules
     if log not in LOGS:
@@ -1168,6 +1189,7 @@ def governance_rules(log: str = "resolutions"):
 
 
 @app.get("/api/rules/active")
+@_with_queries
 def rules_active(log: str = "resolutions"):
     """The promoted rules in force. None yet: promotion needs a writable engine,
     so no decision is made by a rule; the model path decides (see RulesView)."""
@@ -1254,10 +1276,12 @@ def _envelope_for(ticket_id: str, text: str | None) -> dict:
     cached = _envelopes.get(key)
     if cached is not None:
         return cached
+    before = len(query_log.current())
     try:
         out = envelope(_support_client(), ticket, steps)
     except AitoError as e:
         raise HTTPException(status_code=502, detail=str(e))
+    out["_queries"] = query_log.current()[before:]  # cached with the value, so a cache hit shows them too
     out["edited"] = key[2] is not None
     if out["edited"]:
         for s in out["steps"]:
@@ -1275,6 +1299,7 @@ _ENVELOPE_TEXT_PER_MIN = 10
 
 
 @app.get("/api/support/envelope")
+@_with_queries
 def support_envelope(request: Request, ticket_id: str, text: str | None = None):
     if text is not None and _over_limit(request, "/api/support/envelope?text", _ENVELOPE_TEXT_PER_MIN):
         raise HTTPException(status_code=429, detail="Too many of your own tickets in a minute. Give it a few seconds.")

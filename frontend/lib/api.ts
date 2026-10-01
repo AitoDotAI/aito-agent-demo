@@ -26,6 +26,17 @@ export interface AitoLatencySample {
 type LatencyListener = (sample: AitoLatencySample) => void;
 const latencyListeners = new Set<LatencyListener>();
 
+/** One Aito request a route sent (src/query_log.py): the exact body, no credentials. */
+export interface AitoQuery { op: string; path: string; env: string; body: Record<string, unknown> | null; ms: number; status: number }
+type QueryListener = (path: string, queries: AitoQuery[]) => void;
+const queryListeners = new Set<QueryListener>();
+
+/** Subscribe to the queries each /api/* response reports in `_queries` (the side panels render them). */
+export function onAitoQueries(fn: QueryListener): () => void {
+  queryListeners.add(fn);
+  return () => { queryListeners.delete(fn); };
+}
+
 export function onAitoLatency(fn: LatencyListener): () => void {
   latencyListeners.add(fn);
   return () => {
@@ -73,7 +84,15 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     } catch {}
     throw new ApiError(res.status, detail, path);
   }
-  return res.json();
+  const data = await res.json();
+  const queries = data && typeof data === "object" ? (data as { _queries?: AitoQuery[] })._queries : undefined;
+  if (Array.isArray(queries) && queries.length) {
+    const endpoint = path.split("?")[0];
+    for (const fn of queryListeners) {
+      try { fn(endpoint, queries); } catch { /* listener error must not break API call */ }
+    }
+  }
+  return data;
 }
 
 export function fmtAmount(n: number): string {

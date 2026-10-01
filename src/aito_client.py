@@ -20,7 +20,11 @@ import os
 from dataclasses import dataclass
 from typing import Any
 
+import time
+
 import httpx
+
+from src import query_log
 
 from src.config import Config
 
@@ -119,11 +123,13 @@ class AitoClient:
         return ["$value" if s == "feature" else s for s in select]
 
     def _request(self, method: str, path: str, body: dict | None = None, op: str | None = None) -> dict:
+        t0 = time.perf_counter()
         try:
             r = self._http.request(method, path, json=body)
         except httpx.HTTPError as e:
             raise AitoError(f"Aito {path} unreachable: {e}") from e
-        self.last_call = AitoCall(op=op or path, ms=r.elapsed.total_seconds() * 1000, status=r.status_code)
+        self.last_call = AitoCall(op=op or path, ms=(time.perf_counter() - t0) * 1000, status=r.status_code)
+        query_log.record(op or path.rsplit("/", 1)[-1], path, self._env, body, self.last_call.ms, r.status_code)
         if r.status_code >= 400:
             try:
                 body_json = r.json()
