@@ -24,8 +24,10 @@ class _FakeAito:
             if self.fail:
                 raise AitoError("400 unknown operator")
             return {"hits": self.hits}
-        if table == "customers":
+        if table == "customers" and (where or {}).get("customer_id"):
             return {"hits": [{"customer_id": where["customer_id"], "name": "Acme"}]}
+        if limit == 0:  # a count (the 360's counted rates)
+            return {"hits": [], "total": 10}
         return {"hits": [], "total": 0}
 
 

@@ -14,13 +14,15 @@ type Lever = { value: string; p: number; lift: number };
 type KpiWhy = { base: number | null; factors: { field: string; value: string; lift: number }[] };
 type Kpi = {
   key: string; kpi: string; headline: { metric: string; now: number; then: number; lower_is_better: boolean };
-  lift_pp: number; current: number; bad_label: string; good_label: string; kpi_why: KpiWhy;
+  // empty: the segment has no rows for this KPI (headline numbers are then null)
+  lift_pp: number; current: number | null; empty?: boolean; bad_label: string; good_label: string; kpi_why: KpiWhy;
   causes: Cause[];
   levers: { lever: string; items: Lever[] };
   recommended_play: { lever: string; change_to: string };
 };
 
-// the KPI rate's own $why: base × the segment attributes' lifts = the rate
+// the KPI rate's $why: base × the segment attributes' lifts, from the model over every customer;
+// the headline itself is counted within the segment, so both are shown
 function KpiWhyBody({ w, now }: { w: KpiWhy; now: number }) {
   if (w.base == null) return <div style={{ fontSize: 12, color: "#56524a" }}>This rate is the base, the segment&apos;s attributes don&apos;t move this KPI.</div>;
   return (
@@ -35,7 +37,10 @@ function KpiWhyBody({ w, now }: { w: KpiWhy; now: number }) {
         ))}
       </div>
       <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "#56524a", borderTop: "1px solid #efeadd", paddingTop: 7 }}>
-        {Math.round(w.base * 100)}%{w.factors.map((f, i) => <span key={i}> × {f.lift}</span>)} = <b style={{ color: "#16140f" }}>{Math.round(now * 100)}%</b>
+        {Math.round(w.base * 100)}%{w.factors.map((f, i) => <span key={i}> × {f.lift}</span>)} ≈ <b style={{ color: "#16140f" }}>{Math.round(w.factors.reduce((p, f) => p * f.lift, w.base) * 100)}%</b> modelled
+      </div>
+      <div style={{ fontSize: 11.5, color: "#56524a", marginTop: 5 }}>
+        Counted in this segment: <b style={{ color: "#16140f" }}>{Math.round(now * 100)}%</b>. The factors show how its attributes move the rate against every customer.
       </div>
     </div>
   );
@@ -186,6 +191,15 @@ export function CompanyDashboardView() {
             <div className="kgrid">
               {sheet.kpis.map((k) => {
                 const m = META[k.key] ?? { label: k.headline.metric, sub: "" };
+                if (k.empty || k.headline.now == null) {
+                  // a segment with no rows for this KPI: nothing to count or recommend
+                  return (
+                    <div className="kc" key={k.key}>
+                      <div className="kh"><b>{m.label}</b><span>{m.sub}</span></div>
+                      <div className="ks" style={{ padding: "18px 0", color: "#8a857a" }}>No rows in this segment, so nothing to measure.</div>
+                    </div>
+                  );
+                }
                 const lower = k.headline.lower_is_better;
                 const good = lower ? k.headline.now <= 0.33 : k.headline.now >= 0.5;
                 return (
@@ -208,7 +222,7 @@ export function CompanyDashboardView() {
 
                     <div className="flist">
                       <div className="ft">Recommended levers <span className="op2">_recommend</span></div>
-                      {k.levers.items.map((l, i) => <LeverRow key={i} l={l} lever={k.levers.lever} current={k.current} good={k.good_label} top={i === 0} />)}
+                      {k.levers.items.map((l, i) => <LeverRow key={i} l={l} lever={k.levers.lever} current={k.current ?? 0} good={k.good_label} top={i === 0} />)}
                     </div>
 
                     <div className="proj">↳ pull the top lever → <b style={{ color: "var(--t)" }}>{pct(k.headline.then)}</b> · {k.lift_pp}pp better</div>
