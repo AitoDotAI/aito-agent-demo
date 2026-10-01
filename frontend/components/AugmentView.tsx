@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import ConfidenceBar from "@/components/prediction/ConfidenceBar";
 import { apiFetch, ApiError } from "@/lib/api";
+import { AUTO_GATE, pctP } from "@/lib/gates";
 
 type Pick = { tool: string; latency_ms: number; tokens: number; cost_usd: number; n_tools: number };
 type Route = {
@@ -56,7 +57,7 @@ export function AugmentView({ onAito }: { onAito?: (ms: number | null) => void }
         <div className="rc-kpi"><div className="kl">Tool catalog</div><div className="kv">{r?.catalog_size ?? 240}</div><div className="ks">backend tools the LLM must consider</div></div>
         <div className="rc-kpi"><div className="kl">Prompt tokens</div><div className="kv t">{tokFactor ? `${tokFactor}× less` : "—"}</div><div className="ks">{full && coop ? `${full.tokens.toLocaleString()} → ${coop.tokens}` : "after Aito shortlists"}</div></div>
         <div className="rc-kpi"><div className="kl">Latency</div><div className="kv t">{speedFactor ? `${speedFactor.toFixed(1)}×` : "—"}</div><div className="ks">faster on the shortlist</div></div>
-        <div className="rc-kpi"><div className="kl">Aito top confidence</div><div className="kv">{top != null ? `${Math.round(Math.min(top, 0.99) * 100)}%` : "—"}</div><div className="ks">{top != null && top >= 0.9 ? "above gate, LLM optional" : "→ hand the shortlist to the LLM"}</div></div>
+        <div className="rc-kpi"><div className="kl">Aito top confidence</div><div className="kv">{top != null ? pctP(top) : "—"}</div><div className="ks">{top != null && top >= AUTO_GATE ? `at or above the ${AUTO_GATE} gate, LLM optional` : "→ hand the shortlist to the LLM"}</div></div>
       </div>
 
       <div className="rc-h">Aito augments the LLM, it doesn&apos;t replace it</div>
@@ -106,7 +107,7 @@ export function AugmentView({ onAito }: { onAito?: (ms: number | null) => void }
               <div className="rc-act">{coop.tool}() {full && coop.tool === full.tool && <span style={{ color: "var(--rc-green-ink)", fontSize: 12 }}>· same answer ✓</span>}</div>
               <div className="rc-meta">{coop.n_tools} tools in prompt · <b style={{ color: "var(--turq)" }}>{coop.tokens} tokens</b> · ${coop.cost_usd.toFixed(5)} · {coop.latency_ms.toFixed(0)}ms</div>
               <div style={{ marginTop: 12, fontSize: 11.5, color: "var(--rc-faint)", lineHeight: 1.5, borderTop: "1px dashed var(--rc-line)", paddingTop: 10 }}>
-                Same LLM, {full && coop.tool === full.tool ? "same answer" : "a different pick"}, {tokFactor ?? "many"}× fewer tokens, grounded in Aito&apos;s calibrated shortlist. {top != null && top >= 0.9 ? "Here Aito's top confidence clears the gate, so you could skip this call entirely." : ""}
+                Same LLM, {full && coop.tool === full.tool ? "same answer" : "a different pick"}, {tokFactor ?? "many"}× fewer tokens, grounded in Aito&apos;s calibrated shortlist. {top != null && top >= AUTO_GATE ? "Here Aito's top confidence clears the gate, so you could skip this call entirely." : ""}
               </div>
             </>)}
           </div>

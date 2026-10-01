@@ -40,7 +40,10 @@ const SAMPLES: { label: string; p: Profile }[] = [
 ];
 
 const eur = (n: number) => "€" + (n >= 1000 ? `${Math.round(n / 1000)}k` : `${n}`);
-const winLabel = (p: number) => (p >= 0.7 ? ["Strong", "var(--g)"] : p >= 0.45 ? ["Moderate", "var(--gold-ink)"] : ["Long shot", "var(--r)"]);
+// Bands for a deal's win probability (a sales label, not a routing gate like lib/gates.ts)
+const STRONG_WIN = 0.7;
+const MODERATE_WIN = 0.45;
+const winLabel = (p: number) => (p >= STRONG_WIN ? ["Strong", "var(--g)"] : p >= MODERATE_WIN ? ["Moderate", "var(--gold-ink)"] : ["Long shot", "var(--r)"]);
 
 export type SalesMeta = { loading: boolean; meeting_p: number | null; win_p: number | null };
 

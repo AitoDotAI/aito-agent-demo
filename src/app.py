@@ -30,6 +30,7 @@ from pydantic import BaseModel as _BaseModel
 
 from src import query_log
 from src.aito_client import AitoClient, AitoError
+from src.gates import ASSIST_GATE, AUTO_GATE
 from src.config import load_config
 
 # Each support intent fills exactly one structured parameter (or none). The
@@ -403,7 +404,7 @@ _TEAM = {
 _SENSITIVE = {"refund", "cancel_service"}
 #: the off-topic ticket the Human handoff page's caveat quotes; its read is measured live
 _CAVEAT_EXAMPLE = "What's the weather like in Oulu tomorrow?"
-_AUTO_GATE, _ASSIST_GATE = 0.85, 0.65
+_AUTO_GATE, _ASSIST_GATE = AUTO_GATE, ASSIST_GATE  # src/gates.py: one place for the whole app
 
 
 @app.get("/api/handoff")
