@@ -617,8 +617,11 @@ def _base_win_rate() -> float | None:
     """The share of all pursued engagements that were won, counted (cached ten minutes):
     the base a deal's win odds are read against."""
     if time.time() - _BASE_WIN_CACHE["at"] > 600 or _BASE_WIN_CACHE["rate"] is None:
-        total = aito.query("engagements", limit=0).get("total") or 0
-        won = aito.query("engagements", where={"outcome": "won"}, limit=0).get("total") or 0
+        try:
+            total = aito.query("engagements", limit=0).get("total") or 0
+            won = aito.query("engagements", where={"outcome": "won"}, limit=0).get("total") or 0
+        except AitoError:
+            return _BASE_WIN_CACHE["rate"]  # the odds still show; only the comparison is missing
         _BASE_WIN_CACHE.update(at=time.time(), rate=round(won / total, 3) if total else None)
     return _BASE_WIN_CACHE["rate"]
 
