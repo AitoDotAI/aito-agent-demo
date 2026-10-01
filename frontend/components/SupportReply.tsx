@@ -125,6 +125,7 @@ type Bench = {
   llm: Record<string, { tokens_per_ticket: number; usd_per_1000_tickets: number; calls_per_ticket: number }>;
   latency_ms: Record<string, { p50: number; p95: number }>;
   paired_vs_aito_only: Record<string, { mcnemar_p: number }>;
+  novel_text?: { groups: Record<string, { n: number; arms: Record<string, { all_five_right: number }> }> };
 };
 
 const ARMS: [string, string][] = [
@@ -140,12 +141,13 @@ export function BenchPanel() {
   useEffect(() => { apiFetch<Bench>("/api/support/benchmark").then(setB).catch(() => setB(null)); }, []);
   if (!b) return null;
   const n = ARMS.length - 1;
+  const novel = b.novel_text?.groups?.novel_text;
   return (
     <div className="sb">
       <div className="sb-h"><b>Aito vs the LLM on the same {b.tickets} held-out tickets</b><span>recorded run · synthetic fixture · gpt-5-mini</span></div>
       <div className="sb-scroll">
         <table>
-          <thead><tr><th /><th>all five decisions right</th><th>LLM tokens / ticket</th><th>LLM spend / 1,000 tickets</th><th>median · slowest 5%</th></tr></thead>
+          <thead><tr><th /><th>all five decisions right</th>{novel && <th>new wording only ({novel.n})</th>}<th>LLM tokens / ticket</th><th>LLM spend / 1,000 tickets</th><th>median · slowest 5%</th></tr></thead>
           <tbody>
             {ARMS.map(([k, name]) => {
               const a = b.accuracy[k]?.all_five_right, l = b.llm[k], t = b.latency_ms[k], pr = b.paired_vs_aito_only[k];
@@ -154,6 +156,7 @@ export function BenchPanel() {
                 <tr key={k} className={k === "aito_only" ? "me" : ""}>
                   <td>{name}</td>
                   <td><b>{Math.round(a.share * 100)}%</b> <i>{Math.round(a.ci95[0] * 100)}–{Math.round(a.ci95[1] * 100)}{pr ? ` · p ${pr.mcnemar_p < 0.001 ? "<0.001" : pr.mcnemar_p.toFixed(3)}` : ""}</i></td>
+                  {novel && <td>{novel.arms[k] ? <b>{Math.round(novel.arms[k].all_five_right * 100)}%</b> : "—"}</td>}
                   <td>{l.tokens_per_ticket === 0 ? "0" : l.tokens_per_ticket}</td>
                   <td>{l.usd_per_1000_tickets === 0 ? "none" : `$${l.usd_per_1000_tickets.toFixed(2)}`}</td>
                   <td>{secs(t.p50)} · {secs(t.p95)}</td>
@@ -166,7 +169,9 @@ export function BenchPanel() {
       <div className="sr-foot">
         Product, category, priority, resolution and first step, each checked against what happened; 95% intervals, and a
         paired McNemar p against Aito only ({n} comparisons, so below {(0.05 / n).toFixed(4)} is conclusive, above it
-        suggestive). Accuracy is on a synthetic desk with planted patterns, so it shows the method, not a forecast for
+        suggestive). None of these tickets was loaded into Aito, but {novel ? b.tickets - novel.n : "some"} repeat the exact
+        wording of a loaded ticket; on the {novel ? novel.n : ""} with new wording, Aito and the LLM arms with context are
+        level. Accuracy is on a synthetic desk with planted patterns, so it shows the method, not a forecast for
         your data. Speed and LLM spend carry over; Aito has its own compute cost, which is not LLM spend. Latency is end to
         end from our server.
       </div>

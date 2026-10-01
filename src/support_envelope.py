@@ -3,7 +3,7 @@
 One incoming ticket, the steps a support agent takes, and the Aito op that
 grounds each step. Read-only: tickets come from the held-out incoming queue
 (src/data/support_incoming.json), which is never loaded into Aito, so every
-prediction is on a ticket Aito has not seen and can be compared with the
+prediction is on a ticket never loaded into Aito and can be compared with the
 ticket's recorded truth.
 
 Every prediction goes through `guarded()`, which enforces the fixture's

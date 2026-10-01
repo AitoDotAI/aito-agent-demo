@@ -3,7 +3,7 @@
 /* The support agent's predictive envelope (docs/design/support-agent.md, phase 1).
    One incoming ticket and the steps a support agent takes, each grounded by an
    Aito op, with its confidence, latency and the ticket's recorded truth.
-   Read-only: the tickets are a held-out queue Aito has never seen, and the backend
+   Read-only: the tickets are a held-out queue never loaded into Aito, and the backend
    refuses any prediction that uses a field recorded later (src/support_envelope.py). */
 
 import { useEffect, useState } from "react";
@@ -77,7 +77,8 @@ export function EnvelopeView() {
       <div className="rc-sub">
         The Aito side of a support agent: every step it takes, grounded by one Aito call. Who wrote, what it&apos;s
         about, how urgent, whether history already decides the answer, what to try first, and how to keep the
-        customer. These tickets are held out: Aito has never seen them, and each step is checked against what really
+        customer. These tickets are held out: none was loaded into Aito (some repeat the wording of loaded ones,
+        which is measured below), and each step is checked against what really
         happened.
       </div>
 

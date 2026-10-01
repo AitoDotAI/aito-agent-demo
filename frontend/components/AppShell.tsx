@@ -467,7 +467,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     pdb: "the predictive envelope",
     stats: [["11", "Aito calls"], ["300", "held-out tickets"], ["checked", "inputs, per target"]],
     chip: "cost · impact · governance",
-    desc: "The Aito side of one support agent, every step grounded by an Aito call: <b>who</b> wrote, <b>what</b> it is, <b>how urgent</b>, whether <b>history already decides</b> it (where it does, no LLM call is needed), what to try first, and how to <b>keep the customer</b>. Each step may only use inputs known at that point, enforced in code, and is checked against what really happened on tickets Aito never saw.",
+    desc: "The Aito side of one support agent, every step grounded by an Aito call: <b>who</b> wrote, <b>what</b> it is, <b>how urgent</b>, whether <b>history already decides</b> it (where it does, no LLM call is needed), what to try first, and how to <b>keep the customer</b>. Each step may only use inputs known at that point, enforced in code, and is checked against what really happened on tickets that were never loaded into Aito.",
     codeLabel: "One step",
     code: "POST /api/v2/_predict\n{\n  \"from\": \"support_tickets\",\n  \"where\": { \"text\": \"…\",\n             \"customer\": \"…\",\n             \"category\": \"billing\" },\n  \"predict\": \"resolution\"\n}\n// $p ≥ .85 → served from history",
   },

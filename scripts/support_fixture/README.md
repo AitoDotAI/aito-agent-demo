@@ -39,7 +39,9 @@ so the envelope shows it as information, not as a gate.
 
 The **newest 300 tickets** (and their steps) are held out as the **incoming queue**:
 never loaded, and committed at `src/data/support_incoming.json` for the app. The
-envelope view predicts on those, so Aito has not seen the tickets it is judged on.
+envelope view predicts on those, so the tickets it is judged on were never loaded.
+166 of the 300 repeat the exact wording of a loaded ticket (the fixture is written
+from templates); results/novel_text.json re-scores every arm on the other 134.
 The measurements below are over all 12,000.
 
 ## Planted causes, and what they measure
