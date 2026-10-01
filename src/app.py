@@ -854,8 +854,12 @@ def _tool_optimize_kpi(args: dict) -> dict:
     pop = {"from": table, "where": where} if where else table
     # the current rates are counted within the segment, not modelled
     total = aito.query(table, where=where or None, limit=0).get("total") or 0
+    if total == 0:
+        # an empty segment is an empty state, not an error: on shared 2.11.x a nested `from`
+        # matching no rows answers 400 instead of an empty result (td-20261001101027850797)
+        return _empty_kpi(cfg, lower_better)
     good_n = aito.query(table, where={**where, target: good}, limit=0).get("total") or 0
-    current = round(good_n / total, 2) if total else 0.0
+    current = round(good_n / total, 2)
     # $why from the pooled model: it explains how this segment's attributes move the rate
     # relative to every customer (the "?" next to the headline), not the rate itself
     hits = aito.predict(table, where, target, limit=4, select=["$p", "feature", "$why"]).get("hits") or []
@@ -871,7 +875,7 @@ def _tool_optimize_kpi(args: dict) -> dict:
     # LEVERS (prescription): _recommend ranks the lever values toward the goal (it
     # conditions properly, unlike relating the good outcome). Each is shown as a lift
     # = P(good | this lever) / the segment's current good-rate.
-    rec = (aito.recommend(pop, {}, cfg["lever"], {target: good}, limit=3).get("hits") or [])
+    rec = _unless_empty(lambda: aito.recommend(pop, {}, cfg["lever"], {target: good}, limit=3).get("hits") or [])
     lever_items = []
     for h in rec:
         p = round(float(h["$p"]), 2)
@@ -881,11 +885,12 @@ def _tool_optimize_kpi(args: dict) -> dict:
     ph: list = []
     projected = current
     if best is not None:
-        ph = aito.predict(pop, {cfg["lever"]: best}, target, limit=4, select=["$p", "feature"]).get("hits") or []
-        projected = round(_p_of(ph, good), 2)
+        ph = _unless_empty(lambda: aito.predict(pop, {cfg["lever"]: best}, target, limit=4,
+                                                 select=["$p", "feature"]).get("hits") or [])
+        projected = round(_p_of(ph, good), 2) if ph else current
     report_n = aito.query(table, where={**where, target: report}, limit=0).get("total") or 0 if lower_better else 0
     now = (round(report_n / total, 2) if total else 0.0) if lower_better else current
-    then = (round(_p_of(ph, report), 2) if (lower_better and best is not None) else (now if lower_better else projected))
+    then = (round(_p_of(ph, report), 2) if (lower_better and best is not None and ph) else (now if lower_better else projected))
     return {
         "kpi": cfg["label"], "goal": f"{target}={good}",
         "headline": {"metric": cfg["label"], "now": now, "then": then, "lower_is_better": lower_better},
@@ -901,6 +906,28 @@ def _tool_optimize_kpi(args: dict) -> dict:
         "lift_pp": round(abs(then - now) * 100),
         "note": "Aito has no training step: log this play's outcome and it sharpens the next prediction.",
     }
+
+
+def _empty_kpi(cfg: dict, lower_better: bool) -> dict:
+    """A KPI over a segment with no rows: nothing to count, explain or recommend."""
+    return {"kpi": cfg["label"], "goal": f"{cfg['target']}={cfg['good']}", "empty": True,
+            "headline": {"metric": cfg["label"], "now": None, "then": None, "lower_is_better": lower_better},
+            "current": None, "current_basis": f"no {cfg['good_label'].split()[-1]} in this segment",
+            "bad_label": cfg["bad_label"], "good_label": cfg["good_label"], "kpi_why": {"base": None, "factors": []},
+            "causes": [], "drivers": [], "levers": {"lever": cfg["lever_label"], "items": []},
+            "recommended_play": {"lever": cfg["lever_label"], "change_to": None}, "projected": None, "lift_pp": 0,
+            "note": "This segment has no rows for this KPI."}
+
+
+def _unless_empty(call):
+    """A nested-`from` call, where the engine's "matched no rows" 400 means an empty population."""
+    try:
+        return call()
+    except AitoError as e:
+        body = e.body if isinstance(e.body, dict) else {}
+        if e.status_code == 400 and "matched no rows" in str((body.get("data") or {}).get("message", "")):
+            return []
+        raise
 
 
 _360_SELECT = {

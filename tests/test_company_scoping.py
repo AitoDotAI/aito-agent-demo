@@ -55,3 +55,48 @@ def test_no_segment_means_the_whole_table(monkeypatch):
     monkeypatch.setattr(A, "aito", fake)
     A._tool_optimize_kpi({"kpi": "churn"})
     assert all(c[1] == "customers" for c in fake.calls if c[0] in ("recommend", "predict"))
+
+
+class _Empty(_Recording):
+    """A segment with no rows: counts are 0, and (on shared 2.11.2) any nested `from`
+    over it answers 400 request.invalid "... matched no rows" instead of an empty result."""
+
+    def query(self, table, where=None, select=None, order_by=None, limit=5):
+        self.calls.append(("query", table, dict(where or {})))
+        return {"hits": [], "total": 0}
+
+    def _nested(self, table):
+        if isinstance(table, dict):
+            raise A.AitoError("400", status_code=400,
+                              body={"kind": "error", "data": {"code": "request.invalid",
+                                                               "message": "the nested from matched no rows"}})
+
+    def predict(self, table, where, target, limit=5, select=None):
+        self._nested(table)
+        return super().predict(table, where, target, limit, select)
+
+    def recommend(self, table, where, field, goal, limit=5):
+        self._nested(table)
+        return super().recommend(table, where, field, goal, limit)
+
+
+def test_an_empty_segment_is_an_empty_state_not_an_error(monkeypatch):
+    from fastapi.testclient import TestClient
+    fake = _Empty()
+    monkeypatch.setattr(A, "aito", fake)
+    r = A._tool_optimize_kpi({"kpi": "churn", "size": "SMB", "plan": "Free"})
+    assert r["empty"] is True and r["headline"]["now"] is None and r["levers"]["items"] == []
+    assert not [c for c in fake.calls if c[0] in ("recommend",) or (c[0] == "predict" and isinstance(c[1], dict))]
+    monkeypatch.setattr(A, "_tool_find_examples", lambda args: {"rows": []})
+    resp = TestClient(A.app).get("/api/company-360", params={"size": "SMB", "plan": "Free"})
+    assert resp.status_code == 200 and all(k["empty"] for k in resp.json()["kpis"])
+
+
+def test_a_matched_no_rows_400_reads_as_empty(monkeypatch):
+    """If the count and the nested from ever disagree, the engine's 400 is still an empty population."""
+    class _Disagree(_Empty):
+        def query(self, table, where=None, select=None, order_by=None, limit=5):
+            return {"hits": [], "total": 5}
+    monkeypatch.setattr(A, "aito", _Disagree())
+    r = A._tool_optimize_kpi({"kpi": "churn", "size": "SMB", "plan": "Free"})
+    assert r["levers"]["items"] == [] and r["recommended_play"]["change_to"] is None
