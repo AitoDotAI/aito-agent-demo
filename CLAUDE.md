@@ -98,6 +98,10 @@ If you want to deploy a feature branch for testing without merging, in aito-demo
 
 `src/app.py`'s middleware sets those headers based on `aito.last_call` (the AitoClient records the most recent call's op + ms). If you bypass `AitoClient` (e.g., call Aito directly with raw httpx in a route), set the headers yourself in the response so the badge keeps working.
 
+## Query panes — they show the query actually sent
+
+`AitoClient._request` records every Aito request body (op, API path, env; never headers or keys) in a request-scoped list (`src/query_log.py`). Routes decorated with `@_with_queries` return it as `_queries`; `apiFetch` emits it and the side panel renders it (`SentQuery` in AppShell.tsx). Never write query text into a panel by hand; `tests/test_query_panes.py` fails if one comes back. A thread pool must run each task in `contextvars.copy_context()` (see `support_envelope.py`), and a cached value stores its `_queries` with it.
+
 ## Pointers
 
 - [docs/v2-migration.md](./docs/v2-migration.md) — the `/api/v2` migration: how to

@@ -15,6 +15,7 @@ lists are allow-lists: a field not named is refused, not trusted.
 
 from __future__ import annotations
 
+import contextvars
 import json
 import time
 from pathlib import Path
@@ -222,6 +223,11 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: b
     pool = ThreadPoolExecutor(max_workers=8) if parallel else None
     run = pool if pool else _Now()
     g, g_rec = _soft(guarded), _soft(guarded_recommend)
+
+    def sub(fn, *args):
+        # each task runs in a copy of this request's context, so its Aito calls are
+        # recorded for the side panel like the ones made on this thread
+        return run.submit(contextvars.copy_context().run, fn, *args)
     try:
         # 1. who: in a B2B desk the sender is a known contact, so the account is a lookup;
         # only a new address is inferred, from the domain it writes from
@@ -250,12 +256,12 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: b
                                    order_by={"$similarity": {"text": ticket["text"]}}, limit=3)
             except AitoError:
                 return None, 0
-        f_similar = run.submit(similar_cases)
-        f_rec = run.submit(g_rec, aito, "support_tickets", {**acct, "repeat_30d": ticket["repeat_30d"]},
+        f_similar = sub(similar_cases)
+        f_rec = sub(g_rec, aito, "support_tickets", {**acct, "repeat_30d": ticket["repeat_30d"]},
                            "recovery", {"nps_after": "promoter"})
-        f_ups = run.submit(g, aito, "support_tickets", {"adoption_band": ticket["adoption_band"], **acct,
+        f_ups = sub(g, aito, "support_tickets", {"adoption_band": ticket["adoption_band"], **acct,
                                                               "upsell_offered": "yes"}, "upsell_accepted", 2)
-        f_base = run.submit(_soft_base, aito)
+        f_base = sub(_soft_base, aito)
 
         # 2. which product: a shortlist from the text and the account's own products;
         # later steps use its top pick, so a wrong pick shows up downstream too
@@ -270,12 +276,12 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: b
         entry("category", "What is it about?", "_predict category", cat, ticket["category"])
         triaged = {**known, **({"category": cat["value"]} if cat["value"] is not None else {})}
 
-        f_pri = run.submit(g, aito, "support_tickets", triaged, "priority", 3, why)
-        f_res = run.submit(g, aito, "support_tickets", triaged, "resolution", 3, why)
-        f_kb = run.submit(g, aito, "support_tickets", triaged, "kb_article")
+        f_pri = sub(g, aito, "support_tickets", triaged, "priority", 3, why)
+        f_res = sub(g, aito, "support_tickets", triaged, "resolution", 3, why)
+        f_kb = sub(g, aito, "support_tickets", triaged, "kb_article")
         # the first step reads the ticket's own words through the link: which fix a bug
         # needs (crash or wrong data) is in the text, not in the category
-        f_first = run.submit(g, aito, "support_steps",
+        f_first = sub(g, aito, "support_steps",
                              {"previous_action": "start", "ticket.text": ticket["text"],
                               **({"category": cat["value"]} if cat["value"] is not None else {})}, "action", 3, why)
 
@@ -283,7 +289,7 @@ def envelope(aito: AitoClient, ticket: dict, true_steps: list[dict], parallel: b
         entry("priority", "How urgent?", "_predict priority", pri, ticket["priority"])
         # risks, not decisions: a probability against the base rate, shown with what happened,
         # never scored right or wrong on one ticket
-        f_risk = run.submit(g, aito, "support_tickets",
+        f_risk = sub(g, aito, "support_tickets",
                             {**triaged, **({"priority": pri["value"]} if pri["value"] is not None else {})}, "nps_after", 3)
 
         res = f_res.result()

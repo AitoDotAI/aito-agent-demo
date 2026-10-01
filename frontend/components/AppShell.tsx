@@ -23,7 +23,7 @@ import { SalesAgentView } from "@/components/SalesAgentView";
 import { CompanyAgentView } from "@/components/CompanyAgentView";
 import { CompanyDashboardView } from "@/components/CompanyDashboardView";
 import { ToolboxView, type ToolMeta } from "@/components/ToolboxView";
-import { apiFetch, ApiError } from "@/lib/api";
+import { apiFetch, ApiError, onAitoQueries, type AitoQuery } from "@/lib/api";
 import type { Alternative, WhyFactor } from "@/lib/types";
 
 export type View = "home" | "resolve" | "augment" | "handoff" | "rules" | "support" | "sales" | "agent" | "toolbox" | "company" | "company-data" | "company-toolbox";
@@ -79,6 +79,9 @@ const CO_EXAMPLES: Record<string, string> = {
 
 export default function AppShell({ initialView = "home" }: { initialView?: View }) {
   const [view, setView] = useState<View>(initialView);
+  // the Aito queries each endpoint last reported (`_queries`), for the side panels
+  const [sent, setSent] = useState<Record<string, AitoQuery[]>>({});
+  useEffect(() => onAitoQueries((endpoint, queries) => setSent((m) => ({ ...m, [endpoint]: queries }))), []);
 
   // resolve (telco) state
   const [text, setText] = useState(SAMPLES[0].text);
@@ -387,8 +390,8 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
           </div>
           <div className="rc-pchip">_predict</div>
           <div className="rc-pdesc">Aito is a <b>predictive cache in front of the LLM</b>. Each ticket is resolved by reading the <b>intent</b> and the one parameter it needs from history, <b>two _predict calls, no chain</b>. A confident hit fires instantly and free; a miss falls through to the LLM, whose answer becomes the next cache entry.</div>
-          <div className="rc-plabel">Live query</div>
-          <div className="rc-code"><span className="m">POST</span> /api/v2/_predict{"\n"}{"{"}{"\n"}  <span className="k">&quot;from&quot;</span>: <span className="s">&quot;resolutions&quot;</span>,{"\n"}  <span className="k">&quot;where&quot;</span>: {"{"} <span className="k">&quot;text&quot;</span>: <span className="s">&quot;…ticket…&quot;</span>,{"\n"}            <span className="k">&quot;sender_domain&quot;</span>: <span className="s">&quot;…&quot;</span> {"}"},{"\n"}  <span className="k">&quot;predict&quot;</span>: <span className="s">&quot;intent&quot;</span>,{"\n"}  <span className="k">&quot;select&quot;</span>: [<span className="s">&quot;$p&quot;</span>, <span className="s">&quot;$why&quot;</span>]{"\n"}{"}"}{"\n"}<span className="c">// → {aito ? `${aito.intent} (p ≈ ${aito.intent_p.toFixed(2)})` : "intent + $why"}</span></div>
+          <div className="rc-plabel">Query sent</div>
+          <div className="rc-code"><SentQuery queries={sent["/api/resolve"]} pick={(q) => q.op === "_predict"} /></div>
           <div className="rc-plabel">Verify yourself</div>
           <div className="rc-pdesc" style={{ paddingTop: 8 }}>Every routed call traces back to an Aito query, no model file, no retrain. A row added today is in the next prediction.</div>
           <PanelLinks />
@@ -402,8 +405,8 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
           </div>
           <div className="rc-pchip">{PANEL[view].chip}</div>
           <div className="rc-pdesc" dangerouslySetInnerHTML={{ __html: PANEL[view].desc }} />
-          <div className="rc-plabel">{PANEL[view].codeLabel}</div>
-          <div className="rc-code">{PANEL[view].code}</div>
+          <div className="rc-plabel">{PANEL[view].live ? "Query sent" : PANEL[view].codeLabel}</div>
+          <div className="rc-code">{PANEL[view].live ? <SentQuery queries={sent[PANEL[view].live!.endpoint]} pick={PANEL[view].live!.pick} /> : PANEL[view].code}</div>
           <PanelLinks />
         </aside>
       )}
@@ -438,6 +441,8 @@ function PanelLinks() {
 
 const PANEL: Record<Exclude<View, "resolve">, {
   pdb: string; stats: [string, string][]; chip: string; desc: string; codeLabel: string; code: React.ReactNode;
+  /** the query this view's backend actually sent, shown in place of `code` (src/query_log.py) */
+  live?: { endpoint: string; pick: (q: AitoQuery) => boolean };
 }> = {
   home: {
     pdb: "The Predictive DB",
@@ -453,7 +458,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     chip: "augment, not compete",
     desc: "The agent keeps reasoning, Aito just hands it a <b>shorter menu</b>. <code>_predict</code> narrows the full tool catalog to the handful that fit this ticket, so the LLM picks from 5, not 240. On 20 live tickets the prompt shrank from 3,829 to 225 input tokens (median), and the pick was right 20 times out of 20, against 13 with the full catalog.",
     codeLabel: "Live query",
-    code: "POST /api/v2/_predict\n{\n  \"from\": \"tool_calls\",\n  \"where\": { \"ticket\": \"…\" },\n  \"predict\": \"tool\",\n  \"limit\": 5\n}\n// → 5-tool short-list",
+    code: "", live: { endpoint: "/api/route", pick: (q) => q.op === "_predict" },
   },
   handoff: {
     pdb: "_predict · $p gate",
@@ -461,7 +466,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     chip: "_predict + $p",
     desc: "Calibrated confidence is <b>governance</b>. A confident prediction auto-resolves; a borderline one is handed to a human with the tentative read attached; anything sensitive (refund, cancel) is gated regardless. The number decides who acts.",
     codeLabel: "Live query",
-    code: "POST /api/v2/_predict\n{\n  \"from\": \"resolutions\",\n  \"where\": { \"text\": \"…\" },\n  \"predict\": \"intent\",\n  \"select\": [\"$p\"]\n}\n// $p ≥ .85 auto · else escalate",
+    code: "", live: { endpoint: "/api/handoff", pick: (q) => q.op === "_predict" },
   },
   support: {
     pdb: "the predictive envelope",
@@ -469,7 +474,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     chip: "cost · impact · governance",
     desc: "The Aito side of one support agent, every step grounded by an Aito call: <b>who</b> wrote, <b>what</b> it is, <b>how urgent</b>, whether <b>history already decides</b> it (where it does, no LLM call is needed), what to try first, and how to <b>keep the customer</b>. Each step may only use inputs known at that point, enforced in code, and is checked against what really happened on tickets Aito never saw.",
     codeLabel: "One step",
-    code: "POST /api/v2/_predict\n{\n  \"from\": \"support_tickets\",\n  \"where\": { \"text\": \"…\",\n             \"customer\": \"…\",\n             \"category\": \"billing\" },\n  \"predict\": \"resolution\"\n}\n// $p ≥ .85 → served from history",
+    code: "", live: { endpoint: "/api/support/envelope", pick: (q) => q.body?.predict === "resolution" },
   },
   rules: {
     pdb: "_relate · rule mining",
@@ -477,7 +482,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     chip: "govern · review",
     desc: "Review the <b>rules</b> an agent's decisions follow, not the decisions one by one. <code>_relate</code> finds, for each decision, the conditions that go with it, with how often each is right when it fires. A reviewer approves the real ones and rejects the accidents. Read-only here: the rules follow the shape of the accounting demo's promote API, and none is in force.",
     codeLabel: "Live query",
-    code: "POST /api/v2/_relate\n{\n  \"from\": \"resolutions\",\n  \"where\": { \"intent\": \"refund\" },\n  \"relate\": [\"text\", \"sender_domain\",\n             \"customer\"]\n}\n// → text has \"refund\": 532 of 532",
+    code: "", live: { endpoint: "/api/governance/rules", pick: (q) => q.op === "_relate" },
   },
   sales: {
     pdb: "estimate · recommend · query",
@@ -485,7 +490,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     chip: "analyze · automate",
     desc: "The same index, asked four ways over the firm's own history: <b>win odds</b> (<code>_predict</code>+<code>$why</code>), <b>effort</b> (<code>_estimate</code>), <b>references</b> (<code>_query</code>) and the <b>best way in</b> (<code>_recommend</code>), the numbers an LLM can't invent. This dashboard calls them <b>directly</b>; the Sales agent calls them as <b>tools</b>.",
     codeLabel: "Live query",
-    code: "POST /api/v2/_estimate\n{\n  \"from\": \"engagements\",\n  \"where\": { \"service_line\": \"…\",\n            \"complexity\": \"…\" },\n  \"estimate\": \"effort_days\"\n}\n// → person-days, from history",
+    code: "", live: { endpoint: "/api/opportunity", pick: (q) => q.op === "_estimate" },
   },
   agent: {
     pdb: "Aito in the toolbox",
@@ -517,7 +522,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     chip: "Aito, no agent",
     desc: "The same ops the Company agent calls, here <b>directly</b> as a dashboard (like the Opportunity Assistant). Pick a segment → every KPI with the <b>lever that moves it</b> (<code>_predict</code> + <code>_recommend</code>) and a spotlight customer joined across every domain (<code>_query</code> the link). No LLM in this view, just the predictive database.",
     codeLabel: "Live query",
-    code: "GET /api/company-360?size=SMB&plan=Free\n// per KPI: counted rate, _relate causes,\n//   _recommend lever + projection\n// + one customer, every domain",
+    code: "", live: { endpoint: "/api/company-360", pick: (q) => q.op === "_recommend" },
   },
   "company-toolbox": {
     pdb: "the 360 toolbox",
@@ -528,3 +533,18 @@ const PANEL: Record<Exclude<View, "resolve">, {
     code: "kpi_snapshot  → _predict ×6\noptimize_kpi  → _predict + _recommend\ncustomer_360  → _query (linked)\nfind_examples → _query\nestimate_mrr  → _estimate\nlaunch_play   → action (gated)",
   },
 };
+
+
+/** The query a view's backend actually sent (its `_queries`), never a hand-written sample. */
+function SentQuery({ queries, pick }: { queries?: AitoQuery[]; pick: (q: AitoQuery) => boolean }) {
+  const q = queries?.find(pick) ?? queries?.[0];
+  if (!q) return <span className="c">waiting for this view&apos;s first query…</span>;
+  const others = (queries?.length ?? 1) - 1;
+  return (
+    <>
+      <span className="m">POST</span> {q.path}{q.env !== "master" ? <span className="c">  · env {q.env}</span> : null}{"\n"}
+      {JSON.stringify(q.body, null, 2)}
+      {"\n"}<span className="c">{`// ${Math.round(q.ms)} ms${others > 0 ? ` · ${others} more ${others === 1 ? "query" : "queries"} for this view` : ""}`}</span>
+    </>
+  );
+}
