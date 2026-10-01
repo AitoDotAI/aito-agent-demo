@@ -55,6 +55,7 @@ def test_win_odds_drivers_explain_winning_even_when_losing_ranks_first(monkeypat
     # "win" were hits[0]'s, i.e. the drivers of LOSING (New logo x1.12,
     # where the same attribute is x0.92 against winning).
     monkeypatch.setattr(app_module.aito, "predict", lambda *a, **k: LOSING_DEAL)
+    monkeypatch.setattr(app_module, "_base_win_rate", lambda: 0.2)   # no network: the base is a separate count
 
     out = app_module._tool_win_odds({"industry": "Retail"})
 

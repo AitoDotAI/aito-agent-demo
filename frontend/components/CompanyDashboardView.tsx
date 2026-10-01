@@ -215,9 +215,15 @@ export function CompanyDashboardView() {
 
                     <div className="flist">
                       <div className="ft">Root causes <span className="op2">_relate</span></div>
-                      {k.causes.length
-                        ? k.causes.map((c, i) => <CauseRow key={i} c={c} bad={k.bad_label} good={k.good_label} />)
-                        : <div className="fnone">no strong driver beyond the segment</div>}
+                      {k.causes.length ? (
+                        <>
+                          {/* split by direction: what raises the bad outcome, then what protects against it */}
+                          {k.causes.some((c) => c.lift >= 1) && <div className="fsub">raise {k.bad_label}</div>}
+                          {k.causes.filter((c) => c.lift >= 1).map((c, i) => <CauseRow key={`u${i}`} c={c} bad={k.bad_label} good={k.good_label} />)}
+                          {k.causes.some((c) => c.lift < 1) && <div className="fsub">protect against {k.bad_label}</div>}
+                          {k.causes.filter((c) => c.lift < 1).map((c, i) => <CauseRow key={`d${i}`} c={c} bad={k.bad_label} good={k.good_label} />)}
+                        </>
+                      ) : <div className="fnone">no strong driver beyond the segment</div>}
                     </div>
 
                     <div className="flist">
@@ -308,6 +314,7 @@ const CSS = `
 .cd .fr .fx.prot{color:var(--g);background:#e3f4ea}
 .cd .fr .fx.best{color:#04221f;background:#d6f3f0}
 .cd .fr .fx.good{color:var(--t);background:#e9f6f5}
+.cd .fsub{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);margin:6px 0 2px}
 .cd .fnone{font-size:11px;color:var(--faint);font-style:italic;padding:2px 0}
 .cd .proj{border-top:1px dashed var(--line);margin-top:9px;padding-top:8px;font-size:11.5px;color:var(--ink2)}
 .cd .spot{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:16px 17px;border-left:3px solid var(--r)}
