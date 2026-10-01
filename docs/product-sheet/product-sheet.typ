@@ -208,7 +208,7 @@ otherwise reach for.
 #grid(
   columns: (1fr, 1fr, 1fr), gutter: 10pt,
   feature("Shortlisting holds at scale", "Embedding-retrieval shortlist degrades as the catalog grows; Aito holds and hands the LLM ~17× fewer input tokens, and a better pick (20/20 vs 13–15/20).", icon: "01"),
-  feature("~9–10× lower latency", "A 6-step LLM resolution chains to ≈22 s; Aito predicts in parallel in ~0.15 s — resolved before the agent clears step one.", icon: "02"),
+  feature("Sub-second, not seconds per step", "A 6-step LLM resolution chains to about 11 s (6 × the 1.9 s median gpt-5-mini call); Aito resolves in ~0.15 s, before the agent clears step one.", icon: "02"),
   feature("Right context-memory", "Vector search picks the wrong customer's memory 86% of the time; Aito conditions on structure and recovers what the text can't identify.", icon: "03"),
 )
 

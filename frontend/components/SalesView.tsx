@@ -15,7 +15,7 @@ type Sheet = {
   win: { p: number; drivers: Driver[] };
   effort_days: number;
   references: Ref[];
-  outreach: { channels: Ranked[]; angles: Ranked[]; recommended: { channel: string; angle: string; personalization: string }; meeting_p: number; baseline_meeting_p: number };
+  outreach: { channels: Ranked[]; angles: Ranked[]; recommended: { channel: string | null; angle: string | null; personalization: string | null }; meeting_p: number | null; baseline_meeting_p: number };
   business_case: { value_eur: number; day_rate: number; cost_eur: number; margin_eur: number; margin_pct: number };
 };
 
@@ -126,7 +126,7 @@ export function SalesView({ onMeta }: { onMeta?: (m: SalesMeta) => void }) {
                 <b>{sheet.outreach.recommended.channel}</b> · <b>{sheet.outreach.recommended.angle}</b> · {sheet.outreach.recommended.personalization} personalization
               </div>
               <div className="meet">
-                predicted meeting rate <b>{Math.round(sheet.outreach.meeting_p * 100)}%</b>
+                predicted meeting rate <b>{sheet.outreach.meeting_p != null ? `${Math.round(sheet.outreach.meeting_p * 100)}%` : "—"}</b>
                 {sheet.outreach.baseline_meeting_p > 0 && <> vs <b>{Math.round(sheet.outreach.baseline_meeting_p * 100)}%</b> baseline</>}
                 <span className="gate rev">draft for rep review</span>
               </div>
@@ -137,7 +137,7 @@ export function SalesView({ onMeta }: { onMeta?: (m: SalesMeta) => void }) {
             </div>
           </div>
         )}
-        <div className="foot">Every figure is a live Aito query over Northlight&apos;s own history: win &amp; drivers (`_predict`+`$why`), effort (`_estimate`), references (`_query`), outreach (`_recommend`). The LLM would draft the email; Aito supplies the facts it can&apos;t invent.</div>
+        <div className="foot">Every prediction is a live Aito query over Northlight&apos;s own history: win &amp; drivers (`_predict`+`$why`), effort (`_estimate`), references (`_query`), outreach (`_recommend`). Deal value per size band and the €1,100 day rate are fixed assumptions, so cost and margin follow from them. The LLM would draft the email; Aito supplies the facts it can&apos;t invent.</div>
       </div>
     </div>
   );

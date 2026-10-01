@@ -30,8 +30,8 @@ Ask *"Why are we losing Enterprise Pro accounts and what should we do?"*
 and the agent calls `optimize_kpi("churn", {size:"Enterprise",
 plan:"Pro"})`, which runs the `_predict $why` + `_recommend` pair from the
 dashboard and returns the root cause **and** the counterfactual lever with
-its lift — e.g. *"churn 35% → 22% via Exec-sponsor CSM."* Then it can draft
-the play with `launch_play` (gated). A text-to-SQL bot can report the 35%;
+its projection, measured on the segment's own rows (the live page shows the numbers).
+Then it can draft the play with `launch_play` (gated). A text-to-SQL bot can report the rate;
 it cannot prescribe the lever with calibration.
 
 ## The on/off A/B

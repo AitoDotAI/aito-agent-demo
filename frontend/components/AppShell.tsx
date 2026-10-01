@@ -509,7 +509,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     chip: "see · optimise · act · learn",
     desc: "One <b>linked</b> customers master across sales, support, product, finance and CX. A SQL+LLM bot can <code>COUNT(*)</code>; this agent calls Aito for the <b>360 KPIs</b>, the <b>lever that moves each one</b> (<code>_recommend</code> + projected lift), and drafts the play. Aito has no training step, a logged outcome sharpens the next prediction. A closed loop, no retrain.",
     codeLabel: "Optimise a KPI",
-    code: "optimize_kpi(\"churn\",\n  {size:\"SMB\", plan:\"Free\"})\n// ⇒ _predict $why + _recommend\n//   65% → 78% via Exec-sponsor CSM",
+    code: "optimize_kpi(\"churn\",\n  {size:\"SMB\", plan:\"Free\"})\n// ⇒ counted rate + _recommend on the segment\n//   → now, the top lever, and its projection",
   },
   "company-data": {
     pdb: "the data view",
@@ -517,7 +517,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
     chip: "Aito, no agent",
     desc: "The same ops the Company agent calls, here <b>directly</b> as a dashboard (like the Opportunity Assistant). Pick a segment → every KPI with the <b>lever that moves it</b> (<code>_predict</code> + <code>_recommend</code>) and a spotlight customer joined across every domain (<code>_query</code> the link). No LLM in this view, just the predictive database.",
     codeLabel: "Live query",
-    code: "GET /api/company-360?size=SMB&plan=Free\n// per KPI: _predict + _recommend\n//   churn 35% → 22% via Exec-sponsor\n// + one customer, every domain",
+    code: "GET /api/company-360?size=SMB&plan=Free\n// per KPI: counted rate, _relate causes,\n//   _recommend lever + projection\n// + one customer, every domain",
   },
   "company-toolbox": {
     pdb: "the 360 toolbox",
