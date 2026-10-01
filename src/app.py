@@ -1165,7 +1165,7 @@ def support_status():
 
 @app.get("/api/support/incoming")
 def support_incoming():
-    """The held-out queue: tickets Aito has never seen (served from the app, not Aito)."""
+    """The held-out queue: tickets never loaded into Aito (served from the app, not Aito)."""
     from src.support_envelope import load_incoming
     q = load_incoming()
     return {"tickets": [{k: q["tickets"][i][k] for k in ("ticket_id", "created_at", "text", "channel")}
@@ -1276,10 +1276,15 @@ _BENCH = Path(__file__).resolve().parent.parent / "scripts" / "support_fixture" 
 
 @app.get("/api/support/benchmark")
 def support_benchmark():
-    """The recorded Aito vs LLM comparison on the held-out queue (scripts/support_fixture/compare_modes.py)."""
+    """The recorded Aito vs LLM comparison on the held-out queue (scripts/support_fixture/compare_modes.py),
+    with its re-score on the tickets whose wording is new (novel_text.py)."""
     if not _BENCH.exists():
         raise HTTPException(status_code=404, detail="no recorded comparison")
-    return _json.loads(_BENCH.read_text())
+    out = _json.loads(_BENCH.read_text())
+    novel = _BENCH.with_name("novel_text.json")
+    if novel.exists():
+        out["novel_text"] = _json.loads(novel.read_text())
+    return out
 
 
 # ── Static files — keep this last ─────────────────────────────────
