@@ -11,8 +11,8 @@ from __future__ import annotations
 import contextvars
 import json
 
-#: enough for a pane; a view that makes more calls ships only the first ones
-MAX_RECORDS = 30
+#: enough for a pane (the 360 makes ~46 calls); a view that makes more ships only the first ones
+MAX_RECORDS = 60
 
 _records: contextvars.ContextVar[list | None] = contextvars.ContextVar("aito_queries", default=None)
 

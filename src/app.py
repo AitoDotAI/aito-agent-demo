@@ -18,6 +18,7 @@ and /api/schema can stay verbatim across demos.
 from __future__ import annotations
 
 import logging
+import contextvars
 import functools
 import os
 import threading
@@ -1159,26 +1160,37 @@ def company_360(industry: str = "", size: str = "", plan: str = ""):
     that moves it most and the projected lift, plus a spotlight at-risk customer
     joined across every domain."""
     seg = {k: v for k, v in {"industry": industry, "size": size, "plan": plan}.items() if v}
-    try:
-        kpis = []
-        for kpi in _KPIS:
-            r = _tool_optimize_kpi({"kpi": kpi, **seg})
-            if r.get("error"):
-                continue
-            kpis.append({"key": kpi, **r})  # key = the kpi id; r["kpi"] is its label
+
+    def spotlight_of():
         # "at risk" means still a customer: someone who has not churned, with the strongest
         # observable risk (health Red is the largest measured churn driver), else Yellow, else any
-        spotlight = None
         for health in ("Red", "Yellow", None):
             rows = (_tool_find_examples({"domain": "customers", **seg, "churned": "no",
                                          **({"health": health} if health else {})}).get("rows") or [])
             if rows:
-                spotlight = _tool_customer_360({"customer_id": rows[0].get("customer_id")})
-                spotlight["why_spotlight"] = (f"a current customer (not churned) with health {health}" if health
-                                              else "a current customer (not churned); none in this segment is Red or Yellow")
-                break
-    except AitoError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+                found = _tool_customer_360({"customer_id": rows[0].get("customer_id")})
+                found["why_spotlight"] = (f"a current customer (not churned) with health {health}" if health
+                                          else "a current customer (not churned); none in this segment is Red or Yellow")
+                return found
+        return None
+
+    # the six KPIs and the spotlight are independent: run them at once, each in a copy of this
+    # request's context so the side panel still records their queries; KPI order is kept
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=len(_KPIS) + 1) as pool:
+        futures = {kpi: pool.submit(contextvars.copy_context().run, _tool_optimize_kpi, {"kpi": kpi, **seg})
+                   for kpi in _KPIS}
+        spot_future = pool.submit(contextvars.copy_context().run, spotlight_of)
+        try:
+            kpis = []
+            for kpi, f in futures.items():
+                r = f.result()
+                if r.get("error"):
+                    continue
+                kpis.append({"key": kpi, **r})  # key = the kpi id; r["kpi"] is its label
+            spotlight = spot_future.result()
+        except AitoError as e:
+            raise HTTPException(status_code=502, detail=str(e))
     # the parts that fell back to empty on an Aito error, so a hollow view is visible as one
     degraded = [f"causes:{k['key']}" for k in kpis if k.get("causes_unavailable")]
     if spotlight and spotlight.get("graph_unavailable"):

@@ -100,3 +100,23 @@ def test_a_matched_no_rows_400_reads_as_empty(monkeypatch):
     monkeypatch.setattr(A, "aito", _Disagree())
     r = A._tool_optimize_kpi({"kpi": "churn", "size": "SMB", "plan": "Free"})
     assert r["levers"]["items"] == [] and r["recommended_play"]["change_to"] is None
+
+
+def test_the_kpis_run_concurrently_and_keep_their_order(monkeypatch):
+    """Each KPI makes about seven Aito calls; run one after another the 360 took 12-21 s on prod."""
+    import threading
+    import time
+    from fastapi.testclient import TestClient
+    seen = set()
+
+    class _Slow(_Recording):
+        def query(self, table, where=None, select=None, order_by=None, limit=5):
+            seen.add(threading.get_ident())
+            time.sleep(0.05)
+            return super().query(table, where, select, order_by, limit)
+
+    monkeypatch.setattr(A, "aito", _Slow())
+    monkeypatch.setattr(A, "_tool_find_examples", lambda args: {"rows": []})
+    out = TestClient(A.app).get("/api/company-360", params={"size": "SMB"}).json()
+    assert [k["key"] for k in out["kpis"]] == list(A._KPIS)
+    assert len(seen) > 1                                    # more than one thread did the work
