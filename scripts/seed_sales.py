@@ -188,9 +188,18 @@ OUT_SCHEMA = {
 
 def _upload(http: httpx.Client, table: str, schema: dict, rows: list[dict]) -> None:
     sc = http.get("/schema").json().get("schema", {})
-    if table in sc:
+    live = sc.get(table)
+    if live is not None:
+        # Recreate the table from its OWN live schema, so its storage engine and column types
+        # survive (selecting /api/v2 does not by itself pick the engine); only the rows change.
+        if set(live.get("columns", {})) != set(schema["columns"]):
+            raise SystemExit(f"refusing: {table}'s live columns differ from the seed's; nothing written")
+        schema = live
         assert http.delete(f"/schema/{table}").status_code < 400
     assert http.put(f"/schema/{table}", json=schema).status_code < 400, "create failed"
+    after = http.get(f"/schema/{table}").json()
+    if live is not None and after.get("engine") != live.get("engine"):
+        raise SystemExit(f"{table}: engine changed from {live.get('engine')!r} to {after.get('engine')!r}")
     r = http.post(f"/data/{table}/batch", json=rows)
     assert r.status_code < 400, f"upload {table} failed: {r.text[:200]}"
     cnt = http.post("/_query", json={"from": table, "limit": 0}).json().get("total")
