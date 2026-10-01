@@ -557,8 +557,7 @@ def opportunity(industry: str = "SaaS", client_size: str = "Mid-market", service
                                             "client_industry": industry}, "effort_days")
         effort = round(float(er.get("estimate", 0)))
 
-        refs = (aito.query("engagements", where={"client_industry": industry, "service_line": service_line, "outcome": "won"},
-                           select=["brief", "effort_days", "deal_size_band", "region"], limit=3).get("hits") or [])
+        refs = _distinct_refs({"client_industry": industry, "service_line": service_line, "outcome": "won"})
 
         out_where = {"target_industry": industry, "target_role": target_role}
         ch = (aito.recommend("outreach", out_where, "channel", {"meeting": "yes"}, limit=4).get("hits") or [])
@@ -657,14 +656,29 @@ def _tool_estimate_effort(args: dict) -> dict:
     return {"effort_days": round(float(est)), "based_on": "similar past engagements"}
 
 
+def _distinct_refs(where: dict, n: int = 3) -> list[dict]:
+    """Up to n won references that describe different work, so a card never lists the
+    same project three times (briefs read "<client>: <work>.")."""
+    hits = aito.query("engagements", where=where, select=["brief", "effort_days", "deal_size_band", "region"],
+                      limit=n * 4).get("hits") or []
+    out, works = [], set()
+    for h in hits:
+        work = str(h.get("brief", "")).split(": ", 1)[-1]
+        if work not in works:
+            works.add(work)
+            out.append(h)
+        if len(out) == n:
+            break
+    return out
+
+
 def _tool_find_references(args: dict) -> dict:
     where = {"outcome": "won"}
     if args.get("industry"):
         where["client_industry"] = args["industry"]
     if args.get("service_line"):
         where["service_line"] = args["service_line"]
-    refs = (aito.query("engagements", where=where,
-                       select=["brief", "effort_days", "deal_size_band", "region"], limit=3).get("hits") or [])
+    refs = _distinct_refs(where)
     return {"references": [{"brief": r.get("brief"), "effort_days": r.get("effort_days"),
                             "deal_size_band": r.get("deal_size_band"), "region": r.get("region")} for r in refs],
             "count": len(refs)}

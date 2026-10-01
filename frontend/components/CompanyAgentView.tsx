@@ -29,7 +29,7 @@ function summarize(t: TraceItem): string {
       const p = (r.recommended_play ?? {}) as { lever?: string; change_to?: string };
       const h = r.headline as { metric?: string; now?: number; then?: number } | undefined;
       const now = h ? h.now : r.current, then = h ? h.then : r.projected;
-      return `${r.kpi}: ${pct(now)} → ${pct(then)} (${r.lift_pp}pp) via ${p.lever}=${p.change_to}`;
+      return `${r.kpi}: ${pct(now)} now; ${pct(then)} among those with ${p.lever}=${p.change_to} (associated)`;
     }
     case "customer_360": {
       const d = (r.domains ?? {}) as Record<string, { count: number }>;

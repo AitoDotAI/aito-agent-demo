@@ -43,14 +43,66 @@ GOOD_FIT = {("SaaS", "Data Platform"), ("SaaS", "Analytics & ML"), ("Banking", "
             ("Healthcare", "Advisory"), ("Logistics", "Data Platform")}
 BAD_FIT = {("Public", "Custom Dev"), ("Banking", "Custom Dev"), ("Healthcare", "Cloud Migration")}
 
-_NEED = {
-    "Advisory": "a data strategy and target-state roadmap",
-    "Analytics & ML": "a churn/propensity model and analytics workbench",
-    "Integration": "an API integration layer across core systems",
-    "Data Platform": "a unified data platform with real-time pipelines",
-    "Cloud Migration": "a lift-and-modernise migration to the cloud",
-    "Custom Dev": "a custom application built and shipped",
+# Reference briefs: the client (by industry, no real company names) and the work done, so the
+# references shown together read as distinct past projects. Picked by each row's position in its
+# (industry, service) group, so they never consume the main random stream: every other column
+# of the fixture is unchanged by them.
+_CLIENTS = {
+    "SaaS": ["a Helsinki HR-software scale-up", "a subscription-billing vendor", "a fintech platform company",
+             "a B2B marketing-automation vendor"],
+    "Retail": ["a Nordic grocery chain", "a fashion e-commerce brand", "a home-improvement retailer",
+               "a sporting-goods chain"],
+    "Banking": ["a regional savings bank", "a payments processor", "a mortgage lender", "a consumer-credit company"],
+    "Manufacturing": ["a paper-machinery maker", "an industrial pump manufacturer", "a food-processing group",
+                      "a steel-components supplier"],
+    "Healthcare": ["a hospital district", "a private clinic chain", "a medical-device maker", "a pharmacy chain"],
+    "Public": ["a city transport authority", "a national statistics agency", "a municipal social-services unit",
+               "a regional rescue service"],
+    "Telecom": ["a mobile operator", "a regional fibre provider", "a cable network", "an IoT connectivity provider"],
+    "Logistics": ["a parcel-delivery company", "a port operator", "a cold-chain freight carrier",
+                  "a warehouse-automation integrator"],
 }
+_WORK = {
+    "Data Platform": ["replaced a nightly batch warehouse with streaming pipelines",
+                      "built a governed lakehouse for finance and operations reporting",
+                      "consolidated scattered data marts into one platform",
+                      "set up the shared customer data model its teams now build on",
+                      "moved reporting off spreadsheets onto a tested data platform"],
+    "Analytics & ML": ["put a churn model into the retention team's weekly call list",
+                       "built demand forecasting that cut stock-outs",
+                       "took a credit-risk model to production with monitoring",
+                       "built the pricing analytics behind its quarterly price review",
+                       "automated invoice classification for the finance team"],
+    "Integration": ["connected ERP, CRM and billing through one API layer",
+                    "replaced point-to-point file transfers with event integration",
+                    "brought a new partner network into order handling",
+                    "integrated a new e-signing service into the sales process",
+                    "opened a public API for its larger customers"],
+    "Advisory": ["set a two-year data strategy with the leadership team",
+                 "assessed the data organisation and its operating model",
+                 "prioritised the AI use-case backlog with the business owners",
+                 "ran a data-governance review ahead of an audit",
+                 "chose a platform vendor through a structured evaluation"],
+    "Cloud Migration": ["moved its core services to the cloud without downtime",
+                        "migrated the main database and retired a data centre",
+                        "re-platformed a legacy ordering system onto managed services",
+                        "moved its analytics workloads to a cloud warehouse",
+                        "set up the landing zone and moved the first product teams"],
+    "Custom Dev": ["built the field-service app its technicians use daily",
+                   "delivered a customer self-service portal",
+                   "rebuilt an internal pricing tool",
+                   "built the booking system its customers now use online",
+                   "replaced a paper approval flow with a web app"],
+}
+
+
+def _brief(ind: str, svc: str, k: int) -> str:
+    """The k-th brief of an (industry, service) group: 4 clients and 5 kinds of work, rotating
+    independently, give 20 distinct briefs before any repeats."""
+    client = _CLIENTS[ind][k % len(_CLIENTS[ind])]
+    return f"{client[0].upper()}{client[1:]}: {_WORK[svc][k % len(_WORK[svc])]}."
+
+
 _BASE_EFFORT = {"Advisory": 22, "Analytics & ML": 60, "Integration": 75, "Data Platform": 100, "Cloud Migration": 115, "Custom Dev": 135}
 _DEAL_MULT = {"S": 0.55, "M": 0.85, "L": 1.25, "XL": 1.8}
 _CPX_MULT = {"Low": 0.8, "Medium": 1.0, "High": 1.35}
@@ -71,6 +123,7 @@ def _prob(o: float) -> float:
 
 def build_engagements(rng: random.Random) -> list[dict]:
     rows = []
+    seen: dict[tuple[str, str], int] = {}
     ids = rng.sample(range(100000, 100000 + N_ENG * 5), N_ENG)
     for i in range(N_ENG):
         ind = rng.choice(INDUSTRY); svc = rng.choice(SERVICE)
@@ -99,13 +152,15 @@ def build_engagements(rng: random.Random) -> list[dict]:
         eff = int(eff * rng.uniform(0.85, 1.15))
         dur = max(2, int(eff / rng.uniform(8, 16)))
 
+        k = seen.get((ind, svc), 0)  # this row's position in its (industry, service) group
+        seen[(ind, svc)] = k + 1
         rows.append({
             "engagement_id": f"ENG-{ids[i]}",
             "client_industry": ind, "client_size": size, "service_line": svc,
             "deal_size_band": deal, "engagement_model": model, "complexity": cpx,
             "team_seniority": sen, "region": reg, "lead_source": lead,
             "relationship": rel, "competitive": comp,
-            "brief": f"{size} {ind} client — {svc.lower()} engagement: {_NEED[svc]}.",
+            "brief": _brief(ind, svc, k),
             "effort_days": eff, "duration_weeks": dur, "outcome": outcome,
         })
     return rows
