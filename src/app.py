@@ -849,8 +849,16 @@ def _tool_optimize_kpi(args: dict) -> dict:
     report = cfg.get("report")
     lower_better = bool(report) and report != good
     focus = report if lower_better else good   # the outcome whose rate we report/explain
+    # The segment is the POPULATION: a segment in `where` is only evidence, so the prior, the
+    # lever ranking and the projection would still come from every customer. `pop` scopes them.
+    pop = {"from": table, "where": where} if where else table
+    # the current rates are counted within the segment, not modelled
+    total = aito.query(table, where=where or None, limit=0).get("total") or 0
+    good_n = aito.query(table, where={**where, target: good}, limit=0).get("total") or 0
+    current = round(good_n / total, 2) if total else 0.0
+    # $why from the pooled model: it explains how this segment's attributes move the rate
+    # relative to every customer (the "?" next to the headline), not the rate itself
     hits = aito.predict(table, where, target, limit=4, select=["$p", "feature", "$why"]).get("hits") or []
-    current = round(_p_of(hits, good), 2)
     # KPI RATE $why: explain the rate itself from the segment attributes' lifts
     # (base 23% × Free ×1.5 = 35%) — the "?" next to the headline number.
     kpi_why = _kpi_why(_why_of(hits, focus))
@@ -863,7 +871,7 @@ def _tool_optimize_kpi(args: dict) -> dict:
     # LEVERS (prescription): _recommend ranks the lever values toward the goal (it
     # conditions properly, unlike relating the good outcome). Each is shown as a lift
     # = P(good | this lever) / the segment's current good-rate.
-    rec = (aito.recommend(table, where, cfg["lever"], {target: good}, limit=3).get("hits") or [])
+    rec = (aito.recommend(pop, {}, cfg["lever"], {target: good}, limit=3).get("hits") or [])
     lever_items = []
     for h in rec:
         p = round(float(h["$p"]), 2)
@@ -873,14 +881,16 @@ def _tool_optimize_kpi(args: dict) -> dict:
     ph: list = []
     projected = current
     if best is not None:
-        ph = aito.predict(table, {**where, cfg["lever"]: best}, target, limit=4, select=["$p", "feature"]).get("hits") or []
+        ph = aito.predict(pop, {cfg["lever"]: best}, target, limit=4, select=["$p", "feature"]).get("hits") or []
         projected = round(_p_of(ph, good), 2)
-    now = round(_p_of(hits, report), 2) if lower_better else current
+    report_n = aito.query(table, where={**where, target: report}, limit=0).get("total") or 0 if lower_better else 0
+    now = (round(report_n / total, 2) if total else 0.0) if lower_better else current
     then = (round(_p_of(ph, report), 2) if (lower_better and best is not None) else (now if lower_better else projected))
     return {
         "kpi": cfg["label"], "goal": f"{target}={good}",
         "headline": {"metric": cfg["label"], "now": now, "then": then, "lower_is_better": lower_better},
         "current": current,
+        "current_basis": f"counted: {good_n} of {total} {cfg['good_label']} in the {'segment' if where else 'base'}",
         "bad_label": cfg["bad_label"], "good_label": cfg["good_label"],
         "kpi_why": kpi_why,   # base × segment-attribute lifts = the rate
         "causes": causes, "drivers": causes,   # within-segment drivers ($on _relate)
