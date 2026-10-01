@@ -20,7 +20,8 @@ type Kpi = {
   recommended_play: { lever: string; change_to: string };
 };
 
-// the KPI rate's own $why: base × the segment attributes' lifts = the rate
+// the KPI rate's $why: base × the segment attributes' lifts, from the model over every customer;
+// the headline itself is counted within the segment, so both are shown
 function KpiWhyBody({ w, now }: { w: KpiWhy; now: number }) {
   if (w.base == null) return <div style={{ fontSize: 12, color: "#56524a" }}>This rate is the base, the segment&apos;s attributes don&apos;t move this KPI.</div>;
   return (
@@ -35,7 +36,10 @@ function KpiWhyBody({ w, now }: { w: KpiWhy; now: number }) {
         ))}
       </div>
       <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5, color: "#56524a", borderTop: "1px solid #efeadd", paddingTop: 7 }}>
-        {Math.round(w.base * 100)}%{w.factors.map((f, i) => <span key={i}> × {f.lift}</span>)} = <b style={{ color: "#16140f" }}>{Math.round(now * 100)}%</b>
+        {Math.round(w.base * 100)}%{w.factors.map((f, i) => <span key={i}> × {f.lift}</span>)} ≈ <b style={{ color: "#16140f" }}>{Math.round(w.factors.reduce((p, f) => p * f.lift, w.base) * 100)}%</b> modelled
+      </div>
+      <div style={{ fontSize: 11.5, color: "#56524a", marginTop: 5 }}>
+        Counted in this segment: <b style={{ color: "#16140f" }}>{Math.round(now * 100)}%</b>. The factors show how its attributes move the rate against every customer.
       </div>
     </div>
   );
