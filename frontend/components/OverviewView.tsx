@@ -205,9 +205,9 @@ export function OverviewView({ onNavigate }: { onNavigate: OverviewNav }) {
           <div className="pc">
             <div className="pn">02 · latency</div>
             <div className="ptt">Agentic workflows get painfully slow</div>
-            <div className="vs"><span className="tag">Standard · LLM agent</span>One clean call measured 3.6 s, so a 6-step chain projects to <b>about 22 s</b>. Under our shared rate limit, 78 back-to-back calls had a median of 20 s each.</div>
+            <div className="vs"><span className="tag">Standard · LLM agent</span>One gpt-5-mini call takes <b>1.9 s</b> at the median (616 banking77 queries), so a 6-step chain projects to <b>about 11 s</b>. Under our shared rate limit, 78 back-to-back calls had a median of 20 s each.</div>
             <div className="ai"><span className="tag">Aito · predict-first</span>The whole resolution takes <b>about 0.15 s</b> (median over 800 tickets, one or two predictions in sequence), so it is back before the agent&apos;s first call returns.</div>
-            <div className="bm">→ resolution-scorecard · live console</div>
+            <div className="bm">→ bench_banking77/results/banking77.json · resolution-scorecard</div>
           </div>
           <div className="pc">
             <div className="pn">03 · context memory</div>

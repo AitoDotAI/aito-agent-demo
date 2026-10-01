@@ -6,7 +6,8 @@ import PredictionBadge from "@/components/prediction/PredictionBadge";
 import type { Alternative } from "@/lib/types";
 
 type HItem = { text: string; intent: string; p: number; alts: Alternative[]; reason: string; team: string };
-export type HandoffData = { total: number; counts: { auto: number; assist: number; handoff: number }; handoff: HItem[] };
+export type HandoffData = { total: number; counts: { auto: number; assist: number; handoff: number }; handoff: HItem[];
+  caveat_example?: { text: string; intent: string; p: number } | null };
 
 const ACTION: Record<string, string> = {
   cancel_service: "cancel a service", refund: "issue a refund", check_outage: "outage status",
@@ -29,7 +30,9 @@ export function HandoffView({ data, loading }: { data: HandoffData | null; loadi
       <div className="rc-sub">Aito triages the queue by its own <b>calibrated confidence</b>. It resolves the sure ones outright, and <b>hands you only the rest</b>: the genuinely ambiguous, and anything that touches money or state. It never guesses on those. And it doesn&apos;t hand them over blank: you get its <b>tentative read, its confidence, and why</b>, so you start informed.</div>
       <div className="rc-caveat" role="note">
         <b>Known limit, being fixed:</b>{" "}a vague or off-topic ticket that shares a few words with past ones can still get a
-        confident answer (&ldquo;What&apos;s the weather like in Oulu tomorrow?&rdquo; reads as a cancellation at 91%), so some
+        confident answer{data?.caveat_example
+          ? <> (&ldquo;{data.caveat_example.text}&rdquo; reads as {data.caveat_example.intent.replace(/_/g, " ")} at {Math.round(data.caveat_example.p * 100)}%, live)</>
+          : null}, so some
         tickets below are resolved that should come to you. Aito is adding a measure of how much of a ticket&apos;s wording it
         has seen, which this queue will route on.
       </div>

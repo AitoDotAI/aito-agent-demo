@@ -385,6 +385,8 @@ _TEAM = {
     "repair_help": "Tech Support", "cancel_service": "Retention", "find_shop": "Sales",
 }
 _SENSITIVE = {"refund", "cancel_service"}
+#: the off-topic ticket the Human handoff page's caveat quotes; its read is measured live
+_CAVEAT_EXAMPLE = "What's the weather like in Oulu tomorrow?"
 _AUTO_GATE, _ASSIST_GATE = 0.85, 0.65
 
 
@@ -413,7 +415,14 @@ def handoff():
     counts = {"auto": 0, "assist": 0, "handoff": 0}
     for r in rows:
         counts[r["band"]] += 1
-    return {"total": len(rows), "counts": counts, "handoff": [r for r in rows if r["band"] == "handoff"]}
+    try:
+        ex_intent, ex_p, _ = _top_and_alts(aito.predict("resolutions", {"text": _CAVEAT_EXAMPLE}, "intent",
+                                                         limit=3, select=["$p", "feature"]))
+        example = {"text": _CAVEAT_EXAMPLE, "intent": ex_intent, "p": round(ex_p, 2)}
+    except AitoError:
+        example = None
+    return {"total": len(rows), "counts": counts, "handoff": [r for r in rows if r["band"] == "handoff"],
+            "caveat_example": example}
 
 
 # ── Cooperation: Aito short-lists, the LLM decides ────────────────
@@ -480,6 +489,13 @@ def route(req: LLMText):
 
 # ── Sales assistant — the firm's intuition for a new opportunity ──
 
+
+def _play(ch: list, ang: list, per: list) -> dict:
+    """The outreach play Aito recommends: its top channel, angle and personalization,
+    or None where _recommend returned nothing (never a made-up default)."""
+    top = lambda hits: hits[0]["feature"] if hits else None  # noqa: E731
+    return {"channel": top(ch), "angle": top(ang), "personalization": top(per)}
+
 _DEAL_VALUE = {"S": 35000, "M": 100000, "L": 275000, "XL": 600000}
 _DAY_RATE = 1100
 
@@ -527,12 +543,10 @@ def opportunity(industry: str = "SaaS", client_size: str = "Mid-market", service
         out_where = {"target_industry": industry, "target_role": target_role}
         ch = (aito.recommend("outreach", out_where, "channel", {"meeting": "yes"}, limit=4).get("hits") or [])
         ang = (aito.recommend("outreach", out_where, "angle", {"meeting": "yes"}, limit=5).get("hits") or [])
-        top_ch = ch[0]["feature"] if ch else "Warm intro"
-        top_ang = ang[0]["feature"] if ang else "Case study"
-        mr = aito.predict("outreach", {"target_industry": industry, "target_role": target_role,
-                                        "channel": top_ch, "angle": top_ang, "personalization": "High",
-                                        "subject_style": "Name-drop", "send_day": "Tue"}, "meeting", limit=2)
-        meeting_p = next((float(h["$p"]) for h in (mr.get("hits") or []) if h.get("feature") == "yes"), 0.0)
+        per = (aito.recommend("outreach", out_where, "personalization", {"meeting": "yes"}, limit=3).get("hits") or [])
+        play = _play(ch, ang, per)
+        # the projection uses only what Aito recommended; nothing is assumed for the rest
+        meeting_p = _meeting_p({**out_where, **play}) if None not in play.values() else None
         baseline_p = _meeting_p(out_where)
     except AitoError as e:
         raise HTTPException(status_code=502, detail=str(e))
@@ -552,7 +566,7 @@ def opportunity(industry: str = "SaaS", client_size: str = "Mid-market", service
         "outreach": {
             "channels": [{"v": h["feature"], "p": float(h["$p"])} for h in ch],
             "angles": [{"v": h["feature"], "p": float(h["$p"])} for h in ang],
-            "recommended": {"channel": top_ch, "angle": top_ang, "personalization": "High"},
+            "recommended": play,
             "meeting_p": meeting_p,
             "baseline_meeting_p": baseline_p,
         },
@@ -630,16 +644,16 @@ def _tool_recommend_outreach(args: dict) -> dict:
     # _recommend = optimize, not describe: rank the actions that maximise meeting=yes
     ch = (aito.recommend("outreach", where, "channel", {"meeting": "yes"}, limit=3).get("hits") or [])
     ang = (aito.recommend("outreach", where, "angle", {"meeting": "yes"}, limit=3).get("hits") or [])
-    top_ch = ch[0]["feature"] if ch else "Warm intro"
-    top_ang = ang[0]["feature"] if ang else "Case study"
+    per = (aito.recommend("outreach", where, "personalization", {"meeting": "yes"}, limit=3).get("hits") or [])
+    play = _play(ch, ang, per)
     # recommended approach vs the baseline = expected meeting rate for this target
     # WITHOUT optimising the approach (the prior). The ratio is the live "outcome lift".
-    rec_p = _meeting_p({**where, "channel": top_ch, "angle": top_ang,
-                        "personalization": "High", "subject_style": "Name-drop", "send_day": "Tue"})
+    # Only what Aito recommended goes into the projection; no recommendation, no projection.
+    rec_p = _meeting_p({**where, **play}) if None not in play.values() else None
     base_p = _meeting_p(where)
-    lift = round(rec_p / base_p, 1) if base_p > 0 else None
-    return {"channel": top_ch, "angle": top_ang, "personalization": "High",
-            "meeting_probability": round(rec_p, 2),
+    lift = round(rec_p / base_p, 1) if rec_p is not None and base_p > 0 else None
+    return {**play,
+            "meeting_probability": round(rec_p, 2) if rec_p is not None else None,
             "baseline_meeting_probability": round(base_p, 2),
             "outcome_lift": lift}  # rec / baseline: how many times more meetings than not optimising
 
