@@ -1,3 +1,5 @@
+import { ASSIST_GATE, AUTO_GATE } from "@/lib/gates";
+
 const API_BASE = typeof window !== "undefined"
   ? `${window.location.protocol}//${window.location.host}`
   : "";
@@ -99,8 +101,9 @@ export function fmtAmount(n: number): string {
   return "\u20AC" + n.toLocaleString("fi-FI", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+/** Colour by the routing gates (lib/gates.ts): green is "would be served as is". */
 export function confClass(p: number): string {
-  if (p >= 0.80) return "conf-high";
-  if (p >= 0.50) return "conf-mid";
+  if (p >= AUTO_GATE) return "conf-high";
+  if (p >= ASSIST_GATE) return "conf-mid";
   return "conf-low";
 }

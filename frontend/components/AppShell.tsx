@@ -24,6 +24,7 @@ import { CompanyAgentView } from "@/components/CompanyAgentView";
 import { CompanyDashboardView } from "@/components/CompanyDashboardView";
 import { ToolboxView, type ToolMeta } from "@/components/ToolboxView";
 import { apiFetch, ApiError, onAitoQueries, type AitoQuery } from "@/lib/api";
+import { ASSIST_GATE, AUTO_GATE } from "@/lib/gates";
 import type { Alternative, WhyFactor } from "@/lib/types";
 
 export type View = "home" | "resolve" | "augment" | "handoff" | "rules" | "support" | "sales" | "agent" | "toolbox" | "company" | "company-data" | "company-toolbox";
@@ -462,7 +463,7 @@ const PANEL: Record<Exclude<View, "resolve">, {
   },
   handoff: {
     pdb: "_predict · $p gate",
-    stats: [["$p", "calibrated"], ["auto", "≥ 0.85"], ["ask", "< 0.65"]],
+    stats: [["$p", "calibrated"], ["auto", `≥ ${AUTO_GATE}`], ["ask", `< ${ASSIST_GATE}`]],
     chip: "_predict + $p",
     desc: "Calibrated confidence is <b>governance</b>. A confident prediction auto-resolves; a borderline one is handed to a human with the tentative read attached; anything sensitive (refund, cancel) is gated regardless. The number decides who acts.",
     codeLabel: "Live query",

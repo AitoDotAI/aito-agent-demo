@@ -21,6 +21,7 @@ import time
 from pathlib import Path
 
 from src.aito_client import AitoClient, AitoError
+from src.gates import ASSIST_GATE, AUTO_GATE
 
 INCOMING = Path(__file__).resolve().parent / "data" / "support_incoming.json"
 
@@ -174,7 +175,7 @@ def load_incoming(path: Path = INCOMING) -> dict:
 
 
 #: $p at or above this is served from history; the demo's existing gates (app.py)
-AUTO, ASSIST = 0.85, 0.65
+AUTO, ASSIST = AUTO_GATE, ASSIST_GATE  # src/gates.py
 DETOURS = {"ask_for_details", "wait_for_customer"}
 
 
