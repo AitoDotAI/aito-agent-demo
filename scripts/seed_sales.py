@@ -22,7 +22,7 @@ from src.config import load_config
 
 SEED = 0x5A1E5
 N_ENG = 1800
-N_OUT = 2200
+N_OUT = 6000  # meetings are rare (~3%), so enough rows to learn them from
 
 # ── engagements vocab (all discrete) ───────────────────────────────
 INDUSTRY = ["SaaS", "Retail", "Banking", "Manufacturing", "Healthcare", "Public", "Telecom", "Logistics"]
@@ -55,7 +55,18 @@ _BASE_EFFORT = {"Advisory": 22, "Analytics & ML": 60, "Integration": 75, "Data P
 _DEAL_MULT = {"S": 0.55, "M": 0.85, "L": 1.25, "XL": 1.8}
 _CPX_MULT = {"Low": 0.8, "Medium": 1.0, "High": 1.35}
 _SEN_MULT = {"junior-heavy": 1.2, "balanced": 1.0, "senior-heavy": 0.82}
-_LEAD_WIN = {"Referral": 0.34, "Partner": 0.28, "Inbound": 0.10, "Event": -0.04, "Outbound": -0.14}
+# Win odds: a believable B2B base (about 21% of pursued deals won) and each driver as an
+# odds multiplier, so stacked strengths land near 50%, not at a certain-looking 90%+.
+_BASE_WIN = 0.12
+_LEAD_WIN_OR = {"Referral": 3.0, "Partner": 2.2, "Inbound": 1.3, "Event": 0.9, "Outbound": 0.55}
+
+
+def _odds(p: float) -> float:
+    return p / (1 - p)
+
+
+def _prob(o: float) -> float:
+    return o / (1 + o)
 
 
 def build_engagements(rng: random.Random) -> list[dict]:
@@ -72,15 +83,15 @@ def build_engagements(rng: random.Random) -> list[dict]:
         comp = rng.choices(COMPETITIVE, weights=[4, 6])[0]
         model = rng.choice(MODEL)
 
-        # win probability from discrete drivers
-        p = 0.46 + _LEAD_WIN[lead]
-        if (ind, svc) in GOOD_FIT: p += 0.14
-        if (ind, svc) in BAD_FIT: p -= 0.16
-        if rel == "Existing client": p += 0.12
-        if comp == "Sole-source": p += 0.10
-        if cpx == "High": p -= 0.07
-        if deal == "XL": p -= 0.06
-        p = min(0.95, max(0.05, p))
+        # win probability from discrete drivers, as odds multipliers on the base
+        o = _odds(_BASE_WIN) * _LEAD_WIN_OR[lead]
+        if (ind, svc) in GOOD_FIT: o *= 1.8
+        if (ind, svc) in BAD_FIT: o *= 0.5
+        if rel == "Existing client": o *= 1.6
+        if comp == "Sole-source": o *= 1.5
+        if cpx == "High": o *= 0.75
+        if deal == "XL": o *= 0.8
+        p = _prob(o)
         outcome = "won" if rng.random() < p else "lost"
 
         # effort_days (the numeric to _estimate)
@@ -109,12 +120,15 @@ SUBJECT = ["Stat", "Question", "Name-drop", "Direct"]
 DAY = ["Mon", "Tue", "Wed", "Thu", "Fri"]
 TIME = ["Morning", "Midday", "Afternoon"]
 
-_CH_REPLY = {"Warm intro": 0.40, "LinkedIn": 0.06, "Cold email": -0.04, "Cold call": -0.10}
-_ANG_REPLY = {"Case study": 0.12, "Referral intro": 0.16, "Benchmark offer": 0.08, "Event follow-up": 0.05, "Pain point": -0.03}
-_PER_REPLY = {"High": 0.15, "Medium": 0.04, "Low": -0.06}
-_ROLE_REPLY = {"Head of Data": 0.06, "CTO": 0.01, "COO": -0.01, "CEO": -0.09, "Procurement": -0.04}
-_SUBJ_REPLY = {"Name-drop": 0.05, "Stat": 0.04, "Question": 0.03, "Direct": 0.0}
-_DAY_REPLY = {"Tue": 0.04, "Wed": 0.04, "Thu": 0.01, "Mon": 0.0, "Fri": -0.04}
+# Reply and meeting odds: believable outreach (about 3% of touches book a meeting overall;
+# a personalised warm intro ~18%, a generic cold email under 1%), each factor an odds multiplier.
+_BASE_REPLY, _BASE_MEETING = 0.06, 0.30
+_CH_REPLY = {"Warm intro": 4.0, "LinkedIn": 1.3, "Cold email": 0.7, "Cold call": 0.5}
+_ANG_REPLY = {"Case study": 1.4, "Referral intro": 1.6, "Benchmark offer": 1.2, "Event follow-up": 1.1, "Pain point": 0.9}
+_PER_REPLY = {"High": 1.5, "Medium": 1.1, "Low": 0.8}
+_ROLE_REPLY = {"Head of Data": 1.3, "CTO": 1.05, "COO": 0.95, "CEO": 0.7, "Procurement": 0.85}
+_SUBJ_REPLY = {"Name-drop": 1.2, "Stat": 1.15, "Question": 1.1, "Direct": 1.0}
+_DAY_REPLY = {"Tue": 1.15, "Wed": 1.15, "Thu": 1.05, "Mon": 1.0, "Fri": 0.85}
 
 
 def build_outreach(rng: random.Random) -> list[dict]:
@@ -126,11 +140,12 @@ def build_outreach(rng: random.Random) -> list[dict]:
         ang = rng.choice(ANGLE); per = rng.choices(PERSONALIZATION, weights=[3, 4, 3])[0]
         subj = rng.choice(SUBJECT); day = rng.choice(DAY); tm = rng.choice(TIME)
 
-        p = 0.18 + _CH_REPLY[ch] + _ANG_REPLY[ang] + _PER_REPLY[per] + _ROLE_REPLY[role] + _SUBJ_REPLY[subj] + _DAY_REPLY[day]
-        p = min(0.92, max(0.02, p))
+        p = _prob(_odds(_BASE_REPLY) * _CH_REPLY[ch] * _ANG_REPLY[ang] * _PER_REPLY[per] * _ROLE_REPLY[role]
+                  * _SUBJ_REPLY[subj] * _DAY_REPLY[day])
         replied = rng.random() < p
         # a meeting needs a reply, plus quality
-        mp = 0.42 + (0.12 if ang in ("Case study", "Referral intro") else 0) + (0.1 if per == "High" else 0)
+        mp = _prob(_odds(_BASE_MEETING) * (1.5 if ang in ("Case study", "Referral intro") else 1.0)
+                   * (1.4 if per == "High" else 1.0))
         meeting = replied and rng.random() < mp
 
         rows.append({
@@ -184,6 +199,8 @@ def _upload(http: httpx.Client, table: str, schema: dict, rows: list[dict]) -> N
 
 
 def main() -> None:
+    import sys
+    apply = "--apply" in sys.argv  # a dry run unless asked: this replaces two tables on the live demo's master
     rng = random.Random(SEED)
     cfg = load_config()
     eng = build_engagements(rng)
@@ -191,6 +208,9 @@ def main() -> None:
     from collections import Counter
     print(f"engagements={len(eng)} win-rate={sum(e['outcome']=='won' for e in eng)/len(eng):.2f}")
     print(f"outreach={len(out)} reply-rate={sum(o['replied']=='yes' for o in out)/len(out):.2f} meeting-rate={sum(o['meeting']=='yes' for o in out)/len(out):.2f}")
+    if not apply:
+        print("dry run: nothing written. Pass --apply to replace engagements and outreach.")
+        return
     with httpx.Client(base_url=f"{cfg.aito_url}/api/{cfg.aito_api_version}", headers={"x-api-key": cfg.aito_key, "content-type": "application/json"}, timeout=60.0) as http:
         _upload(http, "engagements", ENG_SCHEMA, eng)
         _upload(http, "outreach", OUT_SCHEMA, out)

@@ -12,7 +12,7 @@ type Ref = { brief: string; effort_days: number; deal_size_band: string; region:
 type Ranked = { v: string; p: number };
 type Sheet = {
   profile: Record<string, string>;
-  win: { p: number; drivers: Driver[] };
+  win: { p: number; drivers: Driver[]; base_rate?: number | null };
   effort_days: number;
   references: Ref[];
   outreach: { channels: Ranked[]; angles: Ranked[]; recommended: { channel: string | null; angle: string | null; personalization: string | null }; meeting_p: number | null; baseline_meeting_p: number };
@@ -40,10 +40,12 @@ const SAMPLES: { label: string; p: Profile }[] = [
 ];
 
 const eur = (n: number) => "€" + (n >= 1000 ? `${Math.round(n / 1000)}k` : `${n}`);
-// Bands for a deal's win probability (a sales label, not a routing gate like lib/gates.ts)
-const STRONG_WIN = 0.7;
-const MODERATE_WIN = 0.45;
-const winLabel = (p: number) => (p >= STRONG_WIN ? ["Strong", "var(--g)"] : p >= MODERATE_WIN ? ["Moderate", "var(--gold-ink)"] : ["Long shot", "var(--r)"]);
+// A deal's win odds read against the base rate (all pursued deals): at least twice the usual odds is strong,
+// above the base is worth a look, below it is a long shot. A sales label, not a routing gate.
+const winLabel = (p: number, base: number | null) => {
+  const b = base ?? 0.25;
+  return p >= 2 * b ? ["Strong", "var(--g)"] : p >= b ? ["Above the base", "var(--gold-ink)"] : ["Long shot", "var(--r)"];
+};
 
 export type SalesMeta = { loading: boolean; meeting_p: number | null; win_p: number | null };
 
@@ -68,7 +70,7 @@ export function SalesView({ onMeta }: { onMeta?: (m: SalesMeta) => void }) {
   const pick = (i: number) => { setActive(i); setProfile(SAMPLES[i].p); build(SAMPLES[i].p); };
 
   const w = sheet?.win;
-  const wl = w ? winLabel(w.p) : ["", ""];
+  const wl = w ? winLabel(w.p, w.base_rate ?? null) : ["", ""];
 
   return (
     <div className="sa">
@@ -94,10 +96,10 @@ export function SalesView({ onMeta }: { onMeta?: (m: SalesMeta) => void }) {
                 <div className="winpct" style={{ color: wl[1] }}>{Math.round(w!.p * 100)}<span>%</span></div>
                 <div className="winmeta"><div className="winlbl" style={{ color: wl[1] }}>{wl[0]}</div><div className="winbar"><i style={{ width: `${Math.round(w!.p * 100)}%`, background: wl[1] }} /></div></div>
               </div>
-              <div className="sub">why, top drivers from {sheet.profile.industry} history</div>
-              {w!.drivers.map((d, i) => (
-                <div className="drv" key={i}><span className="df">{d.field.replace(/_/g, " ")} = <b>{d.value}</b></span><span className={`dl ${d.lift >= 1 ? "up" : "dn"}`}>×{d.lift.toFixed(2)}</span></div>
-              ))}
+              {w!.base_rate != null && (
+                <div className="sub">against a <b>{Math.round(w!.base_rate * 100)}%</b> base rate (all pursued deals): {(w!.p / w!.base_rate).toFixed(1)}× the usual odds</div>
+              )}
+              <DriverGroups drivers={w!.drivers} up="raise the odds" down="lower the odds" />
             </div>
 
             {/* effort + business case */}
@@ -199,3 +201,19 @@ const CSS = `
 .sa .rkrow span{min-width:78px}.sa .rkbar{flex:1;height:6px;background:#eee9dd;border-radius:3px;overflow:hidden}.sa .rkbar i{display:block;height:100%;background:var(--t);border-radius:3px}
 .sa .foot{margin-top:22px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);line-height:1.7}
 `;
+
+/** $why drivers split by direction, so a reader never has to sort ×1.8 from ×0.6 by eye. */
+export function DriverGroups({ drivers, up, down }: { drivers: { field: string; value: string; lift: number }[]; up: string; down: string }) {
+  const ups = drivers.filter((d) => d.lift >= 1), downs = drivers.filter((d) => d.lift < 1);
+  const row = (d: { field: string; value: string; lift: number }, i: number) => (
+    <div className="drv" key={i}><span className="df">{d.field.replace(/_/g, " ")} = <b>{d.value}</b></span><span className={`dl ${d.lift >= 1 ? "up" : "dn"}`}>×{d.lift.toFixed(2)}</span></div>
+  );
+  return (
+    <>
+      {ups.length > 0 && <div className="sub" style={{ marginTop: 6 }}>{up}</div>}
+      {ups.map(row)}
+      {downs.length > 0 && <div className="sub" style={{ marginTop: 6 }}>{down}</div>}
+      {downs.map(row)}
+    </>
+  );
+}

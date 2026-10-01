@@ -579,7 +579,7 @@ def opportunity(industry: str = "SaaS", client_size: str = "Mid-market", service
                     "deal_size_band": deal_size_band, "region": region, "lead_source": lead_source,
                     "complexity": complexity, "team_seniority": team_seniority, "relationship": relationship,
                     "competitive": competitive, "target_role": target_role},
-        "win": {"p": won_p, "drivers": drivers},
+        "win": {"p": won_p, "drivers": drivers, "base_rate": _base_win_rate()},
         "effort_days": effort,
         "references": [{"brief": r.get("brief"), "effort_days": r.get("effort_days"),
                         "deal_size_band": r.get("deal_size_band"), "region": r.get("region")} for r in refs],
@@ -610,6 +610,19 @@ def _eng_where(args: dict) -> dict:
     return {col: args[k] for k, col in m.items() if args.get(k)}
 
 
+_BASE_WIN_CACHE: dict = {"at": 0.0, "rate": None}
+
+
+def _base_win_rate() -> float | None:
+    """The share of all pursued engagements that were won, counted (cached ten minutes):
+    the base a deal's win odds are read against."""
+    if time.time() - _BASE_WIN_CACHE["at"] > 600 or _BASE_WIN_CACHE["rate"] is None:
+        total = aito.query("engagements", limit=0).get("total") or 0
+        won = aito.query("engagements", where={"outcome": "won"}, limit=0).get("total") or 0
+        _BASE_WIN_CACHE.update(at=time.time(), rate=round(won / total, 3) if total else None)
+    return _BASE_WIN_CACHE["rate"]
+
+
 def _tool_win_odds(args: dict) -> dict:
     where = _eng_where(args)
     if not where:
@@ -617,8 +630,11 @@ def _tool_win_odds(args: dict) -> dict:
     r = aito.predict("engagements", where, "outcome", limit=2, select=["$p", "feature", "$why"])
     hits = r.get("hits") or []
     won_p = _p_of(hits, "won")
+    base = _base_win_rate()
     return {
         "win_probability": round(won_p, 2),
+        "base_win_rate": base,  # quote the odds against this: the lift over the base is the story
+        "times_the_base": round(won_p / base, 1) if base else None,
         "drivers": _win_drivers(_why_of(hits, "won")),
         "based_on": "Northlight's won/lost engagements with these attributes",
     }
