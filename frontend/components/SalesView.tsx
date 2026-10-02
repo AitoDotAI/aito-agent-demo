@@ -109,7 +109,7 @@ export function SalesView({ onMeta }: { onMeta?: (m: SalesMeta) => void }) {
               <div className="sub" style={{ marginBottom: 12 }}>estimated from similar {sheet.profile.service_line} work</div>
               <div className="bc">
                 <div><span>deal value</span><b>{eur(sheet.business_case.value_eur)}</b></div>
-                <div><span>delivery cost</span><b>{eur(sheet.business_case.cost_eur)}</b><i>{sheet.effort_days}d × {eur(sheet.business_case.day_rate)}</i></div>
+                <div><span>delivery cost</span><b>{eur(sheet.business_case.cost_eur)}</b><i>{sheet.effort_days} d × €{sheet.business_case.day_rate.toLocaleString("en-US")}</i></div>
                 <div className="m"><span>gross margin</span><b style={{ color: sheet.business_case.margin_pct >= 35 ? "var(--g)" : "var(--gold-ink)" }}>{eur(sheet.business_case.margin_eur)} · {sheet.business_case.margin_pct}%</b></div>
               </div>
             </div>
