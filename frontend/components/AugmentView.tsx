@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import ConfidenceBar from "@/components/prediction/ConfidenceBar";
 import { apiFetch, ApiError } from "@/lib/api";
+import { urlIndex, urlParam, writeUrlState } from "@/lib/route";
 import { AUTO_GATE, pctP } from "@/lib/gates";
 
 type Pick = { tool: string; latency_ms: number; tokens: number; cost_usd: number; n_tools: number };
@@ -20,8 +21,9 @@ const SAMPLES = [
 ];
 
 export function AugmentView({ onAito }: { onAito?: (ms: number | null) => void }) {
-  const [text, setText] = useState(SAMPLES[0]);
-  const [active, setActive] = useState(0);
+  // the sample, or a custom message, from the URL (lib/route.ts)
+  const [active, setActive] = useState(() => (urlParam("text") ? -1 : urlIndex("sample", SAMPLES.length - 1)));
+  const [text, setText] = useState(() => urlParam("text") || SAMPLES[Math.max(0, active)]);
   const [r, setR] = useState<Route | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -41,9 +43,13 @@ export function AugmentView({ onAito }: { onAito?: (ms: number | null) => void }
       .finally(() => { setLoading(false); if (timer.current) window.clearInterval(timer.current); });
   }, [onAito]);
 
-  useEffect(() => { run(SAMPLES[0]); }, [run]);
+  useEffect(() => { run(text); }, [run]);
 
-  const pick = (i: number) => { setActive(i); setText(SAMPLES[i]); run(SAMPLES[i]); };
+  const pick = (i: number) => { setActive(i); setText(SAMPLES[i]); run(SAMPLES[i]); writeUrlState({ sample: i, text: null }); };
+  const runText = () => {
+    run(text);
+    writeUrlState(active >= 0 && text === SAMPLES[active] ? { sample: active, text: null } : { sample: null, text });
+  };
 
   const full = r?.llm_full;
   const coop = r?.llm_coop;
@@ -52,7 +58,7 @@ export function AugmentView({ onAito }: { onAito?: (ms: number | null) => void }
   const top = r?.aito_top_p ?? null;
 
   return (
-    <div className="rc-body">
+    <div className="rc-body" data-route="augment" data-state={active >= 0 ? `sample=${active}` : "text"}>
       <div className="rc-kpis">
         <div className="rc-kpi"><div className="kl">Tool catalog</div><div className="kv">{r?.catalog_size ?? 240}</div><div className="ks">backend tools the LLM must consider</div></div>
         <div className="rc-kpi"><div className="kl">Prompt tokens</div><div className="kv t">{tokFactor ? `${tokFactor}× less` : "—"}</div><div className="ks">{full && coop ? `${full.tokens.toLocaleString()} → ${coop.tokens}` : "after Aito shortlists"}</div></div>
@@ -68,7 +74,7 @@ export function AugmentView({ onAito }: { onAito?: (ms: number | null) => void }
       </div>
       <div className="rc-ticket">
         <textarea rows={1} value={text} onChange={(e) => setText(e.target.value)} />
-        <button className="rc-run" disabled={loading} onClick={() => run(text)}>{loading ? "Routing…" : "▶ Route"}</button>
+        <button className="rc-run" disabled={loading} onClick={runText}>{loading ? "Routing…" : "▶ Route"}</button>
       </div>
 
       {/* Aito shortlist */}

@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { urlParam, writeUrlState } from "@/lib/route";
 import { BenchPanel, ReplyPanel, SUPPORT_REPLY_CSS } from "@/components/SupportReply";
 
 type Alt = { value: string; p: number };
@@ -43,17 +44,17 @@ const GATE = {
 export function EnvelopeView() {
   const [queue, setQueue] = useState<Incoming[]>([]);
   const [queued, setQueued] = useState(0);
-  const [sel, setSel] = useState<string | null>(null);
+  const [sel, setSel] = useState<string | null>(() => urlParam("ticket") || null);  // from the URL (lib/route.ts)
   const [env, setEnv] = useState<Envelope | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [text, setText] = useState<string | null>(null);      // the words being run, when not the ticket's own
+  const [text, setText] = useState<string | null>(() => urlParam("text") || null);  // the words being run, when not the ticket's own
   const [editing, setEditing] = useState<string | null>(null); // the textarea, while open
 
-  const pick = (id: string) => { setSel(id); setText(null); setEditing(null); };
+  const pick = (id: string) => { setSel(id); setText(null); setEditing(null); writeUrlState({ ticket: id, text: null }); };
 
   useEffect(() => {
     apiFetch<{ tickets: Incoming[] }>("/api/support/incoming")
-      .then((r) => { setQueue(r.tickets.slice(0, 12)); setQueued(r.tickets.length); setSel(r.tickets[0]?.ticket_id ?? null); })
+      .then((r) => { setQueue(r.tickets.slice(0, 12)); setQueued(r.tickets.length); setSel((s) => s ?? r.tickets[0]?.ticket_id ?? null); })
       .catch((e) => setErr(String(e?.message ?? e)));
   }, []);
 
@@ -72,7 +73,7 @@ export function EnvelopeView() {
   const right = scored.filter((s) => s.correct).length;
 
   return (
-    <div className="rc-body ev">
+    <div className="rc-body ev" data-route="support" data-state={`ticket=${sel ?? ""}`}>
       <div className="rc-h">One ticket, inside Aito&apos;s predictive envelope</div>
       <div className="rc-sub">
         The Aito side of a support agent: every step it takes, grounded by one Aito call. Who wrote, what it&apos;s
@@ -105,7 +106,7 @@ export function EnvelopeView() {
                     <div className="ev-tm">
                       {env.edited ? "your words" : env.ticket.ticket_id} · from {env.ticket.sender_domain} · {env.ticket.channel}
                       <button className="ev-edit" onClick={() => setEditing(env.ticket.text)}>try your own words</button>
-                      {env.edited && <button className="ev-edit" onClick={() => setText(null)}>back to the real ticket</button>}
+                      {env.edited && <button className="ev-edit" onClick={() => { setText(null); writeUrlState({ text: null }); }}>back to the real ticket</button>}
                     </div>
                   </>
                 ) : (
@@ -117,7 +118,7 @@ export function EnvelopeView() {
                     </div>
                     <div className="ev-tm">
                       same sender, your words: nothing happened to them, so no step is scored
-                      <button className="ev-edit on" disabled={!editing.trim()} onClick={() => { setText(editing.trim()); setEditing(null); }}>run the envelope</button>
+                      <button className="ev-edit on" disabled={!editing.trim()} onClick={() => { setText(editing.trim()); setEditing(null); writeUrlState({ ticket: sel, text: editing.trim() }); }}>run the envelope</button>
                       <button className="ev-edit" onClick={() => setEditing(null)}>cancel</button>
                     </div>
                   </>
