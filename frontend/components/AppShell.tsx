@@ -299,7 +299,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
       </aside>
 
       {/* ---------- main ---------- */}
-      <main className="rc-main" key={routeKey}>{!mounted ? null : <>
+      <main className="rc-main" key={routeKey} data-mounted={mounted ? "" : undefined}>{!mounted ? null : <>
         {view === "home" && <OverviewView onNavigate={go} />}
         {view === "agent" && <SalesAgentView tools={tools} toolOn={toolOn} />}
         {view === "toolbox" && <ToolboxView tools={tools} toolOn={toolOn} onToggle={toggleTool} onAllAito={setAllAito}

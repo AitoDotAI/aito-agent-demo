@@ -11,6 +11,9 @@ const { chromium } = require("playwright-core");
 const BASE = (process.env.BASE_URL || "http://127.0.0.1:4105").replace(/\/$/, "");
 const TIMEOUT = 30000;
 
+// the shell marks <main data-mounted> once it has read the URL; before that the prerendered
+// HTML shows the default view, so every read and click waits for it
+const mounted = (page) => page.locator("main.rc-main[data-mounted]").waitFor({ state: "attached", timeout: TIMEOUT });
 // the active nav item names the view; data-state attributes carry each view's key state
 const activeView = (page) => page.locator(".rc-item.on").first().getAttribute("data-view", { timeout: TIMEOUT });
 const stateOf = (page, sel) => page.locator(sel).first().getAttribute("data-state", { timeout: TIMEOUT });
@@ -50,6 +53,7 @@ async function main() {
     const page = await ctx.newPage();
     try {
       await page.goto(BASE + c.url, { waitUntil: "domcontentloaded" });
+      await mounted(page);
       const v = await activeView(page);
       let ok = v === c.view, detail = `view ${v}`;
       if (ok && c.state) {
@@ -69,6 +73,7 @@ async function main() {
   const page = await ctx.newPage();
   try {
     await page.goto(BASE + "/", { waitUntil: "domcontentloaded" });
+    await mounted(page);
     await page.locator(".rc-item[data-view='handoff']").first().click();
     await page.waitForURL(/view=handoff/, { timeout: TIMEOUT });
     check(true, "navigating writes ?view=handoff");
@@ -88,6 +93,58 @@ async function main() {
     check(false, "navigation and history", e.message.split("\n")[0]);
   }
   await ctx.close();
+
+  // every view, by CLICKING: the nav item and the view's own state controls must change the
+  // address bar (a goto-only test passes even when clicks never write the URL)
+  const c2 = await browser.newContext();
+  const pg = await c2.newPage();
+  const urlIs = async (label, pred) => {
+    try { await pg.waitForURL((u) => pred(u.searchParams, u), { timeout: TIMEOUT }); check(true, label, pg.url().replace(BASE, "")); }
+    catch { check(false, label, `address bar ${pg.url().replace(BASE, "")}`); }
+  };
+  const nav = async (v) => {
+    await pg.locator(`.rc-item[data-view='${v}']`).first().click();
+    await urlIs(`click nav ${v} → URL view=${v}`, (p, u) => (v === "home" ? u.pathname === "/" && !p.get("view") : p.get("view") === v));
+  };
+  const chip = async (route, sel, i) => {
+    await pg.locator(`[data-route='${route}'] ${sel}`).nth(i).click();
+    await urlIs(`click ${route} sample ${i} → URL sample=${i}`, (p) => p.get("sample") === String(i));
+  };
+  try {
+    await pg.goto(BASE + "/?view=toolbox", { waitUntil: "domcontentloaded" });  // not a view clicked first or next
+    await mounted(pg);
+    await nav("home");
+    await nav("resolve");   await chip("resolve", ".rc-chip", 1);
+    await nav("augment");   await chip("augment", ".rc-chip", 2);
+    await nav("handoff");
+    await nav("rules");
+    await pg.locator("[data-route='rules'] [data-log='tool_calls']").first().click();
+    await urlIs("click rules log → URL log=tool_calls", (p) => p.get("log") === "tool_calls");
+    await nav("support");
+    const t = pg.locator("[data-route='support'] .ev-queue button").nth(1);
+    const id = ((await t.locator(".ev-qm").textContent({ timeout: TIMEOUT })) || "").split(" · ")[0].trim();
+    await t.click();
+    await urlIs(`click support ticket → URL ticket=${id}`, (p) => !!id && p.get("ticket") === id);
+    await nav("agent");
+    await nav("sales");     await chip("sales", ".chip", 1);
+    const ss = pg.locator("[data-route='sales'] select").first();
+    const cur = await ss.inputValue();
+    const pickS = (await ss.locator("option").allTextContents()).find((o) => o !== cur);
+    await ss.selectOption(pickS);
+    await urlIs(`edit sales industry → URL industry=${pickS}, no sample`, (p) => p.get("industry") === pickS && !p.get("sample"));
+    await nav("toolbox");
+    await nav("company");
+    await nav("company-data");
+    await pg.locator("[data-route='company-data'] .chip").nth(2).click();
+    await urlIs("click 360 sample Banking · Mid-market → URL industry=Banking&size=Mid-market", (p) =>
+      p.get("industry") === "Banking" && p.get("size") === "Mid-market" && !p.get("plan"));
+    await pg.locator("[data-route='company-data'] select").nth(2).selectOption("Pro");
+    await urlIs("edit 360 plan → URL plan=Pro", (p) => p.get("plan") === "Pro" && p.get("industry") === "Banking");
+    await nav("company-toolbox");
+  } catch (e) {
+    check(false, "clicking through every view", e.message.split("\n")[0]);
+  }
+  await c2.close();
   await browser.close();
   console.log(failed ? `\n${failed} failed` : "\nall deep links work");
   process.exit(failed);
