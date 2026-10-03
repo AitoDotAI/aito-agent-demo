@@ -239,7 +239,7 @@ export function CompanyDashboardView() {
                       {k.levers.items.map((l, i) => <LeverRow key={i} l={l} lever={k.levers.lever} current={k.current ?? 0} good={k.good_label} top={i === 0} />)}
                     </div>
 
-                    <div className="proj">↳ customers in this segment with {k.levers.lever} = {k.levers.items[0]?.value ?? "the top lever"}: <b style={{ color: "var(--t)" }}>{pct(k.headline.then)}</b> vs {pct(k.headline.now)} overall (associated, not a promise)</div>
+                    <div className="proj">↳ customers in this segment with {k.levers.lever} = {k.levers.items[0]?.value ?? "the top lever"}: <b style={{ color: "var(--t)" }}>{pct(k.headline.then)}</b> vs {pct(k.headline.now)} for this segment (associated, not a promise)</div>
                   </div>
                 );
               })}
