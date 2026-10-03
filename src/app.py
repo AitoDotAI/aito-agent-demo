@@ -944,24 +944,32 @@ def _tool_optimize_kpi(args: dict) -> dict:
     # conditions properly, unlike relating the good outcome). Each is shown as a lift
     # = P(good | this lever) / the segment's current good-rate.
     rec = _unless_empty(lambda: aito.recommend(pop, {}, cfg["lever"], {target: good}, limit=3).get("hits") or [])
+    report_n = aito.query(table, where={**where, target: report}, limit=0).get("total") or 0 if lower_better else 0
+    now = (round(report_n / total, 2) if total else 0.0) if lower_better else current
     lever_items = []
-    for h in rec:
+    ph: list = []       # the top lever's prediction, which is the card's projection
+    for i, h in enumerate(rec):
         p = round(float(h["$p"]), 2)
-        lever_items.append({"value": h["feature"], "p": p,
-                            "lift": round(p / current, 2) if current > 0 else 1.0})
+        if lower_better:
+            # churn, NPS and on-time report the BAD outcome, so each lever is read on that same
+            # outcome: P(bad | lever) against the segment's bad rate, not retention against retention
+            hits_i = _unless_empty(lambda: aito.predict(pop, {cfg["lever"]: h["feature"]}, target, limit=4,
+                                                         select=["$p", "feature"]).get("hits") or [])
+            if i == 0:
+                ph = hits_i
+            p = round(_p_of(hits_i, report), 2) if hits_i else now
+            lever_items.append({"value": h["feature"], "p": p, "lift": round(p / now, 2) if now > 0 else 1.0})
+        else:
+            lever_items.append({"value": h["feature"], "p": p,
+                                "lift": round(p / current, 2) if current > 0 else 1.0})
     best = lever_items[0]["value"] if lever_items else None
-    ph: list = []
     projected = current
     if best is not None and not lower_better:
         # the card reports the good outcome, so the top lever's own p IS the projection: one
         # number on the badge and in the sentence under it, not a second query 1-2 points away
         projected = lever_items[0]["p"]
     elif best is not None:
-        ph = _unless_empty(lambda: aito.predict(pop, {cfg["lever"]: best}, target, limit=4,
-                                                 select=["$p", "feature"]).get("hits") or [])
         projected = round(_p_of(ph, good), 2) if ph else current
-    report_n = aito.query(table, where={**where, target: report}, limit=0).get("total") or 0 if lower_better else 0
-    now = (round(report_n / total, 2) if total else 0.0) if lower_better else current
     then = (round(_p_of(ph, report), 2) if (lower_better and best is not None and ph) else (now if lower_better else projected))
     return {
         "kpi": cfg["label"], "goal": f"{target}={good}",
@@ -972,7 +980,8 @@ def _tool_optimize_kpi(args: dict) -> dict:
         "kpi_why": kpi_why,   # base × segment-attribute lifts = the rate
         "causes": causes, "drivers": causes,   # within-segment drivers ($on _relate)
         **({"causes_unavailable": "Aito could not compute the causes just now"} if failed else {}),
-        "levers": {"lever": cfg["lever_label"], "items": lever_items},  # condition = the good outcome
+        "levers": {"lever": cfg["lever_label"], "items": lever_items,
+                   "outcome": cfg["bad_label"] if lower_better else cfg["good_label"]},  # what each lift is read on
         "recommended_play": {"lever": cfg["lever_label"], "change_to": best},
         "projected": projected,
         "lift_pp": round(abs(then - now) * 100),

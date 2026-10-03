@@ -18,7 +18,7 @@ type Kpi = {
   // empty: the segment has no rows for this KPI (headline numbers are then null)
   lift_pp: number; current: number | null; empty?: boolean; bad_label: string; good_label: string; kpi_why: KpiWhy;
   causes: Cause[];
-  levers: { lever: string; items: Lever[] };
+  levers: { lever: string; items: Lever[]; outcome?: string };
   recommended_play: { lever: string; change_to: string };
 };
 
@@ -88,16 +88,18 @@ function CauseRow({ c, bad, good }: { c: Cause; bad: string; good: string }) {
   );
 }
 
-function LeverRow({ l, lever, current, good, top }: { l: Lever; lever: string; current: number; good: string; top: boolean }) {
+// each lift is read on the outcome the card reports: the bad one on churn / NPS / on-time (below ×1
+// is the better lever), the good one on the rest; `baseline` is that outcome's rate in the segment
+function LeverRow({ l, lever, baseline, outcome, lower, top }: { l: Lever; lever: string; baseline: number; outcome: string; lower: boolean; top: boolean }) {
   return (
     <div className="fr">
       <span className="fl">{lever} → {l.value}</span>
-      <span className={`fx ${top ? "best" : "good"}`}>×{l.lift}</span>
-      <WhyTip title={`${lever} → ${l.value}`} subtitle={`live _recommend · toward ${good}`}
+      <span className={`fx ${(lower ? l.lift > 1 : l.lift < 1) ? "risk" : top ? "best" : "good"}`}>×{l.lift}</span>
+      <WhyTip title={`${lever} → ${l.value}`} subtitle={`live _recommend · read on ${outcome}`}
         body={<CmpBody a={{ label: `with ${l.value}`, p: l.p, color: "#16c2b9" }}
-          b={{ label: "segment now", p: current, color: "#cfcabf" }}
-          note={<>Predicted {good} <b>{Math.round(l.p * 100)}%</b> vs {Math.round(current * 100)}% baseline → <b>×{l.lift}</b>.{top ? " The top-ranked action." : ""}</>} />}
-        footer="P(good) for this lever value vs the segment baseline · live Aito _recommend" />
+          b={{ label: "segment now", p: baseline, color: "#cfcabf" }}
+          note={<>Predicted {outcome} <b>{Math.round(l.p * 100)}%</b> vs {Math.round(baseline * 100)}% baseline → <b>×{l.lift}</b>.{top ? " The top-ranked action." : ""}</>} />}
+        footer={`P(${outcome}) for this lever value vs the segment rate · lever ranked by live Aito _recommend`} />
     </div>
   );
 }
@@ -236,7 +238,7 @@ export function CompanyDashboardView() {
 
                     <div className="flist">
                       <div className="ft">Recommended levers <span className="op2">_recommend</span></div>
-                      {k.levers.items.map((l, i) => <LeverRow key={i} l={l} lever={k.levers.lever} current={k.current ?? 0} good={k.good_label} top={i === 0} />)}
+                      {k.levers.items.map((l, i) => <LeverRow key={i} l={l} lever={k.levers.lever} baseline={(k.headline.lower_is_better ? k.headline.now : k.current) ?? 0} outcome={k.levers.outcome ?? k.good_label} lower={k.headline.lower_is_better} top={i === 0} />)}
                     </div>
 
                     <div className="proj">↳ customers in this segment with {k.levers.lever} = {k.levers.items[0]?.value ?? "the top lever"}: <b style={{ color: "var(--t)" }}>{pct(k.headline.then)}</b> vs {pct(k.headline.now)} for this segment (associated, not a promise)</div>

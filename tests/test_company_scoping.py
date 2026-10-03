@@ -139,3 +139,22 @@ def test_a_good_direction_card_shows_one_number_for_the_top_lever(monkeypatch):
     r = A._tool_optimize_kpi({"kpi": "conversion", "size": "SMB", "plan": "Free"})
     assert r["levers"]["items"][0]["p"] == 0.55
     assert r["headline"]["then"] == 0.55 and r["projected"] == 0.55
+
+
+def test_a_lower_is_better_card_shows_the_lever_lift_on_the_outcome_it_reports(monkeypatch):
+    """Churn, NPS and on-time report the BAD outcome in the headline. The lever badge used to
+    be the good outcome's lift (retention x1.07) next to a falling churn rate (32% -> 27%);
+    it now reads on the same outcome as the headline: P(churned | lever) / the segment's rate."""
+    class _Churn(_Recording):
+        def predict(self, table, where, target, limit=5, select=None):
+            self.calls.append(("predict", table, dict(where)))
+            p = 0.2 if where.get("csm_motion") == "Dedicated" else 0.3
+            return {"hits": [{"feature": "yes", "$p": p}, {"feature": "no", "$p": 1 - p}]}
+
+    monkeypatch.setattr(A, "aito", _Churn())
+    r = A._tool_optimize_kpi({"kpi": "churn", "size": "SMB", "plan": "Free"})
+    top = r["levers"]["items"][0]
+    assert top["value"] == "Dedicated" and top["p"] == 0.2          # P(churned | Dedicated)
+    assert top["lift"] == 0.8                                       # 0.2 / the segment's counted 0.25
+    assert r["headline"]["then"] == top["p"] and r["headline"]["now"] == 0.25
+    assert r["levers"]["outcome"] == "churned customers"
