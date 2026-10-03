@@ -120,3 +120,22 @@ def test_the_kpis_run_concurrently_and_keep_their_order(monkeypatch):
     out = TestClient(A.app).get("/api/company-360", params={"size": "SMB"}).json()
     assert [k["key"] for k in out["kpis"]] == list(A._KPIS)
     assert len(seen) > 1                                    # more than one thread did the work
+
+
+def test_a_good_direction_card_shows_one_number_for_the_top_lever(monkeypatch):
+    """The lever badge and the sentence under it ("... with X: 53% vs 39%") named the same
+    outcome but came from two queries (_recommend and _predict), 1-2 points apart on prod.
+    For a KPI whose good outcome is what the card reports, the lever's own p is the number."""
+    class _Apart(_Recording):
+        def predict(self, table, where, target, limit=5, select=None):
+            self.calls.append(("predict", table, dict(where)))
+            return {"hits": [{"feature": "yes", "$p": 0.53}, {"feature": "no", "$p": 0.47}]}
+
+        def recommend(self, table, where, field, goal, limit=5):
+            self.calls.append(("recommend", table, dict(where)))
+            return {"hits": [{"feature": "Self-serve", "$p": 0.55}]}
+
+    monkeypatch.setattr(A, "aito", _Apart())
+    r = A._tool_optimize_kpi({"kpi": "conversion", "size": "SMB", "plan": "Free"})
+    assert r["levers"]["items"][0]["p"] == 0.55
+    assert r["headline"]["then"] == 0.55 and r["projected"] == 0.55

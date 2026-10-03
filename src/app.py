@@ -952,7 +952,11 @@ def _tool_optimize_kpi(args: dict) -> dict:
     best = lever_items[0]["value"] if lever_items else None
     ph: list = []
     projected = current
-    if best is not None:
+    if best is not None and not lower_better:
+        # the card reports the good outcome, so the top lever's own p IS the projection: one
+        # number on the badge and in the sentence under it, not a second query 1-2 points away
+        projected = lever_items[0]["p"]
+    elif best is not None:
         ph = _unless_empty(lambda: aito.predict(pop, {cfg["lever"]: best}, target, limit=4,
                                                  select=["$p", "feature"]).get("hits") or [])
         projected = round(_p_of(ph, good), 2) if ph else current
