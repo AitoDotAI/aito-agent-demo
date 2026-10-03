@@ -25,6 +25,7 @@ import { CompanyDashboardView } from "@/components/CompanyDashboardView";
 import { ToolboxView, type ToolMeta } from "@/components/ToolboxView";
 import { apiFetch, ApiError, onAitoQueries, type AitoQuery } from "@/lib/api";
 import { ASSIST_GATE, AUTO_GATE } from "@/lib/gates";
+import { viewUrl, writeUrlState } from "@/lib/route";
 import type { Alternative, WhyFactor } from "@/lib/types";
 
 export type View = "home" | "resolve" | "augment" | "handoff" | "rules" | "support" | "sales" | "agent" | "toolbox" | "company" | "company-data" | "company-toolbox";
@@ -58,6 +59,13 @@ const SENSITIVE = new Set(["refund", "cancel_service"]);
 const actionText = (intent: string, param: string | null) =>
   (ACTION[intent] ?? ((p: string | null) => `${intent}${p ? " · " + p : ""}`))(param);
 
+/** The view a static route opens on (/sales/, /console/, /company/), for back/forward to it. */
+function pathView(): View {
+  if (typeof window === "undefined") return "home";
+  const p = window.location.pathname.replace(/\/+$/, "");
+  return p === "/sales" ? "sales" : p === "/console" ? "resolve" : p === "/company" ? "company" : "home";
+}
+
 const isView = (v: string | null): v is View =>
   v === "home" || v === "resolve" || v === "augment" || v === "handoff" || v === "rules" || v === "support" || v === "sales" || v === "agent" ||
   v === "toolbox" || v === "company" || v === "company-data" || v === "company-toolbox";
@@ -80,6 +88,10 @@ const CO_EXAMPLES: Record<string, string> = {
 
 export default function AppShell({ initialView = "home" }: { initialView?: View }) {
   const [view, setView] = useState<View>(initialView);
+  // views render only after mount, so they can read their state from the URL at their first
+  // render (lib/route.ts); routeKey remounts them when back/forward changes the URL
+  const [mounted, setMounted] = useState(false);
+  const [routeKey, setRouteKey] = useState(0);
   // the Aito queries each endpoint last reported (`_queries`), for the side panels
   const [sent, setSent] = useState<Record<string, AitoQuery[]>>({});
   useEffect(() => onAitoQueries((endpoint, queries) => setSent((m) => ({ ...m, [endpoint]: queries }))), []);
@@ -171,6 +183,23 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
     const t = p.get("text") ?? SAMPLES[idx].text;
     const s = p.get("sender") ?? SAMPLES[idx].sender;
     setActive(p.get("text") ? -1 : idx); setText(t); setSender(s);
+    setMounted(true);
+  }, []);
+
+  // back/forward: the URL is the source of truth for the view and its state
+  useEffect(() => {
+    const onPop = () => {
+      const v = new URLSearchParams(window.location.search).get("view");
+      setView(isView(v) ? v : pathView());
+      const p = new URLSearchParams(window.location.search);
+      const i = p.get("sample");
+      const idx = i != null ? Math.max(0, Math.min(SAMPLES.length - 1, parseInt(i, 10) || 0)) : 0;
+      setActive(p.get("text") ? -1 : idx); setText(p.get("text") ?? SAMPLES[idx].text);
+      setSender(p.get("sender") ?? SAMPLES[idx].sender);
+      setRouteKey((k) => k + 1);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
   }, []);
 
   // resolve runs a live gpt-5-mini call, so only fire it when the resolve view
@@ -180,15 +209,28 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
-  const pick = (i: number) => { setActive(i); setText(SAMPLES[i].text); setSender(SAMPLES[i].sender); resolve(SAMPLES[i].text, SAMPLES[i].sender); };
+  const pick = (i: number) => {
+    setActive(i); setText(SAMPLES[i].text); setSender(SAMPLES[i].sender); resolve(SAMPLES[i].text, SAMPLES[i].sender);
+    writeUrlState({ sample: i, text: null, sender: null });
+  };
+  // a custom ticket goes into the URL as text (and sender), so the link reproduces it
+  const runCustom = () => {
+    resolve(text, sender);
+    writeUrlState(active >= 0 && text === SAMPLES[active].text ? { sample: active, text: null, sender: null }
+      : { sample: null, text, sender: sender || null });
+  };
 
   const aitoMs = aito?.aito_ms ?? null;
   const llmMs = llm?.latency_ms ?? null;
   const speedup = aitoMs && llmMs ? Math.max(1, Math.round(llmMs / aitoMs)) : null;
 
-  const go = (v: View) => { setView(v); setNavOpen(false); };
+  // switching views is a history entry, starting from the view's own defaults
+  const go = (v: View) => {
+    if (v !== view) window.history.pushState(null, "", viewUrl(v));
+    setView(v); setNavOpen(false);
+  };
   const NavItem = ({ v, children }: { v: View; children: React.ReactNode }) => (
-    <div className={`rc-item ${view === v ? "on" : ""}`} onClick={() => go(v)}>{children}</div>
+    <div className={`rc-item ${view === v ? "on" : ""}`} data-view={v} onClick={() => go(v)}>{children}</div>
   );
 
   const telco = view === "resolve" || view === "augment" || view === "handoff";
@@ -246,7 +288,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
           <div className="rc-grp">Techniques · telco sample</div>
           <NavItem v="resolve">Ticket resolution</NavItem>
           <NavItem v="augment">Tool routing · short-list</NavItem>
-          <div className={`rc-item ${view === "handoff" ? "on" : ""}`} onClick={() => go("handoff")}>
+          <div className={`rc-item ${view === "handoff" ? "on" : ""}`} data-view="handoff" onClick={() => go("handoff")}>
             Human handoff{handoff && handoff.counts.handoff > 0 && <span className="bdg r">{handoff.counts.handoff}</span>}
           </div>
           <NavItem v="rules">Decision rules · review</NavItem>
@@ -257,7 +299,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
       </aside>
 
       {/* ---------- main ---------- */}
-      <main className="rc-main">
+      <main className="rc-main" key={routeKey} data-mounted={mounted ? "" : undefined}>{!mounted ? null : <>
         {view === "home" && <OverviewView onNavigate={go} />}
         {view === "agent" && <SalesAgentView tools={tools} toolOn={toolOn} />}
         {view === "toolbox" && <ToolboxView tools={tools} toolOn={toolOn} onToggle={toggleTool} onAllAito={setAllAito}
@@ -281,7 +323,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
                   <select className="rc-sel" value={active} onChange={(e) => pick(Number(e.target.value))}>
                     {SAMPLES.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
                   </select>
-                  <button className="rc-run" disabled={aitoLoading || llmLoading} onClick={() => resolve(text, sender)}>
+                  <button className="rc-run" disabled={aitoLoading || llmLoading} onClick={runCustom}>
                     {aitoLoading || llmLoading ? "Resolving…" : "▶ Resolve"}
                   </button>
                 </>
@@ -297,7 +339,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
         {view === "sales" && <SalesView onMeta={setSales} />}
 
         {view === "resolve" && (
-        <div className="rc-body">
+        <div className="rc-body" data-route="resolve" data-state={active >= 0 ? `sample=${active}` : "text"}>
           {/* KPIs */}
           <div className="rc-kpis">
             <div className="rc-kpi"><div className="kl">Aito · predict-first</div><div className="kv t">{aitoMs != null ? `${aitoMs.toFixed(0)}ms` : "—"}</div><div className="ks">two _predict calls · 0 LLM tokens</div></div>
@@ -377,7 +419,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
           <div className="rc-foot">Aito predictions, latency and cost are live (real _predict + a real gpt-5-mini call). LLM latency varies with load; Aito serves confident tickets from history (a cache hit) and falls through to the LLM on a miss.</div>
         </div>
         )}
-      </main>
+      </>}</main>
 
       {/* ---------- right Aito panel (adapts per view) ---------- */}
       {view === "resolve" ? (

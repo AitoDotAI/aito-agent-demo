@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { urlParams, writeUrlState } from "@/lib/route";
 import { WhyTip } from "@/components/prediction/WhyTip";
 
 type Cause = { field: string; value: string; lift: number; mode: "rate" | "share"; p_with: number; p_without: number };
@@ -153,8 +154,13 @@ const eur = (n: unknown) => "€" + Number(n ?? 0).toLocaleString("en-US");
 const toQS = (s: Seg) => Object.entries(s).filter(([, v]) => v && v !== "Any").map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
 
 export function CompanyDashboardView() {
-  const [seg, setSeg] = useState<Seg>(SAMPLES[0].s);
-  const [active, setActive] = useState(0);
+  // the segment from the URL (lib/route.ts); "Any" is left out of it
+  const [seg, setSeg] = useState<Seg>(() => {
+    const q = urlParams();
+    if (!["industry", "size", "plan"].some((k) => q.get(k))) return SAMPLES[0].s;
+    return { industry: q.get("industry") || "Any", size: q.get("size") || "Any", plan: q.get("plan") || "Any" };
+  });
+  const [active, setActive] = useState(() => SAMPLES.findIndex((x) => x.s.industry === seg.industry && x.s.size === seg.size && x.s.plan === seg.plan));
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -162,16 +168,18 @@ export function CompanyDashboardView() {
     setLoading(true);
     apiFetch<Sheet>(`/api/company-360?${toQS(s)}`).then(setSheet).catch(() => {}).finally(() => setLoading(false));
   }, []);
-  useEffect(() => { build(SAMPLES[0].s); }, [build]);
+  useEffect(() => { build(seg); }, [build]);
+  const toUrl = (s: Seg) => writeUrlState({ industry: s.industry === "Any" ? null : s.industry,
+                                            size: s.size === "Any" ? null : s.size, plan: s.plan === "Any" ? null : s.plan });
 
-  const set = (k: keyof Seg, v: string) => { const ns = { ...seg, [k]: v }; setSeg(ns); setActive(-1); };
-  const pick = (i: number) => { setActive(i); setSeg(SAMPLES[i].s); build(SAMPLES[i].s); };
+  const set = (k: keyof Seg, v: string) => { const ns = { ...seg, [k]: v }; setSeg(ns); setActive(-1); toUrl(ns); };
+  const pick = (i: number) => { setActive(i); setSeg(SAMPLES[i].s); build(SAMPLES[i].s); toUrl(SAMPLES[i].s); };
 
   const c = sheet?.customer;
   const prof = (c?.profile ?? {}) as Record<string, string | number>;
 
   return (
-    <div className="cd">
+    <div className="cd" data-route="company-data" data-state={`industry=${seg.industry}&size=${seg.size}&plan=${seg.plan}`}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="wrap">
         <div className="kick">Northwind Cloud · 360 Dashboard</div>

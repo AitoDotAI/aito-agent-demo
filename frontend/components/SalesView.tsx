@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { urlIndex, urlParams, writeUrlState } from "@/lib/route";
 
 type Driver = { field: string; value: string; lift: number };
 type Ref = { brief: string; effort_days: number; deal_size_band: string; region: string };
@@ -50,8 +51,12 @@ const winLabel = (p: number, base: number | null) => {
 export type SalesMeta = { loading: boolean; meeting_p: number | null; win_p: number | null };
 
 export function SalesView({ onMeta }: { onMeta?: (m: SalesMeta) => void }) {
-  const [profile, setProfile] = useState<Profile>(SAMPLES[0].p);
-  const [active, setActive] = useState(0);
+  // the sample, or an edited profile, from the URL (lib/route.ts)
+  const [active, setActive] = useState(() => urlIndex("sample", SAMPLES.length - 1));
+  const [profile, setProfile] = useState<Profile>(() => {
+    const base = SAMPLES[Math.max(0, active)].p, q = urlParams();
+    return Object.fromEntries(Object.keys(base).map((k) => [k, q.get(k) ?? base[k as keyof Profile]])) as Profile;
+  });
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -64,16 +69,22 @@ export function SalesView({ onMeta }: { onMeta?: (m: SalesMeta) => void }) {
       .catch(() => onMeta?.({ loading: false, meeting_p: null, win_p: null }))
       .finally(() => setLoading(false));
   }, [onMeta]);
-  useEffect(() => { build(SAMPLES[0].p); }, [build]);
+  useEffect(() => { build(profile); }, [build]);
 
-  const set = (k: keyof Profile, v: string) => { const np = { ...profile, [k]: v }; setProfile(np); setActive(-1); };
-  const pick = (i: number) => { setActive(i); setProfile(SAMPLES[i].p); build(SAMPLES[i].p); };
+  const set = (k: keyof Profile, v: string) => {
+    const np = { ...profile, [k]: v }; setProfile(np); setActive(-1);
+    writeUrlState({ sample: null, ...np });
+  };
+  const pick = (i: number) => {
+    setActive(i); setProfile(SAMPLES[i].p); build(SAMPLES[i].p);
+    writeUrlState({ sample: i, ...Object.fromEntries(Object.keys(SAMPLES[i].p).map((k) => [k, null])) });
+  };
 
   const w = sheet?.win;
   const wl = w ? winLabel(w.p, w.base_rate ?? null) : ["", ""];
 
   return (
-    <div className="sa">
+    <div className="sa" data-route="sales" data-state={active >= 0 ? `sample=${active}` : "custom"}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="wrap">
         <div className="kick">New opportunity</div>

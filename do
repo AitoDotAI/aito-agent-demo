@@ -15,6 +15,7 @@
 #   ./do bench-banking77 [models] the Aito vs LLM intent benchmark (scripts/bench_banking77/README.md);
 #                                 BENCH_DATASET=clinc150 for the pre-registered second dataset
 #   ./do screenshot-teaser        render assets/teaser.html → assets/teaser.png (1200×630)
+#   ./do e2e-links                cold-load every view's deep link in a fresh browser (no LLM spend)
 #   ./do product-sheet            compile docs/product-sheet/product-sheet.typ → PDF (needs typst)
 #   ./do screenshot-pages [...]   desktop full-page screenshots of given paths
 #   ./do inspect-mobile [...]     iPhone-sized screenshots of given paths
@@ -117,6 +118,20 @@ cmd_v2_parity() {
   uv run python -m scripts.v2_parity "http://127.0.0.1:$P1" "http://127.0.0.1:$P2"
 }
 
+cmd_e2e_links() {
+  # every view and its key state from a pasted URL, cold; the URL follows navigation; back/forward.
+  # Production shape (uvicorn serving frontend/out), with the LLM endpoint pointed at nothing.
+  [ -d frontend/node_modules ] || cmd_install
+  ( cd frontend && npx next build >/dev/null ) || return 1
+  local port=4105
+  OPENAI_MODEL_URL="http://127.0.0.1:9" AITO_API_VERSION=v2 uv run uvicorn src.app:app --host 127.0.0.1 --port $port >/tmp/e2e-links-backend.log 2>&1 &
+  local pid=$!
+  for _ in $(seq 1 30); do curl -sf "http://127.0.0.1:$port/health" >/dev/null && break; sleep 1; done
+  ( cd frontend && BASE_URL="http://127.0.0.1:$port" node scripts/e2e-deeplinks.cjs ); local rc=$?
+  kill $pid 2>/dev/null
+  return $rc
+}
+
 cmd_screenshot_teaser() {
   [ -d frontend/node_modules ] || cmd_install
   ( cd frontend && node scripts/screenshot-teaser.cjs )
@@ -171,6 +186,7 @@ case "${1:-help}" in
   v2-parity)           shift; cmd_v2_parity "$@" ;;
   v2-check)            shift; exec uv run python -m scripts.v2_check "$@" ;;
   screenshot-teaser)   shift; cmd_screenshot_teaser "$@" ;;
+  e2e-links)           shift; cmd_e2e_links "$@" ;;
   product-sheet)       shift; cmd_product_sheet "$@" ;;
   screenshot-pages)    shift; cmd_screenshot_pages "$@" ;;
   inspect-mobile)      shift; cmd_inspect_mobile "$@" ;;

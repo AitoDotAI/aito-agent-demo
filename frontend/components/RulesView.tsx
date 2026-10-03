@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { urlParam, writeUrlState } from "@/lib/route";
 
 type Cond = { field: string; op: string; value: string };
 type Rule = {
@@ -38,7 +39,7 @@ const cond = (c: Cond) =>
 const key = (r: Rule) => JSON.stringify(r.rule);
 
 export function RulesView() {
-  const [log, setLog] = useState("resolutions");
+  const [log, setLog] = useState(() => urlParam("log", "resolutions"));  // from the URL (lib/route.ts)
   const [data, setData] = useState<Mined | null>(null);
   const [active, setActive] = useState<Active | null | "error">(null);
   const [err, setErr] = useState<string | null>(null);
@@ -66,7 +67,7 @@ export function RulesView() {
   const inForce = active === "error" ? "n/a" : active ? active.rules.length : "—";
 
   return (
-    <div className="rc-body gv">
+    <div className="rc-body gv" data-route="rules" data-state={`log=${log}`}>
       <div className="rc-h">The rules your agent&apos;s decisions follow</div>
       <div className="rc-sub">
         Instead of reviewing thousands of decisions one by one, review the few rules they follow. <code>_relate</code> mines
@@ -77,7 +78,7 @@ export function RulesView() {
 
       <div className="gv-tabs" role="tablist" aria-label="Decision log">
         {Object.entries({ resolutions: "ticket resolutions", tool_calls: "tool routing" }).map(([k, label]) => (
-          <button key={k} role="tab" aria-selected={k === log} className={k === log ? "on" : ""} onClick={() => setLog(k)}>{label}</button>
+          <button key={k} role="tab" aria-selected={k === log} className={k === log ? "on" : ""} data-log={k} onClick={() => { setLog(k); writeUrlState({ log: k === "resolutions" ? null : k }); }}>{label}</button>
         ))}
       </div>
 
