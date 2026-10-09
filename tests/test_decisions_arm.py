@@ -79,8 +79,23 @@ def test_a_client_error_fails_the_call_and_does_not_retry(monkeypatch):
     assert len(calls) == 1
 
 
-def test_no_key_means_no_call(monkeypatch):
+def test_without_an_openai_key_it_uses_the_azure_resource(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_MODEL_URL", "https://example.cognitive.microsoft.com/")
+    monkeypatch.setenv("OPENAI_MODEL_API_KEY", "az-test")
+    seen = {}
+
+    def handler(req):
+        seen["url"], seen["key"] = str(req.url), req.headers.get("api-key")
+        return httpx.Response(200, json=ANSWER)
+
+    decisions.decide("gpt-6-luna", "?", "m", LABELS, _client(handler))
+    assert seen == {"url": "https://example.cognitive.microsoft.com/openai/v1/decisions", "key": "az-test"}
+
+
+def test_no_key_means_no_call(monkeypatch):
+    for v in ("OPENAI_API_KEY", "OPENAI_MODEL_URL", "OPENAI_MODEL_API_KEY"):
+        monkeypatch.delenv(v, raising=False)
 
     def handler(req):
         raise AssertionError("a request was sent without a key")

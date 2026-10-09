@@ -31,6 +31,7 @@ import sys
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import urlparse
 
 from common import CFG, DATASET, RESULTS, ROOT, jsonl, labels, sample, split
 
@@ -125,6 +126,15 @@ def llm_arm(model: str, q: dict, allowed: list[str], examples=None, aito=None, e
 DECISIONS_INSTRUCTIONS = f"Which one intent does this message from {CFG['domain']} express?"
 
 
+def _decisions_endpoint() -> str | None:
+    from decisions import target
+    try:
+        url, _, who = target()
+    except SystemExit:
+        return None
+    return f"Decisions API on {who}, {urlparse(url).hostname}"
+
+
 def decisions_text(q: dict, examples: list[dict] | None = None) -> str:
     """The Decisions input: the message, after the similar past queries for the RAG arm. The label
     list goes in the question's choices, not here."""
@@ -188,7 +198,7 @@ def main() -> int:
     from urllib.parse import urlparse
     llm_url = os.environ.get("OPENAI_MODEL_URL")
     here = {"aito": f"{urlparse(c.api_url).hostname}, Aito v2" if c is not None else None,
-            "decisions": f"OpenAI Decisions API, {urlparse(os.environ.get('OPENAI_BASE_URL', 'https://api.openai.com/v1')).hostname}",
+            "decisions": _decisions_endpoint(),
             "llm": f"Azure OpenAI, {urlparse(llm_url).hostname}" if llm_url else "OpenAI"}
 
     def record_endpoints_for(arm: str) -> None:

@@ -93,8 +93,9 @@ cmd_bench_decisions() {
     dry-run)
       for d in banking77 clinc150; do BENCH_DATASET=$d uv run --with tiktoken python "$b/run.py" --dry-run; done ;;
     smoke)
-      BANKING77_RESULTS=/tmp/dec-smoke uv run --with 'aitoai>=1.0' python "$b/run.py" --arms decisions_zero --limit 3 &&
-        say "answers in /tmp/dec-smoke/runs/decisions_zero.gpt-6-luna.jsonl" ;;
+      local f=/tmp/dec-smoke/runs/decisions_zero.gpt-6-luna.jsonl
+      BANKING77_RESULTS=/tmp/dec-smoke uv run --with 'aitoai>=1.0' python "$b/run.py" --arms decisions_zero --limit 3
+      [ -s "$f" ] && say "answers in $f" || die "no answers: every call failed (see above)" ;;
     run)
       for d in banking77 clinc150; do
         BENCH_DATASET=$d uv run --with 'aitoai>=1.0' python "$b/run.py" --arms decisions_zero decisions_rag || return 1

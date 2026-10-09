@@ -59,12 +59,22 @@ def parse(answer: dict, allowed: list[str]) -> dict:
             "p": round(float(conf), 4) if conf is not None else (top[0]["p"] if top else None), "top": top}
 
 
+def target() -> tuple[str, dict, str]:
+    """Where the call goes: OpenAI with OPENAI_API_KEY, else the Azure OpenAI resource the other
+    LLM arms use (OPENAI_MODEL_URL + OPENAI_MODEL_API_KEY, its v1 API; the model is the deployment)."""
+    if os.environ.get("OPENAI_API_KEY"):
+        base = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
+        return base + "/decisions", {"Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}"}, "OpenAI"
+    url, key = os.environ.get("OPENAI_MODEL_URL"), os.environ.get("OPENAI_MODEL_API_KEY")
+    if url and key:
+        return url.rstrip("/") + "/openai/v1/decisions", {"api-key": key}, "Azure OpenAI"
+    raise SystemExit("no key: set OPENAI_API_KEY, or OPENAI_MODEL_URL + OPENAI_MODEL_API_KEY for Azure "
+                     "(environment or the repo's dotenv file)")
+
+
 def decide(model: str, instructions: str, text: str, allowed: list[str], client: httpx.Client | None = None) -> dict:
     """One Decisions call. Returns pred/p/top, input tokens, the call's ms and the backoff ms."""
-    key = os.environ.get("OPENAI_API_KEY")
-    if not key:
-        raise SystemExit("OPENAI_API_KEY is not set (environment or the repo's dotenv file): the Decisions arm calls api.openai.com directly with it, never with the Azure key")
-    url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/") + "/decisions"
+    url, headers, _ = target()
     body = request_body(model, instructions, text, allowed)
     own = client is None
     client = client or httpx.Client(timeout=60)
@@ -73,7 +83,7 @@ def decide(model: str, instructions: str, text: str, allowed: list[str], client:
         for _ in range(8):
             t0 = time.perf_counter()
             try:
-                r = client.post(url, json=body, headers={"Authorization": f"Bearer {key}"})
+                r = client.post(url, json=body, headers=headers)
             except (httpx.TransportError, httpx.TimeoutException) as e:
                 last = e
             else:
