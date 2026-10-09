@@ -63,7 +63,7 @@ def decide(model: str, instructions: str, text: str, allowed: list[str], client:
     """One Decisions call. Returns pred/p/top, input tokens, the call's ms and the backoff ms."""
     key = os.environ.get("OPENAI_API_KEY")
     if not key:
-        raise SystemExit("OPENAI_API_KEY is not set: the Decisions arm calls api.openai.com directly, key from the environment only")
+        raise SystemExit("OPENAI_API_KEY is not set (environment or the repo's dotenv file): the Decisions arm calls api.openai.com directly with it, never with the Azure key")
     url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/") + "/decisions"
     body = request_body(model, instructions, text, allowed)
     own = client is None
