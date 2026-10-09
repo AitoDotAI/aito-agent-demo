@@ -1,5 +1,13 @@
 {
  "aito": "shared.aito.ai, Aito v2",
  "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com",
- "note": "written 2026-09-30 for the runs recorded before run.py wrote this file; the same endpoints throughout"
+ "note": "written 2026-09-30 for the runs recorded before run.py wrote this file; the same endpoints throughout",
+ "per_arm": {
+  "decisions_zero.gpt-6-luna": {
+   "decisions": "Decisions API on OpenAI, api.openai.com"
+  },
+  "decisions_rag.gpt-6-luna": {
+   "decisions": "Decisions API on OpenAI, api.openai.com"
+  }
+ }
 }

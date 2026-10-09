@@ -30,6 +30,8 @@ sha256 hashes.
 | `llm_zero.<model>` | the LLM | the 77 intent labels and the message |
 | `llm_rag.<model>` | the LLM | the labels, the message, and the 10 most similar training messages with their intents (text-embedding-3-large, 256 dimensions, cosine) |
 | `aito_llm.<model>` | the LLM | the labels, the message, Aito's top 5 intents with their probabilities, and the words behind the top one (`$why`); it may overrule Aito |
+| `decisions_zero.<model>` | the OpenAI Decisions API (`/v1/decisions`, opt-in) | one `choice` question over the labels, and the message (`PREREGISTRATION-decisions.md`) |
+| `decisions_rag.<model>` | the Decisions API | the same, with the 10 most similar training messages |
 | gated (planned) | Aito, or `aito_llm` when Aito's probability is below a threshold | the threshold is chosen on one half of the sample and scored on the other |
 | gated, RAG fallback (post hoc) | Aito, or `llm_rag` below the threshold | the same, added after the first results were seen, so labelled post hoc |
 
@@ -44,6 +46,17 @@ every command below; its files go to `data/clinc150/` and `results/clinc150/`.
 
 **Memorisation.** `contamination.py` checks whether the models can reproduce the
 datasets (label recall, and completing held-out messages); see RESULTS.md.
+
+The Decisions arms are opt-in and call `api.openai.com` directly with `OPENAI_API_KEY` from the
+environment. `run.py --dry-run` prints their token and cost estimate without a call or a key:
+
+```bash
+uv run --with tiktoken python scripts/bench_banking77/run.py --dry-run                       # banking77
+BENCH_DATASET=clinc150 uv run --with tiktoken python scripts/bench_banking77/run.py --dry-run
+BANKING77_RESULTS=/tmp/dec-smoke uv run --with 'aitoai>=1.0' python scripts/bench_banking77/run.py \
+  --arms decisions_zero --limit 3                                                            # 3 paid calls
+uv run --with 'aitoai>=1.0' python scripts/bench_banking77/run.py --arms decisions_zero decisions_rag   # the run
+```
 
 ## What is measured
 
@@ -60,7 +73,8 @@ datasets (label recall, and completing held-out messages); see RESULTS.md.
   vector search, which ran in pure Python here and takes milliseconds in a vector
   database.
 - **Calibration** of Aito's probability on the full test set: the expected
-  calibration error, and stated vs actual accuracy per bin.
+  calibration error, and stated vs actual accuracy per bin. Arms that state a
+  probability (Aito, the Decisions API) are also scored on the sample (`calibration_on_sample`).
 
 ## Reproduce it
 

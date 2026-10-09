@@ -17,13 +17,15 @@
   "note": "every arm is scored on these same queries, so the comparisons are paired"
  },
  "measured_at": "2026-09-30T08:53:00+00:00",
- "summarized_at": "2026-09-30T12:36:24+00:00",
+ "summarized_at": "2026-10-09T05:16:26+00:00",
  "run_files_last_written": {
   "aito": "2026-09-30T11:34:12+00:00",
   "aito_full": "2026-09-30T11:34:12+00:00",
   "aito_llm.gpt-5-mini": "2026-09-30T11:34:12+00:00",
   "aito_llm.gpt-5.4": "2026-09-30T11:34:12+00:00",
   "aito_llm.gpt-6-luna": "2026-09-30T11:34:12+00:00",
+  "decisions_rag.gpt-6-luna": "2026-10-09T05:16:24+00:00",
+  "decisions_zero.gpt-6-luna": "2026-10-09T05:14:59+00:00",
   "llm_rag.gpt-5-mini": "2026-09-30T11:34:12+00:00",
   "llm_rag.gpt-5.4": "2026-09-30T11:34:12+00:00",
   "llm_rag.gpt-6-luna": "2026-09-30T11:34:12+00:00",
@@ -44,6 +46,66 @@
     "p50": 67.3,
     "p95": 124.5,
     "mean": 75.3
+   },
+   "calibration_on_sample": {
+    "ece": 0.0401,
+    "bins": [
+     {
+      "bin": "0.1-0.2",
+      "n": 5,
+      "stated": 0.155,
+      "right": 0.0
+     },
+     {
+      "bin": "0.2-0.3",
+      "n": 21,
+      "stated": 0.256,
+      "right": 0.571
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 15,
+      "stated": 0.357,
+      "right": 0.533
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 35,
+      "stated": 0.458,
+      "right": 0.457
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 42,
+      "stated": 0.556,
+      "right": 0.5
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 34,
+      "stated": 0.649,
+      "right": 0.676
+     },
+     {
+      "bin": "0.7-0.8",
+      "n": 30,
+      "stated": 0.74,
+      "right": 0.9
+     },
+     {
+      "bin": "0.8-0.9",
+      "n": 54,
+      "stated": 0.86,
+      "right": 0.796
+     },
+     {
+      "bin": "0.9-1.0",
+      "n": 380,
+      "stated": 0.977,
+      "right": 0.968
+     }
+    ],
+    "answers_without_probability": 0
    },
    "llm": {
     "calls_per_query": 0.0,
@@ -71,6 +133,8 @@
     "input_tokens_per_query": 543,
     "output_tokens_per_query": 36,
     "usd_per_1000_queries": 0.207,
+    "usd_per_1m_decisions": 207.27,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 1,
     "rate_limit_backoff_ms_total": 1034000
    }
@@ -94,6 +158,8 @@
     "input_tokens_per_query": 543,
     "output_tokens_per_query": 44,
     "usd_per_1000_queries": null,
+    "usd_per_1m_decisions": null,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 0
    }
@@ -117,6 +183,178 @@
     "input_tokens_per_query": 543,
     "output_tokens_per_query": 42,
     "usd_per_1000_queries": null,
+    "usd_per_1m_decisions": null,
+    "tokens_estimated_for": 0,
+    "invalid_label_answers": 0,
+    "rate_limit_backoff_ms_total": 0
+   }
+  },
+  "decisions_rag.gpt-6-luna": {
+   "n": 616,
+   "right": 584,
+   "accuracy": 0.9481,
+   "ci95": [
+    0.9276,
+    0.963
+   ],
+   "latency_ms": {
+    "p50": 299.4,
+    "p95": 489.6,
+    "mean": 323.9
+   },
+   "calibration_on_sample": {
+    "ece": 0.0189,
+    "bins": [
+     {
+      "bin": "0.1-0.2",
+      "n": 1,
+      "stated": 0.18,
+      "right": 0.0
+     },
+     {
+      "bin": "0.2-0.3",
+      "n": 2,
+      "stated": 0.235,
+      "right": 0.0
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 4,
+      "stated": 0.438,
+      "right": 0.0
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 9,
+      "stated": 0.542,
+      "right": 0.556
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 6,
+      "stated": 0.648,
+      "right": 0.667
+     },
+     {
+      "bin": "0.7-0.8",
+      "n": 7,
+      "stated": 0.75,
+      "right": 0.714
+     },
+     {
+      "bin": "0.8-0.9",
+      "n": 20,
+      "stated": 0.863,
+      "right": 0.7
+     },
+     {
+      "bin": "0.9-1.0",
+      "n": 567,
+      "stated": 0.99,
+      "right": 0.981
+     }
+    ],
+    "answers_without_probability": 0
+   },
+   "llm": {
+    "calls_per_query": 1.0,
+    "tokens_per_query": 873,
+    "input_tokens_per_query": 873,
+    "output_tokens_per_query": 0,
+    "usd_per_1000_queries": 0.087,
+    "usd_per_1m_decisions": 87.31,
+    "tokens_estimated_for": 0,
+    "invalid_label_answers": 0,
+    "rate_limit_backoff_ms_total": 0
+   }
+  },
+  "decisions_zero.gpt-6-luna": {
+   "n": 616,
+   "right": 480,
+   "accuracy": 0.7792,
+   "ci95": [
+    0.7448,
+    0.8102
+   ],
+   "latency_ms": {
+    "p50": 129.2,
+    "p95": 179.1,
+    "mean": 150.9
+   },
+   "calibration_on_sample": {
+    "ece": 0.077,
+    "bins": [
+     {
+      "bin": "0.0-0.1",
+      "n": 1,
+      "stated": 0.08,
+      "right": 1.0
+     },
+     {
+      "bin": "0.1-0.2",
+      "n": 6,
+      "stated": 0.148,
+      "right": 0.0
+     },
+     {
+      "bin": "0.2-0.3",
+      "n": 15,
+      "stated": 0.245,
+      "right": 0.2
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 14,
+      "stated": 0.345,
+      "right": 0.571
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 34,
+      "stated": 0.448,
+      "right": 0.471
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 30,
+      "stated": 0.543,
+      "right": 0.6
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 32,
+      "stated": 0.651,
+      "right": 0.438
+     },
+     {
+      "bin": "0.7-0.8",
+      "n": 47,
+      "stated": 0.744,
+      "right": 0.638
+     },
+     {
+      "bin": "0.8-0.9",
+      "n": 66,
+      "stated": 0.851,
+      "right": 0.697
+     },
+     {
+      "bin": "0.9-1.0",
+      "n": 371,
+      "stated": 0.974,
+      "right": 0.927
+     }
+    ],
+    "answers_without_probability": 0
+   },
+   "llm": {
+    "calls_per_query": 1.0,
+    "tokens_per_query": 663,
+    "input_tokens_per_query": 663,
+    "output_tokens_per_query": 0,
+    "usd_per_1000_queries": 0.066,
+    "usd_per_1m_decisions": 66.26,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 0
    }
@@ -140,6 +378,8 @@
     "input_tokens_per_query": 658,
     "output_tokens_per_query": 26,
     "usd_per_1000_queries": 0.216,
+    "usd_per_1m_decisions": 216.22,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 828000
    }
@@ -163,6 +403,8 @@
     "input_tokens_per_query": 658,
     "output_tokens_per_query": 34,
     "usd_per_1000_queries": null,
+    "usd_per_1m_decisions": null,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 0
    }
@@ -186,6 +428,8 @@
     "input_tokens_per_query": 658,
     "output_tokens_per_query": 28,
     "usd_per_1000_queries": null,
+    "usd_per_1m_decisions": null,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 0
    }
@@ -209,6 +453,8 @@
     "input_tokens_per_query": 448,
     "output_tokens_per_query": 45,
     "usd_per_1000_queries": 0.202,
+    "usd_per_1m_decisions": 202.44,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 932000
    }
@@ -232,6 +478,8 @@
     "input_tokens_per_query": 448,
     "output_tokens_per_query": 52,
     "usd_per_1000_queries": null,
+    "usd_per_1m_decisions": null,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 0
    }
@@ -255,6 +503,8 @@
     "input_tokens_per_query": 448,
     "output_tokens_per_query": 54,
     "usd_per_1000_queries": null,
+    "usd_per_1m_decisions": null,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 0
    }
@@ -359,6 +609,16 @@
    "only_second_right": 49,
    "p": 2.44e-05
   },
+  "decisions_rag.gpt-6-luna": {
+   "only_first_right": 9,
+   "only_second_right": 75,
+   "p": 4.31e-14
+  },
+  "decisions_zero.gpt-6-luna": {
+   "only_first_right": 91,
+   "only_second_right": 53,
+   "p": 0.00194
+  },
   "llm_rag.gpt-5-mini": {
    "only_first_right": 11,
    "only_second_right": 75,
@@ -389,7 +649,7 @@
    "only_second_right": 60,
    "p": 0.721
   },
-  "bonferroni_threshold": 0.00556,
+  "bonferroni_threshold": 0.00455,
   "note": "only_first_right = Aito right, the other wrong. A p below the threshold is a difference at this n; above it, it is not shown."
  },
  "gated": {
@@ -491,6 +751,34 @@
       "only_first_right": 10,
       "only_second_right": 12,
       "p": 0.832
+     }
+    },
+    "decisions_rag.gpt-6-luna": {
+     "n": 308,
+     "right": 289,
+     "accuracy": 0.9383,
+     "ci95": [
+      0.9057,
+      0.9602
+     ],
+     "paired": {
+      "only_first_right": 3,
+      "only_second_right": 22,
+      "p": 0.000157
+     }
+    },
+    "decisions_zero.gpt-6-luna": {
+     "n": 308,
+     "right": 239,
+     "accuracy": 0.776,
+     "ci95": [
+      0.7262,
+      0.819
+     ],
+     "paired": {
+      "only_first_right": 38,
+      "only_second_right": 7,
+      "p": 3.12e-06
      }
     },
     "llm_rag.gpt-5-mini": {
@@ -682,6 +970,34 @@
       "p": 0.21
      }
     },
+    "decisions_rag.gpt-6-luna": {
+     "n": 308,
+     "right": 289,
+     "accuracy": 0.9383,
+     "ci95": [
+      0.9057,
+      0.9602
+     ],
+     "paired": {
+      "only_first_right": 6,
+      "only_second_right": 17,
+      "p": 0.0347
+     }
+    },
+    "decisions_zero.gpt-6-luna": {
+     "n": 308,
+     "right": 239,
+     "accuracy": 0.776,
+     "ci95": [
+      0.7262,
+      0.819
+     ],
+     "paired": {
+      "only_first_right": 42,
+      "only_second_right": 3,
+      "p": 8.65e-10
+     }
+    },
     "llm_rag.gpt-5-mini": {
      "n": 308,
      "right": 288,
@@ -869,6 +1185,34 @@
       "only_first_right": 3,
       "only_second_right": 1,
       "p": 0.625
+     }
+    },
+    "decisions_rag.gpt-6-luna": {
+     "n": 308,
+     "right": 289,
+     "accuracy": 0.9383,
+     "ci95": [
+      0.9057,
+      0.9602
+     ],
+     "paired": {
+      "only_first_right": 4,
+      "only_second_right": 19,
+      "p": 0.0026
+     }
+    },
+    "decisions_zero.gpt-6-luna": {
+     "n": 308,
+     "right": 239,
+     "accuracy": 0.776,
+     "ci95": [
+      0.7262,
+      0.819
+     ],
+     "paired": {
+      "only_first_right": 42,
+      "only_second_right": 7,
+      "p": 3.62e-07
      }
     },
     "llm_rag.gpt-5-mini": {
@@ -1060,6 +1404,34 @@
       "p": 0.00813
      }
     },
+    "decisions_rag.gpt-6-luna": {
+     "n": 308,
+     "right": 289,
+     "accuracy": 0.9383,
+     "ci95": [
+      0.9057,
+      0.9602
+     ],
+     "paired": {
+      "only_first_right": 6,
+      "only_second_right": 8,
+      "p": 0.791
+     }
+    },
+    "decisions_zero.gpt-6-luna": {
+     "n": 308,
+     "right": 239,
+     "accuracy": 0.776,
+     "ci95": [
+      0.7262,
+      0.819
+     ],
+     "paired": {
+      "only_first_right": 52,
+      "only_second_right": 4,
+      "p": 1.1e-11
+     }
+    },
     "llm_rag.gpt-5-mini": {
      "n": 308,
      "right": 288,
@@ -1247,6 +1619,34 @@
       "only_first_right": 19,
       "only_second_right": 4,
       "p": 0.0026
+     }
+    },
+    "decisions_rag.gpt-6-luna": {
+     "n": 308,
+     "right": 289,
+     "accuracy": 0.9383,
+     "ci95": [
+      0.9057,
+      0.9602
+     ],
+     "paired": {
+      "only_first_right": 6,
+      "only_second_right": 8,
+      "p": 0.791
+     }
+    },
+    "decisions_zero.gpt-6-luna": {
+     "n": 308,
+     "right": 239,
+     "accuracy": 0.776,
+     "ci95": [
+      0.7262,
+      0.819
+     ],
+     "paired": {
+      "only_first_right": 52,
+      "only_second_right": 4,
+      "p": 1.1e-11
      }
     },
     "llm_rag.gpt-5-mini": {
@@ -1438,6 +1838,34 @@
       "p": 0.00592
      }
     },
+    "decisions_rag.gpt-6-luna": {
+     "n": 308,
+     "right": 289,
+     "accuracy": 0.9383,
+     "ci95": [
+      0.9057,
+      0.9602
+     ],
+     "paired": {
+      "only_first_right": 4,
+      "only_second_right": 6,
+      "p": 0.754
+     }
+    },
+    "decisions_zero.gpt-6-luna": {
+     "n": 308,
+     "right": 239,
+     "accuracy": 0.776,
+     "ci95": [
+      0.7262,
+      0.819
+     ],
+     "paired": {
+      "only_first_right": 52,
+      "only_second_right": 4,
+      "p": 1.1e-11
+     }
+    },
     "llm_rag.gpt-5-mini": {
      "n": 308,
      "right": 288,
@@ -1535,6 +1963,13 @@
    "source": "gpt-5-mini list price, as in src/llm_agent.py (PRICE_IN/PRICE_OUT); check it against your provider"
   }
  },
+ "decisions_prices": {
+  "gpt-6-luna": {
+   "in": 0.1,
+   "out": 0.0,
+   "source": "https://developers.openai.com/api/docs/guides/decisions, read 2026-10-07"
+  }
+ },
  "rag_retriever": {
   "model": "text-embedding-3-large",
   "dimensions": 256,
@@ -1562,6 +1997,12 @@
     "aito": "shared.aito.ai, Aito v2",
     "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
    },
+   "decisions_rag.gpt-6-luna": {
+    "decisions": "Decisions API on OpenAI, api.openai.com"
+   },
+   "decisions_zero.gpt-6-luna": {
+    "decisions": "Decisions API on OpenAI, api.openai.com"
+   },
    "llm_rag.gpt-5-mini": {
     "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
    },
@@ -1581,6 +2022,7 @@
     "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
    }
   },
+  "decisions": "Decisions API on OpenAI, api.openai.com",
   "aito_engine": [
    {
     "version": "2.11.0",

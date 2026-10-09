@@ -165,3 +165,50 @@ probes this cheaply, with metrics fixed before the first run
 No sign of verbatim memorisation. That does not rule out that the models saw the
 data in training and generalise from it; a private or freshly written dataset is
 the stronger test.
+
+# The OpenAI Decisions API (2026-10-09)
+
+Added after the results above, on the same samples (616 banking77, 600 CLINC150),
+pre-registered in `PREREGISTRATION-decisions.md` before any call. gpt-6-luna on
+`POST /v1/decisions` (api.openai.com; the Azure resource the other arms use does not
+serve it), one `choice` question over the labels. `decisions_rag` adds the same 10
+nearest training messages `llm_rag` gets; its latency includes the embedding call
+(median about 110 ms).
+
+| arm | banking77 | CLINC150 | p50 / p95 ms | ECE on sample | cost per 1M decisions |
+|---|---|---|---|---|---|
+| `aito` | 84.1% | 86.5% | 67 / 125 · 69 / 106 | 0.040 · 0.032 | no LLM spend |
+| `decisions_zero` | 77.9% | 88.3% | 129 / 179 · 134 / 219 | 0.077 · 0.045 | $66 · $90 |
+| `llm_zero.gpt-6-luna` | 83.3% | 94.0% | 867 / 1445 · 828 / 1292 | not stated | no listed price |
+| `decisions_rag` | 94.8% | 97.8% | 299 / 490 · 335 / 574 | 0.019 · 0.012 | $87 · $107 |
+| `llm_rag.gpt-6-luna` | 94.6% | 98.2% | 898 / 1731 · 883 / 1341 | not stated | no listed price |
+
+(banking77 · CLINC150 where a cell has two. Cost is input tokens from the response's
+`usage`, at $0.10 per 1M, embedding not included.)
+
+- **With retrieval, the Decisions API matches LLM + RAG and is about 3x faster.**
+  `decisions_rag` vs `llm_rag.gpt-6-luna`: 9 vs 8 and 3 vs 5 discordant queries
+  (McNemar p = 1.0, 0.73). Both are well ahead of Aito alone (p < 1e-13 on both).
+- **Zero-shot, it is worse than the same model through chat.** `decisions_zero` vs
+  `llm_zero.gpt-6-luna`: 15 vs 48 and 3 vs 37 (p = 4e-5, 2e-8). Against Aito it is
+  behind on banking77 (p = 0.002, under the Bonferroni 0.0045) and level on CLINC150
+  (p = 0.32). Our first pre-registered expectation (within noise of the chat arm)
+  held for the RAG variant and failed for zero-shot.
+- **Its stated confidence is well calibrated with retrieval** (ECE 0.019 and 0.012,
+  better than Aito's 0.040 and 0.032 on the same queries) and overconfident without
+  it (0.077: answers stated at 0.6-0.7 were right 44% of the time). A paired bootstrap
+  over the queries puts Aito's minus `decisions_rag`'s ECE at 0.003 to 0.048 (banking77)
+  and 0.007 to 0.045 (CLINC150), so the difference is real but its size is uncertain.
+- **Two ECEs for Aito, both right.** Aito's published calibration (0.018 banking77,
+  0.020 CLINC150) is on the full test splits (3,073 and 4,498 answers). The 0.040 and
+  0.032 above are the same answers, restricted to the ~600 sampled queries so every arm
+  is scored on the same ones. Binned ECE grows as n shrinks: random 616-query subsets of
+  Aito's own full-test answers give a median of 0.030 (90% range 0.018 to 0.044). Compare
+  arms at the same n; quote the full-split figure for Aito's calibration on its own.
+- **Deterministic.** Two complete runs gave the same answer and the same confidence on
+  every query. One CLINC150 answer was a refusal (scored wrong, left out of ECE).
+- **Latency, measured twice.** The first run opened a new connection per call and this
+  workstation's DNS resolver stalls 5 s on a few percent of lookups, which put p95 at
+  5.2 s. That run is kept (`runs/decisions_run1_client_per_call/`) for its answers;
+  the table is the second run, with one reused connection, as the other arms have.
+- Spend for both runs and the smoke: about $0.43.

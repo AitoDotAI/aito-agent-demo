@@ -10,6 +10,11 @@ Arms, for each LLM in --models:
   aito_llm       the LLM with the labels, the message, and Aito's top 5 intents
                  with their $p and the words that drove the top one ($why). The
                  full label list stays allowed, so the LLM can overrule Aito.
+Opt-in, never in the default --arms (they spend on api.openai.com; OPENAI_API_KEY from the environment):
+  decisions_zero OpenAI Decisions API (`POST /v1/decisions`, decisions.py): one `choice` question over
+                 the labels, given the message. The model is --decisions-models (gpt-6-luna).
+  decisions_rag  the same, with the 10 most similar training queries in the input, like llm_rag.
+  --dry-run      builds those requests and prints the token and cost estimate; no calls, no key needed.
 The gated arm (Aito when its $p clears a threshold, aito_llm otherwise) needs no
 calls of its own: summarize.py derives it, with the threshold chosen on one half
 of the sample and scored on the other.
@@ -26,6 +31,7 @@ import sys
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import urlparse
 
 from common import CFG, DATASET, RESULTS, ROOT, jsonl, labels, sample, split
 
@@ -39,7 +45,9 @@ SYSTEM = (f"You classify one customer message from {CFG['domain']} into exactly 
 
 def uses(arm: str) -> set[str]:
     """Which endpoints an arm's answers come from: aito, aito_full -> Aito; llm_* -> the LLM;
-    aito_llm.* -> both."""
+    aito_llm.* -> both; decisions_* -> the Decisions API."""
+    if arm.startswith("decisions"):
+        return {"decisions"}
     return ({"aito"} if arm.startswith("aito") else set()) | ({"llm"} if "." in arm else set())
 
 
@@ -115,6 +123,52 @@ def llm_arm(model: str, q: dict, allowed: list[str], examples=None, aito=None, e
             "llm_ms": r["ms"], "backoff_ms": r["backoff_ms"], "ms": round(r["ms"] + extra_ms, 1)}
 
 
+DECISIONS_INSTRUCTIONS = f"Which one intent does this message from {CFG['domain']} express?"
+
+
+def _decisions_endpoint() -> str | None:
+    from decisions import target
+    try:
+        url, _, who = target()
+    except SystemExit:
+        return None
+    return f"Decisions API on {who}, {urlparse(url).hostname}"
+
+
+def decisions_text(q: dict, examples: list[dict] | None = None) -> str:
+    """The Decisions input: the message, after the similar past queries for the RAG arm. The label
+    list goes in the question's choices, not here."""
+    if not examples:
+        return f"Message: {q['text']}"
+    return "\n".join(["Similar past messages and their intents:"] + [f'- "{e["text"]}" -> {e["intent"]}' for e in examples]
+                     + ["", f"Message: {q['text']}"])
+
+
+def decisions_arm(model: str, q: dict, allowed: list[str], examples=None, extra_ms: float = 0.0) -> dict:
+    from decisions import decide, usd as dusd
+    r = decide(model, DECISIONS_INSTRUCTIONS, decisions_text(q, examples), allowed)
+    return {**r, "usd": dusd(model, r["in"], r["out"]), "ms": round(r["ms"] + extra_ms, 1)}
+
+
+def dry_run(picked: list[dict], train: list[dict], allowed: list[str], models: list[str], arms: list[str]) -> None:
+    """Token and cost estimate of the Decisions arms with no call. The RAG arm's examples are 10 random
+    training queries (the real ones need the query's embedding, a paid call), so its count is approximate."""
+    import random
+    from decisions import estimate_tokens, request_body, usd as dusd
+    rng = random.Random(1)
+    for model in models:
+        for arm in arms:
+            toks = []
+            for q in picked:
+                ex = rng.sample(train, K_RAG) if arm == "decisions_rag" else None
+                toks.append(estimate_tokens(request_body(model, DECISIONS_INSTRUCTIONS, decisions_text(q, ex), allowed)))
+            total, cost = sum(toks), dusd(model, sum(toks))
+            print(f"{DATASET} {arm}.{model}: {len(picked)} queries, ~{total / len(picked):.0f} input tokens each, "
+                  f"~{total:,} in all, ~${cost:.3f}" if cost is not None else f"{arm}.{model}: no price listed")
+            if cost is not None:
+                print(f"    per 1M decisions at this size: ~${cost / len(picked) * 1e6:,.0f}")
+
+
 def main() -> int:
     sys.path.insert(0, str(ROOT))
     import src.config  # noqa: F401  (loads .env: Aito and the LLM endpoint)
@@ -122,6 +176,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--models", nargs="+", default=["gpt-5-mini"])
     ap.add_argument("--arms", nargs="+", default=["aito_full", "aito", "llm_zero", "llm_rag", "aito_llm"])
+    ap.add_argument("--decisions-models", nargs="+", default=["gpt-6-luna"])
+    ap.add_argument("--dry-run", action="store_true", help="estimate the Decisions arms' tokens and cost; no calls")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--limit", type=int, default=0, help="only the first N sampled queries (a smoke run)")
     args = ap.parse_args()
@@ -131,6 +187,9 @@ def main() -> int:
     picked = sample(test)
     if args.limit:
         picked = picked[:args.limit]
+    if args.dry_run:
+        dry_run(picked, train, allowed, args.decisions_models, [a for a in ("decisions_zero", "decisions_rag") if a in args.arms] or ["decisions_zero", "decisions_rag"])
+        return 0
     RUNS.mkdir(parents=True, exist_ok=True)
     needs_aito = {"aito_full", "aito", "aito_llm"} & set(args.arms)
     c, coll = _aito() if needs_aito else (None, None)
@@ -139,6 +198,7 @@ def main() -> int:
     from urllib.parse import urlparse
     llm_url = os.environ.get("OPENAI_MODEL_URL")
     here = {"aito": f"{urlparse(c.api_url).hostname}, Aito v2" if c is not None else None,
+            "decisions": _decisions_endpoint(),
             "llm": f"Azure OpenAI, {urlparse(llm_url).hostname}" if llm_url else "OpenAI"}
 
     def record_endpoints_for(arm: str) -> None:
@@ -184,7 +244,7 @@ def main() -> int:
     aito_rows = jsonl(RUNS / "aito.jsonl")
 
     index = None
-    if "llm_rag" in args.arms:
+    if {"llm_rag", "decisions_rag"} & set(args.arms):
         from embed import DIMENSIONS, EMBED_MODEL, load_index, nearest
         from llm import embed
         index = load_index()
@@ -208,6 +268,19 @@ def main() -> int:
             run(f"aito_llm.{tag}", picked,
                 lambda q: {**llm_arm(model, q, allowed, aito=aito_rows[q["qid"]], extra_ms=aito_rows[q["qid"]]["ms"]),
                            "aito_ms": aito_rows[q["qid"]]["ms"]}, args.workers)
+
+    for model in args.decisions_models:
+        tag = model.replace("/", "_")
+        if "decisions_zero" in args.arms:
+            run(f"decisions_zero.{tag}", picked, lambda q: decisions_arm(model, q, allowed), args.workers)
+        if "decisions_rag" in args.arms:
+            def drag(q):
+                vec, _, embed_ms = embed(EMBED_MODEL, [q["text"]], DIMENSIONS)
+                rows, vectors = index
+                examples = [rows[i] for i in nearest(vec[0], vectors, K_RAG)]
+                return {**decisions_arm(model, q, allowed, examples=examples, extra_ms=embed_ms),
+                        "embed_ms": round(embed_ms, 1), "examples_hit": sum(e["intent"] == q["intent"] for e in examples)}
+            run(f"decisions_rag.{tag}", picked, drag, args.workers)
     return 0
 
 

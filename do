@@ -9,7 +9,8 @@
 #   ./do backend                  run backend only (foreground; matches production shape)
 #   ./do test                     run pytest unit tests (tests/)
 #   ./do test-book                run booktest snapshot tests (book/, via booktest CLI)
-#   ./do v2-probe                 /api/v1 vs /api/v2 op-level parity (exit = #diffs)
+#   ./do bench-decisions [dry-run|smoke|run]  the OpenAI Decisions API arm (OPENAI_API_KEY from env or dotenv)
+#   ./do v2-probe                /api/v1 vs /api/v2 op-level parity (exit = #diffs)
 #   ./do v2-parity                /api/v1 vs /api/v2 route-level parity (boots both)
 #   ./do v2-check                 read-only v2 correctness + engine/count checks
 #   ./do bench-banking77 [models] the Aito vs LLM intent benchmark (scripts/bench_banking77/README.md);
@@ -79,6 +80,29 @@ cmd_bench_banking77() {
   uv run python "$b/embed.py"
   uv run --with 'aitoai>=1.0' python "$b/run.py" --models "${@:-gpt-5-mini}"
   uv run python "$b/summarize.py"
+}
+
+cmd_bench_decisions() {
+  # The Decisions API arm (scripts/bench_banking77/PREREGISTRATION-decisions.md). The key is
+  # OPENAI_API_KEY, from the environment or the repo's dotenv file (run.py loads that file
+  # without overriding what is already set).
+  #   dry-run  token and cost estimate, no calls          smoke  3 paid calls into /tmp/dec-smoke
+  #   run      banking77 and CLINC150, then the summary (paid, resumable)
+  local b=scripts/bench_banking77 mode="${1:-dry-run}"
+  case "$mode" in
+    dry-run)
+      for d in banking77 clinc150; do BENCH_DATASET=$d uv run --with tiktoken python "$b/run.py" --dry-run; done ;;
+    smoke)
+      local f=/tmp/dec-smoke/runs/decisions_zero.gpt-6-luna.jsonl
+      BANKING77_RESULTS=/tmp/dec-smoke uv run --with 'aitoai>=1.0' python "$b/run.py" --arms decisions_zero --limit 3
+      [ -s "$f" ] && say "answers in $f" || die "no answers: every call failed (see above)" ;;
+    run)
+      for d in banking77 clinc150; do
+        BENCH_DATASET=$d uv run --with 'aitoai>=1.0' python "$b/run.py" --arms decisions_zero decisions_rag || return 1
+        BENCH_DATASET=$d uv run python "$b/summarize.py"
+      done ;;
+    *) die "usage: ./do bench-decisions [dry-run|smoke|run]" ;;
+  esac
 }
 
 cmd_test_book() {
@@ -182,6 +206,7 @@ case "${1:-help}" in
   test)                shift; cmd_test "$@" ;;
   test-book)           shift; cmd_test_book "$@" ;;
   bench-banking77)     shift; cmd_bench_banking77 "$@" ;;
+  bench-decisions)     shift; cmd_bench_decisions "$@" ;;
   v2-probe)            shift; cmd_v2_probe "$@" ;;
   v2-parity)           shift; cmd_v2_parity "$@" ;;
   v2-check)            shift; exec uv run python -m scripts.v2_check "$@" ;;

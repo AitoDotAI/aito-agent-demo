@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from common import CFG, DATASET, RESULTS, ROOT, SEED, ece, jsonl, labels, mcnemar, pct, sample, share, split
+from decisions import DECISIONS_PRICES
 from llm import PRICES
 
 RUNS = RESULTS / "runs"
@@ -42,12 +43,18 @@ def arm_stats(rows: list[dict], qids: list[str]) -> dict:
     out = {**share(right),
            "latency_ms": {"p50": pct([r["ms"] for r in rs], 0.5), "p95": pct([r["ms"] for r in rs], 0.95),
                           "mean": round(st.mean(r["ms"] for r in rs), 1)}}
+    # a stated probability (Aito's $p, the Decisions API's confidence) is scored for calibration on these queries
+    stated = [(r["p"], ok) for r, ok in zip(rs, right) if r.get("p") is not None]
+    if len(stated) >= 0.9 * len(rs):      # a refusal states no probability: scored without it, and counted
+        out["calibration_on_sample"] = {**ece(stated), "answers_without_probability": len(rs) - len(stated)}
     if "in" in rs[0]:
         tin, tout = sum(r["in"] for r in rs), sum(r["out"] for r in rs)
         costs = [r["usd"] for r in rs]
         out["llm"] = {"calls_per_query": 1.0, "tokens_per_query": round((tin + tout) / len(rs)),
                       "input_tokens_per_query": round(tin / len(rs)), "output_tokens_per_query": round(tout / len(rs)),
                       "usd_per_1000_queries": None if any(c is None for c in costs) else round(sum(costs) / len(rs) * 1000, 3),
+                      "usd_per_1m_decisions": None if any(c is None for c in costs) else round(sum(costs) / len(rs) * 1e6, 2),
+                      "tokens_estimated_for": sum(bool(r.get("tokens_estimated")) for r in rs),
                       "invalid_label_answers": sum(r["pred"] is None for r in rs),
                       "rate_limit_backoff_ms_total": sum(r.get("backoff_ms", 0) for r in rs)}
     else:
@@ -174,6 +181,7 @@ def main() -> int:
                 "status": "confirmed" if kept and saved else "not confirmed"}
 
     out["prices"] = PRICES
+    out["decisions_prices"] = DECISIONS_PRICES
     emb = RESULTS / "embedding.json"
     if emb.exists():
         out["rag_retriever"] = {**json.loads(emb.read_text()), "k": 10,
@@ -193,8 +201,8 @@ def main() -> int:
     def distinct(key):
         vals = sorted({e[key] for e in per_arm.values() if e.get(key)})
         return vals[0] if len(vals) == 1 else (vals or ["unknown"])
-    where = {"aito": distinct("aito"), "llm": distinct("llm")}
-    out["endpoints"] = {"aito": where["aito"], "per_arm": per_arm,
+    where = {"aito": distinct("aito"), "llm": distinct("llm"), "decisions": distinct("decisions")}
+    out["endpoints"] = {"aito": where["aito"], "per_arm": per_arm, "decisions": where["decisions"],
                         "aito_engine": json.loads(engine.read_text()) if engine.exists() else None,
                         "llm": where["llm"]}
     out["latency_note"] = ("wall time per query from the machine that ran run.py; Aito's calls ran one at a time, "
