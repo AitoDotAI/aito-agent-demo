@@ -196,8 +196,15 @@ nearest training messages `llm_rag` gets; its latency includes the embedding cal
   held for the RAG variant and failed for zero-shot.
 - **Its stated confidence is well calibrated with retrieval** (ECE 0.019 and 0.012,
   better than Aito's 0.040 and 0.032 on the same queries) and overconfident without
-  it (0.077: answers stated at 0.6-0.7 were right 44% of the time). Aito's ECE on the
-  full test splits is 0.018 and 0.020; at n=600 these are coarse.
+  it (0.077: answers stated at 0.6-0.7 were right 44% of the time). A paired bootstrap
+  over the queries puts Aito's minus `decisions_rag`'s ECE at 0.003 to 0.048 (banking77)
+  and 0.007 to 0.045 (CLINC150), so the difference is real but its size is uncertain.
+- **Two ECEs for Aito, both right.** Aito's published calibration (0.018 banking77,
+  0.020 CLINC150) is on the full test splits (3,073 and 4,498 answers). The 0.040 and
+  0.032 above are the same answers, restricted to the ~600 sampled queries so every arm
+  is scored on the same ones. Binned ECE grows as n shrinks: random 616-query subsets of
+  Aito's own full-test answers give a median of 0.030 (90% range 0.018 to 0.044). Compare
+  arms at the same n; quote the full-split figure for Aito's calibration on its own.
 - **Deterministic.** Two complete runs gave the same answer and the same confidence on
   every query. One CLINC150 answer was a refusal (scored wrong, left out of ECE).
 - **Latency, measured twice.** The first run opened a new connection per call and this
