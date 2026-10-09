@@ -44,3 +44,18 @@ No gate and no pass/fail rule: this is a comparison, not a test of a claim. No t
 instruction or the choices after seeing results; if the first smoke call shows the request shape
 needs a change (for example required choice descriptions), the change is made once, recorded here, and
 applied to every query. Answers that error are retried on the next run, never dropped.
+
+## Addendum (2026-10-09): smoke result and a latency measurement fix
+
+- **Endpoint.** The Azure OpenAI resource the other arms use answers `/openai/v1/decisions` with 404
+  (its gpt-6-luna lists `chat_completion` only), so the arm runs on api.openai.com. The 3-call smoke
+  needed no change to the request shape; the response carries `usage.input_tokens`, so no token count
+  is estimated.
+- **Run 1 is kept but not reported for latency.** It opened a new HTTP client per call, so every call
+  paid a DNS lookup and a TLS handshake. About 7% of its calls took 5.15 s or 10.15 s with no rate
+  limiting, and this workstation's resolver was measured stalling 5-10 s on 3 of 60 lookups of
+  api.openai.com. The SDK-based arms reuse one connection. Run 2 reuses one keep-alive client and is
+  the reported run; nothing else changed (the question, the choices, the input). Run 1's answers are in
+  `results/*/runs/decisions_run1_client_per_call/` as a repeatability check of the accuracy.
+- **Refusals.** An answer of type `refusal` is a wrong answer for accuracy; it states no probability,
+  so calibration is scored without it and the count is reported (`answers_without_probability`).

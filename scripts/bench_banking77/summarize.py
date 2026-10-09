@@ -44,8 +44,9 @@ def arm_stats(rows: list[dict], qids: list[str]) -> dict:
            "latency_ms": {"p50": pct([r["ms"] for r in rs], 0.5), "p95": pct([r["ms"] for r in rs], 0.95),
                           "mean": round(st.mean(r["ms"] for r in rs), 1)}}
     # a stated probability (Aito's $p, the Decisions API's confidence) is scored for calibration on these queries
-    if all(r.get("p") is not None for r in rs):
-        out["calibration_on_sample"] = ece([(r["p"], ok) for r, ok in zip(rs, right)])
+    stated = [(r["p"], ok) for r, ok in zip(rs, right) if r.get("p") is not None]
+    if len(stated) >= 0.9 * len(rs):      # a refusal states no probability: scored without it, and counted
+        out["calibration_on_sample"] = {**ece(stated), "answers_without_probability": len(rs) - len(stated)}
     if "in" in rs[0]:
         tin, tout = sum(r["in"] for r in rs), sum(r["out"] for r in rs)
         costs = [r["usd"] for r in rs]

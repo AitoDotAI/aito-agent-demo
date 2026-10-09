@@ -17,12 +17,14 @@
   "note": "every arm is scored on these same queries, so the comparisons are paired"
  },
  "measured_at": "2026-09-30T09:22:14+00:00",
- "summarized_at": "2026-09-30T12:36:25+00:00",
+ "summarized_at": "2026-10-09T05:18:47+00:00",
  "run_files_last_written": {
   "aito": "2026-09-30T11:34:11+00:00",
   "aito_full": "2026-09-30T11:34:11+00:00",
   "aito_llm.gpt-5-mini": "2026-09-30T11:34:12+00:00",
   "aito_llm.gpt-6-luna": "2026-09-30T11:34:12+00:00",
+  "decisions_rag.gpt-6-luna": "2026-10-09T05:18:46+00:00",
+  "decisions_zero.gpt-6-luna": "2026-10-09T05:16:50+00:00",
   "llm_rag.gpt-5-mini": "2026-09-30T11:34:12+00:00",
   "llm_rag.gpt-5.4": "2026-09-30T11:34:12+00:00",
   "llm_rag.gpt-6-luna": "2026-09-30T11:34:12+00:00",
@@ -43,6 +45,72 @@
     "p50": 69.2,
     "p95": 105.5,
     "mean": 73.5
+   },
+   "calibration_on_sample": {
+    "ece": 0.0319,
+    "bins": [
+     {
+      "bin": "0.0-0.1",
+      "n": 3,
+      "stated": 0.065,
+      "right": 0.667
+     },
+     {
+      "bin": "0.1-0.2",
+      "n": 3,
+      "stated": 0.173,
+      "right": 0.333
+     },
+     {
+      "bin": "0.2-0.3",
+      "n": 6,
+      "stated": 0.269,
+      "right": 0.167
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 16,
+      "stated": 0.354,
+      "right": 0.5
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 24,
+      "stated": 0.463,
+      "right": 0.417
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 29,
+      "stated": 0.557,
+      "right": 0.483
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 25,
+      "stated": 0.649,
+      "right": 0.68
+     },
+     {
+      "bin": "0.7-0.8",
+      "n": 27,
+      "stated": 0.749,
+      "right": 0.778
+     },
+     {
+      "bin": "0.8-0.9",
+      "n": 44,
+      "stated": 0.856,
+      "right": 0.75
+     },
+     {
+      "bin": "0.9-1.0",
+      "n": 423,
+      "stated": 0.984,
+      "right": 0.974
+     }
+    ],
+    "answers_without_probability": 0
    },
    "llm": {
     "calls_per_query": 0.0,
@@ -70,6 +138,8 @@
     "input_tokens_per_query": 627,
     "output_tokens_per_query": 24,
     "usd_per_1000_queries": 0.205,
+    "usd_per_1m_decisions": 204.93,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 1086000
    }
@@ -93,7 +163,173 @@
     "input_tokens_per_query": 627,
     "output_tokens_per_query": 30,
     "usd_per_1000_queries": null,
+    "usd_per_1m_decisions": null,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
+    "rate_limit_backoff_ms_total": 0
+   }
+  },
+  "decisions_rag.gpt-6-luna": {
+   "n": 600,
+   "right": 587,
+   "accuracy": 0.9783,
+   "ci95": [
+    0.9633,
+    0.9873
+   ],
+   "latency_ms": {
+    "p50": 334.8,
+    "p95": 574.1,
+    "mean": 384.6
+   },
+   "calibration_on_sample": {
+    "ece": 0.0118,
+    "bins": [
+     {
+      "bin": "0.2-0.3",
+      "n": 2,
+      "stated": 0.23,
+      "right": 1.0
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 3,
+      "stated": 0.453,
+      "right": 0.667
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 3,
+      "stated": 0.557,
+      "right": 0.333
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 4,
+      "stated": 0.623,
+      "right": 0.75
+     },
+     {
+      "bin": "0.7-0.8",
+      "n": 3,
+      "stated": 0.733,
+      "right": 0.667
+     },
+     {
+      "bin": "0.8-0.9",
+      "n": 8,
+      "stated": 0.859,
+      "right": 0.875
+     },
+     {
+      "bin": "0.9-1.0",
+      "n": 577,
+      "stated": 0.994,
+      "right": 0.988
+     }
+    ],
+    "answers_without_probability": 0
+   },
+   "llm": {
+    "calls_per_query": 1.0,
+    "tokens_per_query": 1068,
+    "input_tokens_per_query": 1068,
+    "output_tokens_per_query": 0,
+    "usd_per_1000_queries": 0.107,
+    "usd_per_1m_decisions": 106.8,
+    "tokens_estimated_for": 0,
+    "invalid_label_answers": 0,
+    "rate_limit_backoff_ms_total": 0
+   }
+  },
+  "decisions_zero.gpt-6-luna": {
+   "n": 600,
+   "right": 530,
+   "accuracy": 0.8833,
+   "ci95": [
+    0.8552,
+    0.9066
+   ],
+   "latency_ms": {
+    "p50": 134.4,
+    "p95": 219.0,
+    "mean": 146.9
+   },
+   "calibration_on_sample": {
+    "ece": 0.0451,
+    "bins": [
+     {
+      "bin": "0.0-0.1",
+      "n": 1,
+      "stated": 0.04,
+      "right": 0.0
+     },
+     {
+      "bin": "0.1-0.2",
+      "n": 11,
+      "stated": 0.145,
+      "right": 0.182
+     },
+     {
+      "bin": "0.2-0.3",
+      "n": 10,
+      "stated": 0.233,
+      "right": 0.5
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 5,
+      "stated": 0.348,
+      "right": 0.6
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 7,
+      "stated": 0.441,
+      "right": 0.571
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 20,
+      "stated": 0.532,
+      "right": 0.65
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 15,
+      "stated": 0.652,
+      "right": 0.4
+     },
+     {
+      "bin": "0.7-0.8",
+      "n": 16,
+      "stated": 0.743,
+      "right": 0.688
+     },
+     {
+      "bin": "0.8-0.9",
+      "n": 40,
+      "stated": 0.854,
+      "right": 0.775
+     },
+     {
+      "bin": "0.9-1.0",
+      "n": 474,
+      "stated": 0.984,
+      "right": 0.96
+     }
+    ],
+    "answers_without_probability": 1
+   },
+   "llm": {
+    "calls_per_query": 1.0,
+    "tokens_per_query": 902,
+    "input_tokens_per_query": 902,
+    "output_tokens_per_query": 0,
+    "usd_per_1000_queries": 0.09,
+    "usd_per_1m_decisions": 90.22,
+    "tokens_estimated_for": 0,
+    "invalid_label_answers": 1,
     "rate_limit_backoff_ms_total": 0
    }
   },
@@ -116,6 +352,8 @@
     "input_tokens_per_query": 707,
     "output_tokens_per_query": 19,
     "usd_per_1000_queries": 0.215,
+    "usd_per_1m_decisions": 214.89,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 750000
    }
@@ -139,6 +377,8 @@
     "input_tokens_per_query": 707,
     "output_tokens_per_query": 30,
     "usd_per_1000_queries": null,
+    "usd_per_1m_decisions": null,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 0
    }
@@ -162,6 +402,8 @@
     "input_tokens_per_query": 707,
     "output_tokens_per_query": 24,
     "usd_per_1000_queries": null,
+    "usd_per_1m_decisions": null,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 0
    }
@@ -185,6 +427,8 @@
     "input_tokens_per_query": 543,
     "output_tokens_per_query": 26,
     "usd_per_1000_queries": 0.187,
+    "usd_per_1m_decisions": 187.06,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 3,
     "rate_limit_backoff_ms_total": 838000
    }
@@ -208,6 +452,8 @@
     "input_tokens_per_query": 543,
     "output_tokens_per_query": 42,
     "usd_per_1000_queries": null,
+    "usd_per_1m_decisions": null,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 0
    }
@@ -231,6 +477,8 @@
     "input_tokens_per_query": 543,
     "output_tokens_per_query": 39,
     "usd_per_1000_queries": null,
+    "usd_per_1m_decisions": null,
+    "tokens_estimated_for": 0,
     "invalid_label_answers": 0,
     "rate_limit_backoff_ms_total": 0
    }
@@ -330,6 +578,16 @@
    "only_second_right": 60,
    "p": 4.87e-13
   },
+  "decisions_rag.gpt-6-luna": {
+   "only_first_right": 4,
+   "only_second_right": 72,
+   "p": 3.59e-17
+  },
+  "decisions_zero.gpt-6-luna": {
+   "only_first_right": 46,
+   "only_second_right": 57,
+   "p": 0.324
+  },
   "llm_rag.gpt-5-mini": {
    "only_first_right": 6,
    "only_second_right": 71,
@@ -360,7 +618,7 @@
    "only_second_right": 68,
    "p": 2.52e-06
   },
-  "bonferroni_threshold": 0.00625,
+  "bonferroni_threshold": 0.005,
   "note": "only_first_right = Aito right, the other wrong. A p below the threshold is a difference at this n; above it, it is not shown."
  },
  "gated": {
@@ -448,6 +706,34 @@
       "only_first_right": 5,
       "only_second_right": 12,
       "p": 0.143
+     }
+    },
+    "decisions_rag.gpt-6-luna": {
+     "n": 300,
+     "right": 291,
+     "accuracy": 0.97,
+     "ci95": [
+      0.944,
+      0.9841
+     ],
+     "paired": {
+      "only_first_right": 3,
+      "only_second_right": 16,
+      "p": 0.00443
+     }
+    },
+    "decisions_zero.gpt-6-luna": {
+     "n": 300,
+     "right": 264,
+     "accuracy": 0.88,
+     "ci95": [
+      0.8383,
+      0.912
+     ],
+     "paired": {
+      "only_first_right": 24,
+      "only_second_right": 10,
+      "p": 0.0243
      }
     },
     "llm_rag.gpt-5-mini": {
@@ -625,6 +911,34 @@
       "p": 0.289
      }
     },
+    "decisions_rag.gpt-6-luna": {
+     "n": 300,
+     "right": 291,
+     "accuracy": 0.97,
+     "ci95": [
+      0.944,
+      0.9841
+     ],
+     "paired": {
+      "only_first_right": 3,
+      "only_second_right": 13,
+      "p": 0.0213
+     }
+    },
+    "decisions_zero.gpt-6-luna": {
+     "n": 300,
+     "right": 264,
+     "accuracy": 0.88,
+     "ci95": [
+      0.8383,
+      0.912
+     ],
+     "paired": {
+      "only_first_right": 26,
+      "only_second_right": 9,
+      "p": 0.00599
+     }
+    },
     "llm_rag.gpt-5-mini": {
      "n": 300,
      "right": 292,
@@ -798,6 +1112,34 @@
       "only_first_right": 8,
       "only_second_right": 7,
       "p": 1.0
+     }
+    },
+    "decisions_rag.gpt-6-luna": {
+     "n": 300,
+     "right": 291,
+     "accuracy": 0.97,
+     "ci95": [
+      0.944,
+      0.9841
+     ],
+     "paired": {
+      "only_first_right": 3,
+      "only_second_right": 8,
+      "p": 0.227
+     }
+    },
+    "decisions_zero.gpt-6-luna": {
+     "n": 300,
+     "right": 264,
+     "accuracy": 0.88,
+     "ci95": [
+      0.8383,
+      0.912
+     ],
+     "paired": {
+      "only_first_right": 28,
+      "only_second_right": 6,
+      "p": 0.000195
      }
     },
     "llm_rag.gpt-5-mini": {
@@ -979,6 +1321,34 @@
       "p": 1.0
      }
     },
+    "decisions_rag.gpt-6-luna": {
+     "n": 300,
+     "right": 291,
+     "accuracy": 0.97,
+     "ci95": [
+      0.944,
+      0.9841
+     ],
+     "paired": {
+      "only_first_right": 3,
+      "only_second_right": 8,
+      "p": 0.227
+     }
+    },
+    "decisions_zero.gpt-6-luna": {
+     "n": 300,
+     "right": 264,
+     "accuracy": 0.88,
+     "ci95": [
+      0.8383,
+      0.912
+     ],
+     "paired": {
+      "only_first_right": 28,
+      "only_second_right": 6,
+      "p": 0.000195
+     }
+    },
     "llm_rag.gpt-5-mini": {
      "n": 300,
      "right": 292,
@@ -1154,6 +1524,34 @@
       "p": 1.0
      }
     },
+    "decisions_rag.gpt-6-luna": {
+     "n": 300,
+     "right": 291,
+     "accuracy": 0.97,
+     "ci95": [
+      0.944,
+      0.9841
+     ],
+     "paired": {
+      "only_first_right": 3,
+      "only_second_right": 8,
+      "p": 0.227
+     }
+    },
+    "decisions_zero.gpt-6-luna": {
+     "n": 300,
+     "right": 264,
+     "accuracy": 0.88,
+     "ci95": [
+      0.8383,
+      0.912
+     ],
+     "paired": {
+      "only_first_right": 28,
+      "only_second_right": 6,
+      "p": 0.000195
+     }
+    },
     "llm_rag.gpt-5-mini": {
      "n": 300,
      "right": 292,
@@ -1265,6 +1663,13 @@
    "source": "gpt-5-mini list price, as in src/llm_agent.py (PRICE_IN/PRICE_OUT); check it against your provider"
   }
  },
+ "decisions_prices": {
+  "gpt-6-luna": {
+   "in": 0.1,
+   "out": 0.0,
+   "source": "https://developers.openai.com/api/docs/guides/decisions, read 2026-10-07"
+  }
+ },
  "rag_retriever": {
   "model": "text-embedding-3-large",
   "dimensions": 256,
@@ -1288,6 +1693,12 @@
     "aito": "shared.aito.ai, Aito v2",
     "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
    },
+   "decisions_rag.gpt-6-luna": {
+    "decisions": "Decisions API on OpenAI, api.openai.com"
+   },
+   "decisions_zero.gpt-6-luna": {
+    "decisions": "Decisions API on OpenAI, api.openai.com"
+   },
    "llm_rag.gpt-5-mini": {
     "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
    },
@@ -1307,6 +1718,7 @@
     "llm": "Azure OpenAI, swedencentral.api.cognitive.microsoft.com"
    }
   },
+  "decisions": "Decisions API on OpenAI, api.openai.com",
   "aito_engine": [
    {
     "version": "2.11.0",

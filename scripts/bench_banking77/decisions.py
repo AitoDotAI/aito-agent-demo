@@ -72,39 +72,46 @@ def target() -> tuple[str, dict, str]:
                      "(environment or the repo's dotenv file)")
 
 
+_pool: list[httpx.Client] = []
+
+
+def _shared() -> httpx.Client:
+    """One keep-alive client for the run, as the SDK-based arms have: a client per call paid a DNS
+    lookup and TLS handshake every time, and this workstation's resolver stalls 5 s on a few percent
+    of lookups (measured 2026-10-09), which showed up as a false 5 s p95."""
+    if not _pool:
+        _pool.append(httpx.Client(timeout=60, limits=httpx.Limits(max_keepalive_connections=16)))
+    return _pool[0]
+
+
 def decide(model: str, instructions: str, text: str, allowed: list[str], client: httpx.Client | None = None) -> dict:
     """One Decisions call. Returns pred/p/top, input tokens, the call's ms and the backoff ms."""
     url, headers, _ = target()
     body = request_body(model, instructions, text, allowed)
-    own = client is None
-    client = client or httpx.Client(timeout=60)
+    client = client or _shared()
     backoff, delay, last = 0.0, 2.0, None
-    try:
-        for _ in range(8):
-            t0 = time.perf_counter()
-            try:
-                r = client.post(url, json=body, headers=headers)
-            except (httpx.TransportError, httpx.TimeoutException) as e:
-                last = e
-            else:
-                ms = (time.perf_counter() - t0) * 1000
-                if r.status_code not in _RETRY:
-                    if r.status_code >= 400:
-                        raise RuntimeError(f"{model}: HTTP {r.status_code}: {r.text[:300]}")
-                    data = r.json()
-                    answers = data.get("answers") or []
-                    if not answers:
-                        raise RuntimeError(f"{model}: no answers in {str(data)[:300]}")
-                    u = data.get("usage") or {}
-                    tin = u.get("input_tokens") or u.get("prompt_tokens")
-                    return {**parse(answers[0], allowed), "in": int(tin) if tin is not None else estimate_tokens(body),
-                            "out": 0, "tokens_estimated": tin is None, "ms": round(ms, 1), "llm_ms": round(ms, 1),
-                            "backoff_ms": round(backoff)}
-                last = RuntimeError(f"HTTP {r.status_code}")
-            time.sleep(delay)
-            backoff += delay * 1000
-            delay = min(delay * 2, 30)
-        raise RuntimeError(f"{model}: transient errors exhausted: {last}")
-    finally:
-        if own:
-            client.close()
+    for _ in range(8):
+        t0 = time.perf_counter()
+        try:
+            r = client.post(url, json=body, headers=headers)
+        except (httpx.TransportError, httpx.TimeoutException) as e:
+            last = e
+        else:
+            ms = (time.perf_counter() - t0) * 1000
+            if r.status_code not in _RETRY:
+                if r.status_code >= 400:
+                    raise RuntimeError(f"{model}: HTTP {r.status_code}: {r.text[:300]}")
+                data = r.json()
+                answers = data.get("answers") or []
+                if not answers:
+                    raise RuntimeError(f"{model}: no answers in {str(data)[:300]}")
+                u = data.get("usage") or {}
+                tin = u.get("input_tokens") or u.get("prompt_tokens")
+                return {**parse(answers[0], allowed), "in": int(tin) if tin is not None else estimate_tokens(body),
+                        "out": 0, "tokens_estimated": tin is None, "ms": round(ms, 1), "llm_ms": round(ms, 1),
+                        "backoff_ms": round(backoff)}
+            last = RuntimeError(f"HTTP {r.status_code}")
+        time.sleep(delay)
+        backoff += delay * 1000
+        delay = min(delay * 2, 30)
+    raise RuntimeError(f"{model}: transient errors exhausted: {last}")
