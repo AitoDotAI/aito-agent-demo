@@ -31,7 +31,7 @@ from pydantic import BaseModel as _BaseModel
 
 from src import query_log
 from src.aito_client import AitoClient, AitoError
-from src.gates import ASSIST_GATE, AUTO_GATE
+from src.gates import ASSIST_GATE, AUTO_GATE, band_of, margin_to_gate
 from src.config import load_config
 
 # Each support intent fills exactly one structured parameter (or none). The
@@ -408,6 +408,27 @@ _CAVEAT_EXAMPLE = "What's the weather like in Oulu tomorrow?"
 _AUTO_GATE, _ASSIST_GATE = AUTO_GATE, ASSIST_GATE  # src/gates.py: one place for the whole app
 
 
+def _band_margin(rows: list[dict]) -> dict | None:
+    """The queue row closest to being triaged differently, and how far it has to move.
+
+    Only rows whose band the $p actually decides are candidates: a sensitive
+    action is handed to a human at any confidence, so its distance to a gate says
+    nothing about what the page would show. Reported, never acted on — the bands
+    above are unchanged. scripts/live_smoke.py prints it so a row sitting a
+    thousandth above a gate is visible before drift moves it, which the fleet
+    gates could not see while they asserted only the predicted label
+    (td-20260919195009050217).
+    """
+    best: dict | None = None
+    for r in rows:
+        if r["intent"] in _SENSITIVE:
+            continue
+        gate, delta = margin_to_gate(r["p"])
+        if best is None or abs(delta) < abs(best["delta"]):
+            best = {"delta": round(delta, 6), "gate": gate, "band": r["band"], "text": r["text"]}
+    return best
+
+
 @app.get("/api/handoff")
 @_with_queries
 def handoff():
@@ -419,14 +440,13 @@ def handoff():
     try:
         for text in _HANDOFF_QUEUE:
             intent, p, alts = _top_and_alts(aito.predict("resolutions", {"text": text}, "intent", limit=3, select=["$p", "feature"]))
-            if p < _ASSIST_GATE:  # unsure first — Aito won't guess, regardless of intent
-                band, reason = "handoff", f"low confidence ({p*100:.0f}%), Aito won't guess on this"
-            elif intent in _SENSITIVE:  # confident, but money/state-change → verify with a human
-                band, reason = "handoff", f"sensitive action ({intent.replace('_', ' ')}), needs human verification"
-            elif p >= _AUTO_GATE:
-                band, reason = "auto", None
-            else:
-                band, reason = "assist", None
+            band = band_of(p, intent in _SENSITIVE)   # src/gates.py: the gate script reads the same function
+            if band != "handoff":
+                reason = None
+            elif p < _ASSIST_GATE:  # unsure first — Aito won't guess, regardless of intent
+                reason = f"low confidence ({p*100:.0f}%), Aito won't guess on this"
+            else:  # confident, but money/state-change → verify with a human
+                reason = f"sensitive action ({intent.replace('_', ' ')}), needs human verification"
             rows.append({"text": text, "intent": intent, "p": p, "alts": alts,
                          "band": band, "reason": reason, "team": _TEAM.get(intent, "Support")})
     except AitoError as e:
@@ -441,7 +461,7 @@ def handoff():
     except AitoError:
         example = None
     return {"total": len(rows), "counts": counts, "handoff": [r for r in rows if r["band"] == "handoff"],
-            "caveat_example": example}
+            "margin": _band_margin(rows), "caveat_example": example}
 
 
 # ── Cooperation: Aito short-lists, the LLM decides ────────────────
