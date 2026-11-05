@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+from src.gates import ASSIST_GATE, AUTO_GATE
+
 _spec = importlib.util.spec_from_file_location(
     "live_smoke", Path(__file__).resolve().parents[1] / "scripts" / "live_smoke.py")
 smoke = importlib.util.module_from_spec(_spec)
@@ -101,3 +103,87 @@ def test_every_step_is_a_get(monkeypatch):
     for step in smoke.STEPS:
         smoke.fetch("http://x", step, 1)
     assert set(methods) == {"GET"} and len(methods) == len(smoke.STEPS)
+
+
+# ── the band, not the label (td-20260919195009050217) ──────────────────────
+# Every test below nudges one fixture across a gate and changes nothing else:
+# same predicted label, same $why, same counts-that-add-up. That is the shape of
+# the drift the old checks could not see.
+
+
+def _resolved(p):
+    """A resolve body that differs from a passing one only in its $p."""
+    return {"intent": "check_outage", "intent_p": p, "why": [{"x": 1}],
+            "param_field": "location", "param": "Helsinki"}
+
+
+def test_resolve_crossing_the_auto_gate_fails_though_the_label_is_the_same():
+    over = smoke.check_resolve(_resolved(AUTO_GATE + 0.0011))
+    assert "auto" in over and "+0.0011 from the auto gate" in over
+    under = _resolved(AUTO_GATE - 0.0011)
+    with pytest.raises(AssertionError, match="is band 'assist', not 'auto'"):
+        smoke.check_resolve(under)
+    # what the old check asserted still holds on the failing body: label, $why, >= 0.5
+    assert under["intent"] == "check_outage" and under["why"] and under["intent_p"] >= 0.5
+
+
+def test_resolve_below_the_assist_gate_fails_too():
+    with pytest.raises(AssertionError, match="is band 'handoff', not 'auto'"):
+        smoke.check_resolve(_resolved(ASSIST_GATE - 0.0011))
+
+
+def _handoff(counts, rows=(), **extra):
+    return {"total": sum(counts.values()), "counts": dict(counts), "handoff": list(rows), **extra}
+
+
+def test_one_ticket_crossing_a_gate_fails_the_handoff_check():
+    assert "routed" in smoke.check_handoff(_handoff(smoke.EXPECTED_BANDS))
+    flipped = dict(smoke.EXPECTED_BANDS, auto=smoke.EXPECTED_BANDS["auto"] - 1,
+                   assist=smoke.EXPECTED_BANDS["assist"] + 1)
+    body = _handoff(flipped)
+    assert sum(body["counts"].values()) == body["total"]      # the old check's only assertion
+    with pytest.raises(AssertionError, match="crossed a confidence gate"):
+        smoke.check_handoff(body)
+
+
+def test_the_whole_queue_in_one_band_fails():
+    total = sum(smoke.EXPECTED_BANDS.values())
+    with pytest.raises(AssertionError, match="band split is"):
+        smoke.check_handoff(_handoff({"auto": 0, "assist": 0, "handoff": total}))
+
+
+def _row(p, reason, text="a ticket"):
+    return {"text": text, "intent": "refund", "p": p, "reason": reason}
+
+
+def test_a_handoff_row_must_be_one_for_the_reason_it_gives():
+    sensitive = "sensitive action (refund), needs human verification"
+    assert "routed" in smoke.check_handoff(
+        _handoff(smoke.EXPECTED_BANDS, [_row(0.754, sensitive)]))
+    # the same row a thousandth under the assist gate: still handed off, but the
+    # visitor is told "sensitive" when the code would have said "low confidence"
+    with pytest.raises(AssertionError, match="not the reason the code used"):
+        smoke.check_handoff(_handoff(smoke.EXPECTED_BANDS,
+                                     [_row(ASSIST_GATE - 0.0011, sensitive)]))
+
+
+def test_a_row_listed_as_a_handoff_that_the_gates_would_serve_fails():
+    with pytest.raises(AssertionError, match="but the gates put it in 'auto'"):
+        smoke.check_handoff(_handoff(smoke.EXPECTED_BANDS,
+                                     [_row(0.95, "low confidence (95%), Aito won't guess on this")]))
+
+
+def test_the_margin_is_reported_and_can_be_required(monkeypatch):
+    assert "no `margin`" in smoke.check_handoff(_handoff(smoke.EXPECTED_BANDS))
+    monkeypatch.setattr(smoke, "REQUIRE_MARGIN", True)
+    with pytest.raises(AssertionError, match="require-margin"):
+        smoke.check_handoff(_handoff(smoke.EXPECTED_BANDS))
+    served = _handoff(smoke.EXPECTED_BANDS,
+                      margin={"delta": 0.0011, "gate": "auto", "band": "auto", "text": "a hair over"})
+    assert "+0.0011 from the auto gate" in smoke.check_handoff(served)
+
+
+def test_the_gates_come_from_the_app_not_from_this_script():
+    from src import gates
+    assert (smoke.AUTO_GATE, smoke.ASSIST_GATE) == (gates.AUTO_GATE, gates.ASSIST_GATE)
+    assert smoke.band_of is gates.band_of
