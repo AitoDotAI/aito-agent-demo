@@ -13,7 +13,7 @@
 
 const SURFACE = "agent-demo";
 
-/** Phone or desktop by the width at the first event, kept for the session so turning a phone does not change it. 760 px is where the
+/** Phone or desktop by the width at the first event of this page load (a reload measures again), kept so turning a phone does not change it. 760 px is where the
  *  menu becomes a drawer (globals.css). A hint for comparing phone visitors before and after the first-visit tour. */
 let sessionDevice: "mobile" | "desktop" | undefined;
 const device = () => (sessionDevice ??= window.innerWidth <= 760 ? "mobile" : "desktop");

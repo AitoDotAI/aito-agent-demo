@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { trackEvent } from "@/lib/analytics";
-import { MENU_LINK, autoStart, choseAView, escapeClosesTour, presenting, reCollapsePanel, stepsFor, type Step, type Store } from "@/lib/tour";
+import { autoStart, choseAView, escapeClosesTour, presenting, reCollapsePanel, stepsFor, type Step, type Store } from "@/lib/tour";
 
 export const START_TOUR_EVENT = "agent:start-tour";
 const SPOT = "tour-spot";
@@ -37,17 +37,22 @@ function target(step: Step): Element | null {
  * drawer (`.tour-card` in globals.css), so it never covers what it points at. Going to another view, or closing the drawer, ends or moves the
  * step on, so the card never describes a menu that is not there. "Take the tour" in the menu starts it again.
  */
-export default function Tour({ view, label, navOpen, setNavOpen, panelOpen, previewPanel }: {
+export default function Tour({ view, label, viewCount, navOpen, setNavOpen, panelOpen, previewPanel }: {
   view: string; label: string;
+  /** How many views the menu lists now: it grows when the support view's data answers, so the steps are worded at each render. */
+  viewCount: number;
   navOpen: boolean; setNavOpen: (open: boolean) => void;
   panelOpen: boolean; previewPanel: (open: boolean) => void;
 }) {
-  const [steps, setSteps] = useState<Step[]>([]);
+  const [start, setStart] = useState<{ id: string; label: string; touch: boolean; panelInline: boolean } | null>(null);
   const [index, setIndex] = useState<number | null>(null);
+  const steps: Step[] = start ? stepsFor({ view: { id: start.id, label: start.label }, viewCount, touch: start.touch, panelInline: start.panelInline }) : [];
   const card = useRef<HTMLDivElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const openedDrawer = useRef(false);
   const openedPanel = useRef(false);
+  const panelSetTo = useRef<boolean | null>(null);   // the value the tour last gave the panel, so its own change is not read as the visitor's
+  const visitorChangedPanel = useRef(false);
   const sawDrawerOpen = useRef(false);
   const startedOn = useRef(view);
   const latest = useRef({ view, label, navOpen, panelOpen });
@@ -57,8 +62,7 @@ export default function Tour({ view, label, navOpen, setNavOpen, panelOpen, prev
     const { view: id, label: viewLabel } = latest.current;
     startedOn.current = id;
     returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const viewCount = document.querySelectorAll(MENU_LINK).length;   // what the menu lists now (the support view only once its data is loaded)
-    setSteps(stepsFor({ view: { id, label: viewLabel }, viewCount, touch: touchScreen(), panelInline: panelInline() }));
+    setStart({ id, label: viewLabel, touch: touchScreen(), panelInline: panelInline() });
     setIndex(0);
     trackEvent("tour_started", { view: viewLabel, auto });
   }, []);
@@ -86,8 +90,12 @@ export default function Tour({ view, label, navOpen, setNavOpen, panelOpen, prev
       openedDrawer.current = false;
       if (latest.current.navOpen) setNavOpen(false);
     }
-    if (reCollapsePanel({ openedByTour: openedPanel.current, openNow: latest.current.panelOpen })) previewPanel(false);
+    if (reCollapsePanel({ openedByTour: openedPanel.current, visitorChanged: visitorChangedPanel.current, openNow: latest.current.panelOpen })) {
+      panelSetTo.current = false;
+      previewPanel(false);
+    }
     openedPanel.current = false;
+    visitorChangedPanel.current = false;
   }, [setNavOpen, previewPanel]);
 
   const finish = useCallback((how: "tour_skipped" | "tour_completed", reason?: string) => {
@@ -110,11 +118,17 @@ export default function Tour({ view, label, navOpen, setNavOpen, panelOpen, prev
     if (!step) return;
     restore();
     if (step.id === "menu" && isPhone() && !latest.current.navOpen) { openedDrawer.current = true; setNavOpen(true); }
-    if (step.id === "why" && panelInline() && !latest.current.panelOpen) { openedPanel.current = true; previewPanel(true); }
+    if (step.id === "why" && panelInline() && !latest.current.panelOpen) { openedPanel.current = true; panelSetTo.current = true; previewPanel(true); }
     target(step)?.classList.add(SPOT);
     card.current?.focus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepId]);
+
+  // The panel changed: by the tour (the value it set), or by the visitor during the step, who then owns it (reCollapsePanel).
+  useEffect(() => {
+    if (panelSetTo.current === panelOpen) { panelSetTo.current = null; return; }
+    if (openedPanel.current) visitorChangedPanel.current = true;
+  }, [panelOpen]);
 
   // The card's height tells the drawer how much room to leave (`.tour-menu .rc-side` in globals.css).
   useEffect(() => {

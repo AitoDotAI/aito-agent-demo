@@ -470,7 +470,7 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
       <div className="rc-panel-backdrop" onClick={() => setPanelMobOpen(false)} />
 
       {/* first visit: three skippable steps (components/shell/Tour.tsx); setPanelOpen shows the panel for a step without saving the preference */}
-      <Tour view={view} label={PAGE_TITLE[view]} navOpen={navOpen} setNavOpen={setNavOpen} panelOpen={panelOpen} previewPanel={setPanelOpen} />
+      <Tour view={view} label={PAGE_TITLE[view]} viewCount={Object.keys(PAGE_TITLE).length - (supportReady ? 0 : 1)} navOpen={navOpen} setNavOpen={setNavOpen} panelOpen={panelOpen} previewPanel={setPanelOpen} />
     </div>
   );
 }

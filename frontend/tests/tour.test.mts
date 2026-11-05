@@ -115,7 +115,11 @@ test("Escape closes the tour only when no other dialog is open to take it", () =
 });
 
 test("the panel the tour opened is hidden again after, unless the visitor hid it themselves", () => {
-  assert.equal(reCollapsePanel({ openedByTour: true, openNow: true }), true);
-  assert.equal(reCollapsePanel({ openedByTour: true, openNow: false }), false);   // the visitor hid it: nothing to undo
-  assert.equal(reCollapsePanel({ openedByTour: false, openNow: true }), false);   // it was open before the tour: leave it
+  assert.equal(reCollapsePanel({ openedByTour: true, visitorChanged: false, openNow: true }), true);
+  assert.equal(reCollapsePanel({ openedByTour: true, visitorChanged: true, openNow: false }), false);   // the visitor hid it: nothing to undo
+  assert.equal(reCollapsePanel({ openedByTour: false, visitorChanged: false, openNow: true }), false);  // it was open before the tour: leave it
+});
+
+test("a visitor who hides and re-shows the panel during the step keeps it shown, as they saved it", () => {
+  assert.equal(reCollapsePanel({ openedByTour: true, visitorChanged: true, openNow: true }), false);
 });

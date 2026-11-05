@@ -58,10 +58,11 @@ export function escapeClosesTour(otherDialogsOpen: number): boolean {
   return otherDialogsOpen === 0;
 }
 
-/** After the Aito step: a panel the visitor had collapsed, and the tour opened for the step without saving that, is collapsed again,
- *  unless the visitor has already hidden it themselves. The visitor's saved preference (`rcPanelCollapsed`) is never written by the tour. */
-export function reCollapsePanel({ openedByTour, openNow }: { openedByTour: boolean; openNow: boolean }): boolean {
-  return openedByTour && openNow;
+/** After the Aito step: a panel the visitor had collapsed, and the tour opened for the step without saving that, is collapsed again.
+ *  Not when the visitor changed it during the step (hid it, or hid and showed it again, which saves it shown): the panel is then theirs.
+ *  The visitor's saved preference (`rcPanelCollapsed`) is never written by the tour. */
+export function reCollapsePanel({ openedByTour, visitorChanged, openNow }: { openedByTour: boolean; visitorChanged: boolean; openNow: boolean }): boolean {
+  return openedByTour && !visitorChanged && openNow;
 }
 
 /** The steps for the view the visitor landed on: a deep link starts with the view they are on, the overview with what this is.
