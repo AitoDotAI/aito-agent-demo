@@ -13,6 +13,11 @@
 
 const SURFACE = "agent-demo";
 
+/** Phone or desktop by the width at the first event, kept for the session so turning a phone does not change it. 760 px is where the
+ *  menu becomes a drawer (globals.css). A hint for comparing phone visitors before and after the first-visit tour. */
+let sessionDevice: "mobile" | "desktop" | undefined;
+const device = () => (sessionDevice ??= window.innerWidth <= 760 ? "mobile" : "desktop");
+
 type Props = Record<string, unknown>;
 type Traits = Record<string, unknown>;
 
@@ -52,12 +57,12 @@ export function initAnalytics(): void {
 
 export function trackPage(pageName: string, properties: Props = {}): void {
   if (typeof window === "undefined") return;
-  gtagSafe("event", "page_view", { page_title: pageName, surface: SURFACE, ...properties });
+  gtagSafe("event", "page_view", { page_title: pageName, surface: SURFACE, device: device(), ...properties });
 }
 
 export function trackEvent(event: string, properties: Props = {}): void {
   if (typeof window === "undefined") return;
-  gtagSafe("event", event, { surface: SURFACE, ...properties });
+  gtagSafe("event", event, { surface: SURFACE, device: device(), ...properties });
 }
 
 export function identifyUser(userId: string, traits: Traits = {}): void {

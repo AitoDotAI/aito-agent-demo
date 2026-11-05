@@ -9,6 +9,7 @@
 #   ./do backend                  run backend only (foreground; matches production shape)
 #   ./do test                     run pytest unit tests (tests/)
 #   ./do test-book                run booktest snapshot tests (book/, via booktest CLI)
+#   ./do frontend-test            the frontend's rule tests (node --test: the first-visit tour, no browser)
 #   ./do v2-probe                 /api/v1 vs /api/v2 op-level parity (exit = #diffs)
 #   ./do v2-parity                /api/v1 vs /api/v2 route-level parity (boots both)
 #   ./do v2-check                 read-only v2 correctness + engine/count checks
@@ -79,6 +80,10 @@ cmd_bench_banking77() {
   uv run python "$b/embed.py"
   uv run --with 'aitoai>=1.0' python "$b/run.py" --models "${@:-gpt-5-mini}"
   uv run python "$b/summarize.py"
+}
+
+cmd_frontend_test() {
+  ( cd frontend && node --test tests/*.test.mts )
 }
 
 cmd_test_book() {
@@ -181,6 +186,7 @@ case "${1:-help}" in
   backend)             shift; cmd_backend "$@" ;;
   test)                shift; cmd_test "$@" ;;
   test-book)           shift; cmd_test_book "$@" ;;
+  frontend-test)       cmd_frontend_test ;;
   bench-banking77)     shift; cmd_bench_banking77 "$@" ;;
   v2-probe)            shift; cmd_v2_probe "$@" ;;
   v2-parity)           shift; cmd_v2_parity "$@" ;;

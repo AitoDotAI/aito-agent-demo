@@ -1,0 +1,10 @@
+# The first-visit tour
+
+A phone visitor who lands on a deep link (`/sales/`, `?view=company-data`) sees one view and a ☰ button; the menu with the other views is behind it. The tour is three skippable steps, shown once: what this is (or, on a deep link, "You are on <view>"), the menu (opened as the drawer on a phone), and the Aito panel (its button where the panel is a drawer).
+
+- **Rules:** `frontend/lib/tour.ts`, without React, tested by `frontend/tests/tour.test.mts` (`./do frontend-test`). Ported from aito-ecommerce-demo PR #199: `autoStart`, `choseAView` and `escapeClosesTour` are its rules unchanged. The seen flag is `localStorage` `agent.tourSeen`, set when the tour starts; where storage is missing or throws, the tour does not start by itself, and the page works as before. `?demo=` (a presented demo) does not start it. This demo has no server DEMO_MODE, so there is no server answer to wait for.
+- **Card:** `frontend/components/shell/Tour.tsx`, rendered by `AppShell`, styled at the end of `globals.css` (`.tour-card`). On a phone it sits above the Aito button, and on the menu step the drawer is cut short by the card's height. A phone turned sideways (760 px or narrower, 520 px or lower) puts the card beside the drawer; at 761 to 1180 px the menu is on screen and the card sits beside it, clear of the Aito button.
+- **The Aito panel's preference:** on a wide desktop with the panel collapsed, the Aito step opens it with `setPanelOpen`, not the edge tab's toggle, so `rcPanelCollapsed` is never written; after the step it is collapsed again unless the visitor hid it themselves (`reCollapsePanel`).
+- **Ends:** a tap on a view in the menu ends the tour (`chose_a_view`); closing the drawer with the backdrop or ☰ moves to the next step; going to another view ends it (`left_the_view`); Escape ends it when no other dialog is open.
+- **Again:** "Take the tour" at the foot of the menu fires `agent:start-tour`.
+- **Events:** `tour_started` (view, auto), `tour_step`, `tour_skipped` (at_step, reason), `tour_completed`; every event now carries `device` (`mobile` at 760 px or narrower at the session's first event, else `desktop`).

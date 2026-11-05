@@ -23,6 +23,7 @@ import { SalesAgentView } from "@/components/SalesAgentView";
 import { CompanyAgentView } from "@/components/CompanyAgentView";
 import { CompanyDashboardView } from "@/components/CompanyDashboardView";
 import { ToolboxView, type ToolMeta } from "@/components/ToolboxView";
+import Tour, { START_TOUR_EVENT } from "@/components/shell/Tour";
 import { apiFetch, ApiError, onAitoQueries, type AitoQuery } from "@/lib/api";
 import { ASSIST_GATE, AUTO_GATE } from "@/lib/gates";
 import { viewUrl, writeUrlState } from "@/lib/route";
@@ -293,7 +294,10 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
           </div>
           <NavItem v="rules">Decision rules · review</NavItem>
         </nav>
-        <div style={{ marginTop: "auto", padding: "16px 18px", fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: "var(--side-label)", lineHeight: 1.6, borderTop: "1px solid var(--side-line)" }}>
+        <div style={{ marginTop: "auto", padding: "12px 18px 0" }}>
+          <button type="button" className="tour-link" onClick={() => window.dispatchEvent(new Event(START_TOUR_EVENT))}>Take the tour</button>
+        </div>
+        <div style={{ padding: "16px 18px", fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: "var(--side-label)", lineHeight: 1.6, borderTop: "1px solid var(--side-line)" }}>
           analyze · assist · automate<br />every view is live Aito + gpt-5-mini
         </div>
       </aside>
@@ -464,6 +468,9 @@ export default function AppShell({ initialView = "home" }: { initialView?: View 
         <span className="rc-aw">aito<span className="dots">..</span></span>
       </button>
       <div className="rc-panel-backdrop" onClick={() => setPanelMobOpen(false)} />
+
+      {/* first visit: three skippable steps (components/shell/Tour.tsx); setPanelOpen shows the panel for a step without saving the preference */}
+      <Tour view={view} label={PAGE_TITLE[view]} navOpen={navOpen} setNavOpen={setNavOpen} panelOpen={panelOpen} previewPanel={setPanelOpen} />
     </div>
   );
 }
