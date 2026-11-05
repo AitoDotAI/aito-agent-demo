@@ -10,6 +10,13 @@ broken query look like "no data". Here `_relate_drivers` does exactly that
 (src/app.py), so a failing _relate would read as "no driver above the lift
 threshold" on every KPI. This asserts the views that visitors open are full.
 
+Also fails when a view's *band* changed while its predicted label did not. Board
+td-20260919195009050217: these checks asserted the label and a 0.5 floor the app
+uses for nothing, so a $p drifting across AUTO_GATE (0.85) or ASSIST_GATE (0.65)
+silently moved a ticket between "served as is", "the LLM helps" and "a person
+decides" with the smoke green. The band is what a visitor sees happen, so the
+band is what is asserted, and the distance to the deciding gate is printed.
+
 Read-only and free: GETs only, and none of the LLM routes (resolve-llm, route,
 the chats), which are billable. The demo's Aito key is read-only anyway.
 """
@@ -23,7 +30,14 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Callable
+
+# The app's own gates and band logic, imported rather than re-spelled: a gate
+# script that keeps its own copy of 0.85 is exactly how the band it asserts
+# drifts away from the band the demo serves.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from src.gates import ASSIST_GATE, AUTO_GATE, band_of, margin_to_gate  # noqa: E402
 
 LIVE_BASE = "https://agent.aito.ai"
 SLOW_SECONDS = 20.0
@@ -42,20 +56,81 @@ def check_health(body: dict) -> str:
     return "Aito reachable"
 
 
+#: the band /api/resolve's sample ticket has to land in. The page's whole claim is
+#: that a plain, unambiguous outage report is resolved and served as is; at `assist`
+#: the same screen would be saying the LLM has to help with this one.
+RESOLVE_BAND = "auto"
+
+
 def check_resolve(body: dict) -> str:
-    """A plain outage report must resolve to an intent, confidently, with reasons."""
+    """A plain outage report must resolve to an intent, confidently, with reasons —
+    and land in the band the page is built to show.
+
+    The floor here used to be 0.5, a number the app uses for nothing: anywhere
+    between 0.5 and AUTO_GATE the demo's behaviour has already changed and this
+    check stayed green, because the predicted label does not move when a $p
+    crosses a gate (td-20260919195009050217).
+    """
     assert body.get("intent"), f"no intent resolved: {body}"
-    assert (body.get("intent_p") or 0) >= 0.5, f"intent {body['intent']} at only {body.get('intent_p')}"
+    p = body.get("intent_p") or 0
     assert body.get("why"), "the intent comes with no $why"
-    return f"{body['intent']} ({body['intent_p']:.2f}), param {body.get('param_field')}={body.get('param')}"
+    band = band_of(p)
+    gate, delta = margin_to_gate(p)
+    assert band == RESOLVE_BAND, (
+        f"intent {body['intent']} at $p {p:.4f} is band {band!r}, not {RESOLVE_BAND!r} "
+        f"({delta:+.4f} from the {gate} gate): the label is unchanged but the page "
+        "now behaves differently")
+    return (f"{body['intent']} ({p:.2f}, {band}, {delta:+.4f} from the {gate} gate), "
+            f"param {body.get('param_field')}={body.get('param')}")
+
+
+#: the band split the fixed 10-ticket queue produces, measured live on 2026-11-05
+#: (agent.aito.ai, origin/main 1fea7f7a). Pinned because a band flip IS the change
+#: this gate exists to catch: both the queue and the demo's data are fixed, so these
+#: counts move only when a prediction crosses a gate — and then a visitor sees a
+#: different page. When the move is legitimate (queue edited, data reloaded),
+#: re-measure and say in the PR which row changed band and which way.
+EXPECTED_BANDS = {"auto": 6, "assist": 1, "handoff": 3}
+#: set by --require-margin: once the deployed build serves /api/handoff's `margin`,
+#: its absence must fail rather than be tolerated (as with REQUIRE_DEGRADED below).
+REQUIRE_MARGIN = False
 
 
 def check_handoff(body: dict) -> str:
+    """The queue is triaged the way the page claims, row by row.
+
+    `counts` adding up was the whole check before, and every possible split adds
+    up — all 10 in one band included. So this asserts the split itself, and that
+    each row the page shows as a handoff is one for the reason it gives.
+    """
     counts = body.get("counts") or {}
     total = body.get("total") or 0
     assert total > 0, "nothing routed"
     assert sum(counts.values()) == total, f"routing counts {counts} don't add up to {total}"
-    return f"{total} routed: {counts}"
+    assert counts == EXPECTED_BANDS, (
+        f"band split is {counts}, expected {EXPECTED_BANDS}: a ticket crossed a confidence "
+        "gate, so this queue is triaged differently than when the page was reviewed")
+    for row in body.get("handoff") or []:
+        p, reason = row.get("p") or 0, row.get("reason") or ""
+        sensitive = "sensitive action" in reason
+        assert band_of(p, sensitive) == "handoff", (
+            f"row {row.get('text')!r} is in the handoff list at $p {p:.4f} with reason "
+            f"{reason!r}, but the gates put it in {band_of(p, sensitive)!r}")
+        if sensitive:
+            # app.py tests low confidence FIRST, so a sensitive reason means the $p cleared
+            # the assist gate — below it the row would read "low confidence" instead
+            assert p >= ASSIST_GATE, (
+                f"row {row.get('text')!r} hands off at $p {p:.4f} for a sensitive action, but "
+                f"{p:.4f} is under the {ASSIST_GATE} assist gate: the reason the visitor reads "
+                "is not the reason the code used")
+    margin = body.get("margin")
+    assert not (REQUIRE_MARGIN and margin is None), (
+        "/api/handoff serves no `margin`, so how close this queue is to a different "
+        "triage cannot be seen (--require-margin)")
+    if margin is None:
+        return f"{total} routed: {counts} (build serves no `margin`)"
+    return (f"{total} routed: {counts}; closest to flipping: {margin.get('delta'):+.4f} from the "
+            f"{margin.get('gate')} gate ({margin.get('band')}, {str(margin.get('text'))[:40]!r})")
 
 
 def check_opportunity(body: dict) -> str:
@@ -129,9 +204,13 @@ def main() -> int:
     parser.add_argument("--require-degraded", action="store_true",
                         help="fail if company-360 lacks the `degraded` field (turn on once the "
                              "deployed build serves it)")
+    parser.add_argument("--require-margin", action="store_true",
+                        help="fail if handoff lacks the `margin` field (turn on once the "
+                             "deployed build serves it)")
     args = parser.parse_args()
-    global REQUIRE_DEGRADED
+    global REQUIRE_DEGRADED, REQUIRE_MARGIN
     REQUIRE_DEGRADED = args.require_degraded
+    REQUIRE_MARGIN = args.require_margin
 
     print(f"Agent live smoke — {args.base}, {len(STEPS)} views\n")
     failures = []
