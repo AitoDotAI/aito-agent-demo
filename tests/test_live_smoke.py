@@ -132,8 +132,15 @@ def test_resolve_below_the_assist_gate_fails_too():
         smoke.check_resolve(_resolved(ASSIST_GATE - 0.0011))
 
 
+#: what a live /api/handoff reports for the queue's closest-to-flipping row
+_MARGIN = {"delta": 0.0498, "gate": "auto", "band": "auto", "text": "Nothing has worked..."}
+
+
 def _handoff(counts, rows=(), **extra):
-    return {"total": sum(counts.values()), "counts": dict(counts), "handoff": list(rows), **extra}
+    """A handoff body shaped like the live one, so each test breaks one thing.
+    Pass margin=None for a build from before that field shipped."""
+    return {"total": sum(counts.values()), "counts": dict(counts), "handoff": list(rows),
+            "margin": dict(_MARGIN), **extra}
 
 
 def test_one_ticket_crossing_a_gate_fails_the_handoff_check():
@@ -173,14 +180,16 @@ def test_a_row_listed_as_a_handoff_that_the_gates_would_serve_fails():
                                      [_row(0.95, "low confidence (95%), Aito won't guess on this")]))
 
 
-def test_the_margin_is_reported_and_can_be_required(monkeypatch):
-    assert "no `margin`" in smoke.check_handoff(_handoff(smoke.EXPECTED_BANDS))
-    monkeypatch.setattr(smoke, "REQUIRE_MARGIN", True)
-    with pytest.raises(AssertionError, match="require-margin"):
-        smoke.check_handoff(_handoff(smoke.EXPECTED_BANDS))
+def test_the_margin_is_required_by_default_and_reported(monkeypatch):
+    # the field has been live since 2026-11-06, so a build without it is a failure
+    with pytest.raises(AssertionError, match="rolled back"):
+        smoke.check_handoff(_handoff(smoke.EXPECTED_BANDS, margin=None))
     served = _handoff(smoke.EXPECTED_BANDS,
                       margin={"delta": 0.0011, "gate": "auto", "band": "auto", "text": "a hair over"})
     assert "+0.0011 from the auto gate" in smoke.check_handoff(served)
+    # --no-require-margin checks the rest against an older build instead of refusing it
+    monkeypatch.setattr(smoke, "REQUIRE_MARGIN", False)
+    assert "no `margin`" in smoke.check_handoff(_handoff(smoke.EXPECTED_BANDS, margin=None))
 
 
 def test_the_gates_come_from_the_app_not_from_this_script():

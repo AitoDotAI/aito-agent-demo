@@ -130,9 +130,12 @@ def check_resolve(body: dict, expected: str | None = None) -> str:
 #: different page. When the move is legitimate (queue edited, data reloaded),
 #: re-measure and say in the PR which row changed band and which way.
 EXPECTED_BANDS = {"auto": 6, "assist": 1, "handoff": 3}
-#: set by --require-margin: once the deployed build serves /api/handoff's `margin`,
-#: its absence must fail rather than be tolerated (as with REQUIRE_DEGRADED below).
-REQUIRE_MARGIN = False
+#: /api/handoff serves `margin` in production since the 2026-11-06 deploy, so its
+#: absence is a failure, not something to tolerate. --no-require-margin turns that
+#: off for a run against an older build (a local branch, a rollback). The `degraded`
+#: check below still has the opposite default, deliberately: this one has a deploy
+#: behind it and that one does not.
+REQUIRE_MARGIN = True
 
 
 def check_handoff(body: dict) -> str:
@@ -164,8 +167,9 @@ def check_handoff(body: dict) -> str:
                 "is not the reason the code used")
     margin = body.get("margin")
     assert not (REQUIRE_MARGIN and margin is None), (
-        "/api/handoff serves no `margin`, so how close this queue is to a different "
-        "triage cannot be seen (--require-margin)")
+        "/api/handoff serves no `margin`, so how close this queue is to a different triage "
+        "cannot be seen: either this build predates the field or the deploy was rolled back "
+        "(--no-require-margin to check the rest anyway)")
     if margin is None:
         return f"{total} routed: {counts} (build serves no `margin`)"
     return (f"{total} routed: {counts}; closest to flipping: {margin.get('delta'):+.4f} from the "
@@ -296,9 +300,9 @@ def main() -> int:
     parser.add_argument("--require-degraded", action="store_true",
                         help="fail if company-360 lacks the `degraded` field (turn on once the "
                              "deployed build serves it)")
-    parser.add_argument("--require-margin", action="store_true",
-                        help="fail if handoff lacks the `margin` field (turn on once the "
-                             "deployed build serves it)")
+    parser.add_argument("--no-require-margin", action="store_false", dest="require_margin",
+                        help="tolerate a handoff with no `margin` field, for a run against a "
+                             "build from before it shipped")
     args = parser.parse_args()
     global REQUIRE_DEGRADED, REQUIRE_MARGIN
     REQUIRE_DEGRADED = args.require_degraded
