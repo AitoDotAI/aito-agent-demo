@@ -85,8 +85,22 @@ def check_inputs(table: str, target: str, where: dict) -> None:
 
 
 def _p(hit: dict) -> float | None:
+    """A hit's $p, unrounded.
+
+    Deliberately not rounded: `envelope()` gates on this value, so rounding here
+    decided the band on the rounding rather than on the probability. round(p, 3)
+    put a true 0.8496 at 0.85 and served it as `auto` — "history already decides
+    it" — on a number the prediction never reached. Everything in [0.8495, 0.85)
+    was auto-resolved that way, and the same at the 0.65 gate. The threshold is
+    unchanged; it is now applied to the real $p.
+
+    Nothing downstream wanted three decimals: EnvelopeView.tsx renders every $p
+    as whole percent. (Which still reads oddly right at a gate — 0.8496 shows as
+    "85%" beside an `assist` band — but that is the page's rounding to make, not
+    this one, and it no longer changes what the page does.)
+    """
     p = hit.get("$p")
-    return round(float(p), 3) if isinstance(p, (int, float)) else None
+    return float(p) if isinstance(p, (int, float)) else None
 
 
 def _ranked(hits: list[dict], where: dict, t0: float) -> dict:

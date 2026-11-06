@@ -132,8 +132,15 @@ def test_resolve_below_the_assist_gate_fails_too():
         smoke.check_resolve(_resolved(ASSIST_GATE - 0.0011))
 
 
+#: what a live /api/handoff reports for the queue's closest-to-flipping row
+_MARGIN = {"delta": 0.0498, "gate": "auto", "band": "auto", "text": "Nothing has worked..."}
+
+
 def _handoff(counts, rows=(), **extra):
-    return {"total": sum(counts.values()), "counts": dict(counts), "handoff": list(rows), **extra}
+    """A handoff body shaped like the live one, so each test breaks one thing.
+    Pass margin=None for a build from before that field shipped."""
+    return {"total": sum(counts.values()), "counts": dict(counts), "handoff": list(rows),
+            "margin": dict(_MARGIN), **extra}
 
 
 def test_one_ticket_crossing_a_gate_fails_the_handoff_check():
@@ -173,17 +180,85 @@ def test_a_row_listed_as_a_handoff_that_the_gates_would_serve_fails():
                                      [_row(0.95, "low confidence (95%), Aito won't guess on this")]))
 
 
-def test_the_margin_is_reported_and_can_be_required(monkeypatch):
-    assert "no `margin`" in smoke.check_handoff(_handoff(smoke.EXPECTED_BANDS))
-    monkeypatch.setattr(smoke, "REQUIRE_MARGIN", True)
-    with pytest.raises(AssertionError, match="require-margin"):
-        smoke.check_handoff(_handoff(smoke.EXPECTED_BANDS))
+def test_the_margin_is_required_by_default_and_reported(monkeypatch):
+    # the field has been live since 2026-11-06, so a build without it is a failure
+    with pytest.raises(AssertionError, match="rolled back"):
+        smoke.check_handoff(_handoff(smoke.EXPECTED_BANDS, margin=None))
     served = _handoff(smoke.EXPECTED_BANDS,
                       margin={"delta": 0.0011, "gate": "auto", "band": "auto", "text": "a hair over"})
     assert "+0.0011 from the auto gate" in smoke.check_handoff(served)
+    # --no-require-margin checks the rest against an older build instead of refusing it
+    monkeypatch.setattr(smoke, "REQUIRE_MARGIN", False)
+    assert "no `margin`" in smoke.check_handoff(_handoff(smoke.EXPECTED_BANDS, margin=None))
 
 
 def test_the_gates_come_from_the_app_not_from_this_script():
     from src import gates
     assert (smoke.AUTO_GATE, smoke.ASSIST_GATE) == (gates.AUTO_GATE, gates.ASSIST_GATE)
     assert smoke.band_of is gates.band_of
+
+
+# ── the two surfaces the band gate did not reach (follow-up to #47) ────────
+
+
+def _envelope(**over):
+    """An envelope body that passes, so each test can break exactly one thing."""
+    body = {"ticket": {"ticket_id": smoke.ENVELOPE_TICKET}, "gate": smoke.ENVELOPE_BAND,
+            "degraded": [],
+            "steps": [{"key": "customer", "value": "ACC-1", "p": None},
+                      {"key": "priority", "value": "normal", "p": 0.797},
+                      {"key": "resolution", "value": "api_guidance", "p": 0.984, "gate": "auto"}]}
+    return {**body, **over}
+
+
+def test_the_envelope_is_checked_on_the_ticket_the_page_opens():
+    out = smoke.check_envelope(_envelope())
+    assert smoke.ENVELOPE_TICKET in out and "band auto" in out and "from the auto gate" in out
+    with pytest.raises(AssertionError, match="fixture was reordered"):
+        smoke.check_envelope(_envelope(ticket={"ticket_id": "SUP-00000"}))
+
+
+def test_the_envelope_band_is_asserted_not_just_its_steps():
+    steps = [{"key": "resolution", "value": "api_guidance", "p": 0.80, "gate": "assist"}]
+    with pytest.raises(AssertionError, match="decides this ticket differently"):
+        smoke.check_envelope(_envelope(gate="assist", steps=steps))
+
+
+def test_an_envelope_band_that_contradicts_its_own_p_fails():
+    # the band says auto, the $p it is supposed to come from is an assist
+    steps = [{"key": "resolution", "value": "api_guidance", "p": 0.80, "gate": "auto"}]
+    with pytest.raises(AssertionError, match="by the app's own gates"):
+        smoke.check_envelope(_envelope(steps=steps))
+
+
+def test_an_envelope_with_a_failed_step_or_no_p_fails():
+    with pytest.raises(AssertionError, match="Aito failed behind"):
+        smoke.check_envelope(_envelope(degraded=["resolution"]))
+    with pytest.raises(AssertionError, match="nothing decides the band"):
+        smoke.check_envelope(_envelope(steps=[{"key": "resolution", "value": None, "p": None}]))
+
+
+def test_the_resolve_samples_are_read_from_the_page_itself():
+    samples = smoke.page_samples()
+    assert len(samples) >= 5
+    labels = [label for label, _, _ in samples]
+    assert "Outage · Helsinki" in labels and "Balance" in labels
+    for label, text, sender in samples:
+        assert text and sender, (label, text, sender)      # the page sends a sender; so must the gate
+        assert label in smoke.SAMPLE_BANDS, f"{label}: a new sample needs its band stated"
+
+
+def test_every_sample_is_a_step_with_its_own_sender():
+    by_text = {s.params["text"]: s for s in smoke.STEPS if s.path == "/api/resolve" and s.params}
+    for label, text, sender in smoke.page_samples():
+        assert text in by_text, f"{label} is offered by the page but not gated"
+        assert by_text[text].params["sender"] == sender, label
+    # the no-sender case stays: a visitor typing free text sends none
+    assert any(s.params.get("sender") == "" for s in smoke.STEPS if s.path == "/api/resolve")
+    assert any(s.path == "/api/support/envelope" for s in smoke.STEPS)
+
+
+def test_a_sample_with_no_stated_band_is_not_assumed_to_be_auto(monkeypatch):
+    monkeypatch.setattr(smoke, "SAMPLE_BANDS", {"Balance": "auto"})
+    with pytest.raises(AssertionError, match="needs its band stated"):
+        smoke.sample_band("Outage · Helsinki")
