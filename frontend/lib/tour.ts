@@ -65,6 +65,24 @@ export function reCollapsePanel({ openedByTour, visitorChanged, openNow }: { ope
   return openedByTour && !visitorChanged && openNow;
 }
 
+/** Where focus goes when the tour ends. "Take the tour" on a phone sits in the drawer, which the tour closes: focus would land in a closed
+ *  drawer, so it goes to the menu button that opens it. */
+export function focusAfter({ openerInDrawer, phone }: { openerInDrawer: boolean; phone: boolean }): "burger" | "opener" {
+  return openerInDrawer && phone ? "burger" : "opener";
+}
+
+/** "Take the tour" while a tour runs starts over; the run it replaces is closed as skipped first, so every tour_started has an end. */
+export function restartEvent({ index, of }: { index: number | null; of: number }): { at_step: number; of: number; reason: "restarted" } | null {
+  return index === null ? null : { at_step: index + 1, of, reason: "restarted" };
+}
+
+/** What a step outlines. The Aito step follows the width: the panel where it is on screen (wider than 1180 px), else the button that opens it. */
+export function targetFor(step: Step["id"], panelInline: boolean): string | null {
+  if (step === "menu") return ".rc-side";
+  if (step === "why") return panelInline ? ".rc-panel" : ".rc-panel-fab";
+  return null;
+}
+
 /** The steps for the view the visitor landed on: a deep link starts with the view they are on, the overview with what this is.
  *  `panelInline` is whether the Aito panel is on screen (a wide desktop) rather than behind the Aito button. */
 export function stepsFor({ view, viewCount, touch = true, panelInline = false }:
@@ -75,7 +93,7 @@ export function stepsFor({ view, viewCount, touch = true, panelInline = false }:
     : { id: "what", title: "Agents that answer from your data", text: what };
   return [
     first,
-    { id: "menu", title: "All the views are in the menu", text: `There are ${viewCount} views: the agents, their toolboxes and the techniques behind them. ${touch ? "Tap" : "Click"} one to open it.` },
+    { id: "menu", title: `All ${viewCount} views are in the menu`, text: `There are ${viewCount} views: the agents, their toolboxes and the techniques behind them. ${touch ? "Tap" : "Click"} one to open it.` },
     { id: "why", title: "See the query behind it", text: panelInline
       ? "The Aito panel on the right shows the query behind each view and what it does."
       : "The Aito button, bottom right, opens a panel with the query behind each view and what it does." },

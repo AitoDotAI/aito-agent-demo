@@ -3,14 +3,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { trackEvent } from "@/lib/analytics";
-import { autoStart, choseAView, escapeClosesTour, presenting, reCollapsePanel, stepsFor, type Step, type Store } from "@/lib/tour";
+import {
+  autoStart, choseAView, escapeClosesTour, focusAfter, presenting, reCollapsePanel, restartEvent, stepsFor, targetFor, type Step, type Store,
+} from "@/lib/tour";
 
 export const START_TOUR_EVENT = "agent:start-tour";
 const SPOT = "tour-spot";
 const AUTO_START_DELAY_MS = 900;
 /** The widths globals.css switches at: the menu is a drawer at 760 px or narrower, the Aito panel at 1180 px or narrower. */
 const isPhone = () => window.matchMedia("(max-width: 760px)").matches;
-const panelInline = () => !window.matchMedia("(max-width: 1180px)").matches;
+const PANEL_DRAWER = "(max-width: 1180px)";
 /** A touch screen, at any width: a phone turned sideways shows the menu inline, and is still tapped. */
 const touchScreen = () => window.matchMedia("(pointer: coarse)").matches;
 
@@ -23,19 +25,13 @@ function storage(): Store | undefined {
   }
 }
 
-/** The element a step points at, if it has one: the menu, or the Aito panel (its button where the panel is a drawer). */
-function target(step: Step): Element | null {
-  if (step.id === "menu") return document.querySelector(".rc-side");
-  if (step.id === "why") return document.querySelector(panelInline() ? ".rc-panel" : ".rc-panel-fab");
-  return null;
-}
-
 /**
  * The first-visit tour: three steps, skippable at each, shown once (lib/tour.ts has the rules). The menu step shows the menu: on a phone it
  * opens the drawer. The Aito step on a wide desktop opens a collapsed Aito panel for the step without saving that (`previewPanel`, not the
  * edge tab's toggle, which writes `rcPanelCollapsed`), and collapses it again after unless the visitor has hidden it. The card sits below the
  * drawer (`.tour-card` in globals.css), so it never covers what it points at. Going to another view, or closing the drawer, ends or moves the
- * step on, so the card never describes a menu that is not there. "Take the tour" in the menu starts it again.
+ * step on, so the card never describes a menu that is not there. A resize across 1180 px moves the Aito step between the panel and its button.
+ * "Take the tour" in the menu starts it again, closing a running tour as skipped first.
  */
 export default function Tour({ view, label, viewCount, navOpen, setNavOpen, panelOpen, previewPanel }: {
   view: string; label: string;
@@ -44,9 +40,10 @@ export default function Tour({ view, label, viewCount, navOpen, setNavOpen, pane
   navOpen: boolean; setNavOpen: (open: boolean) => void;
   panelOpen: boolean; previewPanel: (open: boolean) => void;
 }) {
-  const [start, setStart] = useState<{ id: string; label: string; touch: boolean; panelInline: boolean } | null>(null);
+  const [start, setStart] = useState<{ id: string; label: string; touch: boolean } | null>(null);
   const [index, setIndex] = useState<number | null>(null);
-  const steps: Step[] = start ? stepsFor({ view: { id: start.id, label: start.label }, viewCount, touch: start.touch, panelInline: start.panelInline }) : [];
+  const [inline, setInline] = useState(false);   // the Aito panel is on screen (wider than 1180 px), followed live
+  const steps: Step[] = start ? stepsFor({ view: { id: start.id, label: start.label }, viewCount, touch: start.touch, panelInline: inline }) : [];
   const card = useRef<HTMLDivElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const openedDrawer = useRef(false);
@@ -55,14 +52,24 @@ export default function Tour({ view, label, viewCount, navOpen, setNavOpen, pane
   const visitorChangedPanel = useRef(false);
   const sawDrawerOpen = useRef(false);
   const startedOn = useRef(view);
-  const latest = useRef({ view, label, navOpen, panelOpen });
-  latest.current = { view, label, navOpen, panelOpen };
+  const latest = useRef({ view, label, navOpen, panelOpen, index, of: steps.length });
+  latest.current = { view, label, navOpen, panelOpen, index, of: steps.length };
+
+  useEffect(() => {
+    const drawer = window.matchMedia(PANEL_DRAWER);
+    const follow = () => setInline(!drawer.matches);
+    follow();
+    drawer.addEventListener("change", follow);
+    return () => drawer.removeEventListener("change", follow);
+  }, []);
 
   const begin = useCallback((auto: boolean) => {
     const { view: id, label: viewLabel } = latest.current;
     startedOn.current = id;
-    returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    setStart({ id, label: viewLabel, touch: touchScreen(), panelInline: panelInline() });
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    returnFocus.current = focusAfter({ openerInDrawer: Boolean(opener?.closest(".rc-side")), phone: isPhone() }) === "burger"
+      ? document.querySelector<HTMLElement>(".rc-burger") : opener;
+    setStart({ id, label: viewLabel, touch: touchScreen() });
     setIndex(0);
     trackEvent("tour_started", { view: viewLabel, auto });
   }, []);
@@ -74,12 +81,6 @@ export default function Tour({ view, label, viewCount, navOpen, setNavOpen, pane
     }, AUTO_START_DELAY_MS);
     return () => clearTimeout(timer);
   }, [begin]);
-
-  useEffect(() => {
-    const start = () => { setNavOpen(false); begin(false); };
-    window.addEventListener(START_TOUR_EVENT, start);
-    return () => window.removeEventListener(START_TOUR_EVENT, start);
-  }, [begin, setNavOpen]);
 
   const step = index === null ? null : steps[index];
   const stepId = step?.id;
@@ -106,23 +107,42 @@ export default function Tour({ view, label, viewCount, navOpen, setNavOpen, pane
     returnFocus.current?.focus();
   }, [index, steps.length, restore]);
 
+  // "Take the tour": a running tour is closed as skipped (reason restarted) and put back, then it starts over.
+  useEffect(() => {
+    const start = () => {
+      const replaced = restartEvent({ index: latest.current.index, of: latest.current.of });
+      if (replaced) {
+        trackEvent("tour_skipped", replaced);
+        document.querySelectorAll(`.${SPOT}`).forEach((el) => el.classList.remove(SPOT));
+        restore();
+      }
+      setNavOpen(false);
+      begin(false);
+    };
+    window.addEventListener(START_TOUR_EVENT, start);
+    return () => window.removeEventListener(START_TOUR_EVENT, start);
+  }, [begin, setNavOpen, restore]);
+
   const go = useCallback((next: number) => {
     setIndex(next);
     trackEvent("tour_step", { step: next + 1, of: steps.length, id: steps[next].id });
   }, [steps]);
 
   // What the step points at: outlined; the menu step opens the drawer on a phone, the Aito step a collapsed panel; the next step puts it back.
+  // The Aito step runs again when the width crosses 1180 px, so it moves between the panel and its button.
+  const whyInline = stepId === "why" && inline;
   useEffect(() => {
     document.querySelectorAll(`.${SPOT}`).forEach((el) => el.classList.remove(SPOT));
     sawDrawerOpen.current = false;
     if (!step) return;
     restore();
     if (step.id === "menu" && isPhone() && !latest.current.navOpen) { openedDrawer.current = true; setNavOpen(true); }
-    if (step.id === "why" && panelInline() && !latest.current.panelOpen) { openedPanel.current = true; panelSetTo.current = true; previewPanel(true); }
-    target(step)?.classList.add(SPOT);
+    if (whyInline && !latest.current.panelOpen) { openedPanel.current = true; panelSetTo.current = true; previewPanel(true); }
+    const spot = targetFor(step.id, inline);
+    if (spot) document.querySelector(spot)?.classList.add(SPOT);
     card.current?.focus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stepId]);
+  }, [stepId, whyInline]);
 
   // The panel changed: by the tour (the value it set), or by the visitor during the step, who then owns it (reCollapsePanel).
   useEffect(() => {

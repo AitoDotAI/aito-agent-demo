@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  MENU_LINK, STORAGE_KEY, autoStart, choseAView, escapeClosesTour, markSeen, presenting, reCollapsePanel, shouldAutoStart, stepsFor, type View,
+  MENU_LINK, STORAGE_KEY, autoStart, choseAView, escapeClosesTour, focusAfter, markSeen, presenting, reCollapsePanel, restartEvent, shouldAutoStart,
+  stepsFor, targetFor, type View,
 } from "../lib/tour.ts";
 
 const HOME: View = { id: "home", label: "Overview" };
@@ -122,4 +123,27 @@ test("the panel the tour opened is hidden again after, unless the visitor hid it
 
 test("a visitor who hides and re-shows the panel during the step keeps it shown, as they saved it", () => {
   assert.equal(reCollapsePanel({ openedByTour: true, visitorChanged: true, openNow: true }), false);
+});
+
+test("the menu step's title carries the count, so a short phone can drop the text and keep it", () => {
+  assert.equal(stepsFor({ view: HOME, viewCount: 12 })[1].title, "All 12 views are in the menu");
+});
+
+test("after a tour started from inside the phone's drawer, focus goes to the menu button, not into the closed drawer", () => {
+  assert.equal(focusAfter({ openerInDrawer: true, phone: true }), "burger");
+  assert.equal(focusAfter({ openerInDrawer: true, phone: false }), "opener");   // the menu is on screen: back to the link
+  assert.equal(focusAfter({ openerInDrawer: false, phone: true }), "opener");
+});
+
+test("restarting a running tour first closes the old run as skipped, so the funnel has no unclosed start", () => {
+  assert.deepEqual(restartEvent({ index: 1, of: 3 }), { at_step: 2, of: 3, reason: "restarted" });
+  assert.equal(restartEvent({ index: null, of: 3 }), null);
+});
+
+test("the Aito step points at the panel where it is on screen, at its button where it is a drawer, and follows a resize", () => {
+  assert.equal(targetFor("why", true), ".rc-panel");
+  assert.equal(targetFor("why", false), ".rc-panel-fab");
+  assert.equal(targetFor("menu", true), ".rc-side");
+  assert.equal(targetFor("what", true), null);
+  assert.equal(targetFor("here", false), null);
 });
