@@ -338,3 +338,60 @@ def test_the_client_ip_drops_a_port_so_connections_share_a_bucket(monkeypatch, s
     monkeypatch.setattr(app_module, "_PROXY_HOPS", 2)
     req = Request({"type": "http", "headers": [(b"x-forwarded-for", sent.encode())], "client": ("10.0.0.9", 1)})
     assert app_module._client_ip(req) == client
+
+
+# ── the band is decided on the real $p, not on a rounded one ───────────────
+
+
+class _FakeAt(_Fake):
+    """Predicts "v1" at exactly the $p given, so a step can be put on a chosen
+    side of a gate to a precision the old 3-decimal rounding could not express."""
+
+    def __init__(self, p, known=True):
+        super().__init__(known=known)
+        self.p = p
+
+    def predict(self, table, where, target, limit=5, select=None):
+        self.calls.append(("predict", table, dict(where), target))
+        return {"hits": [{"feature": "v1", "$p": self.p}, {"feature": "v2", "$p": 0.001}]}
+
+
+def _one(p):
+    q = env.load_incoming()
+    tid = q["order"][0]
+    out = env.envelope(_FakeAt(p), q["tickets"][tid], q["steps"].get(tid, []))
+    return out, {s["key"]: s for s in out["steps"]}["resolution"]
+
+
+def test_a_step_under_the_auto_gate_is_not_served_as_auto():
+    """0.8496 is below AUTO (0.85), so it is `assist`. Rounded to 3 decimals it
+    reads 0.85 and was gated as `auto`: the band was decided on the rounding."""
+    out, res = _one(0.8496)
+    assert out["gate"] == "assist"
+    assert res["p"] == pytest.approx(0.8496)        # and the number says so, not "0.85"
+    assert res["gate"] == "assist"
+
+
+def test_a_step_under_the_assist_gate_is_not_served_as_assist():
+    out, res = _one(0.6496)
+    assert out["gate"] == "human"
+    assert res["p"] == pytest.approx(0.6496)
+
+
+def test_the_two_sides_of_a_gate_stay_on_their_own_sides():
+    from src.gates import AUTO_GATE, ASSIST_GATE
+    for p, band in ((AUTO_GATE, "auto"), (AUTO_GATE - 1e-6, "assist"),
+                    (ASSIST_GATE, "assist"), (ASSIST_GATE - 1e-6, "human")):
+        out, res = _one(p)
+        assert out["gate"] == band, (p, out["gate"], band)
+        assert res["p"] == pytest.approx(p), (p, res["p"])
+
+
+def test_the_shown_number_and_the_shown_band_cannot_disagree():
+    """Whatever $p the response reports, re-reading it through the app's own gates
+    gives the band the response reports. A rounded $p broke this at the boundary."""
+    from src.gates import band_of
+    names = {"auto": "auto", "assist": "assist", "handoff": "human"}
+    for p in (0.8496, 0.84999, 0.85, 0.6496, 0.65, 0.999, 0.1):
+        out, res = _one(p)
+        assert names[band_of(res["p"])] == out["gate"] == res["gate"], (p, res["p"], out["gate"])
