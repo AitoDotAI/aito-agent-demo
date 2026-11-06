@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 import urllib.error
@@ -62,7 +63,40 @@ def check_health(body: dict) -> str:
 RESOLVE_BAND = "auto"
 
 
-def check_resolve(body: dict) -> str:
+#: the sample tickets the Support resolution page offers, read out of the page
+#: itself so a new sample is gated the moment it is added and the two cannot
+#: drift apart. The page sends the sample's `sender`; so does the gate.
+_SAMPLE_RE = re.compile(r'\{\s*label:\s*"([^"]+)",\s*text:\s*"([^"]*)",\s*sender:\s*"([^"]*)"\s*\}')
+
+
+def page_samples() -> list[tuple[str, str, str]]:
+    src = (Path(__file__).resolve().parents[1] / "frontend" / "components" / "AppShell.tsx").read_text()
+    block = src[src.index("const SAMPLES"):]
+    found = _SAMPLE_RE.findall(block[:block.index("];")])
+    assert found, "cannot read SAMPLES out of AppShell.tsx: the gate would be checking nothing"
+    return found
+
+
+#: the band each offered sample has to land in. A sample missing here is NOT
+#: assumed to be `auto` — the band is the behaviour, so the page's claim about a
+#: new sample has to be stated rather than inherited.
+SAMPLE_BANDS = {
+    "Outage · Helsinki": "auto",
+    "Repair · cracked screen": "auto",
+    "Cancel · broadband": "auto",
+    "Refund · roaming": "auto",
+    "Balance": "auto",
+}
+
+
+def sample_band(label: str) -> str:
+    assert label in SAMPLE_BANDS, (
+        f"{label!r} is offered by the Support page but needs its band stated in SAMPLE_BANDS: "
+        "say which of auto/assist/handoff the page claims for it")
+    return SAMPLE_BANDS[label]
+
+
+def check_resolve(body: dict, expected: str | None = None) -> str:
     """A plain outage report must resolve to an intent, confidently, with reasons —
     and land in the band the page is built to show.
 
@@ -76,8 +110,9 @@ def check_resolve(body: dict) -> str:
     assert body.get("why"), "the intent comes with no $why"
     band = band_of(p)
     gate, delta = margin_to_gate(p)
-    assert band == RESOLVE_BAND, (
-        f"intent {body['intent']} at $p {p:.4f} is band {band!r}, not {RESOLVE_BAND!r} "
+    want = RESOLVE_BAND if expected is None else expected
+    assert band == want, (
+        f"intent {body['intent']} at $p {p:.4f} is band {band!r}, not {want!r} "
         f"({delta:+.4f} from the {gate} gate): the label is unchanged but the page "
         "now behaves differently")
     return (f"{body['intent']} ({p:.2f}, {band}, {delta:+.4f} from the {gate} gate), "
@@ -171,17 +206,70 @@ def check_company_360(body: dict) -> str:
     return f"6 KPIs, {len(with_causes)} with causes (pre-#24 build: no `degraded` field)"
 
 
+#: the ticket the Support envelope page opens by itself: EnvelopeView.tsx takes
+#: tickets[0] from /api/support/incoming. The queue is a committed fixture, so a
+#: different ticket here means the fixture was reordered, not that Aito moved.
+ENVELOPE_TICKET = "SUP-11986"
+#: the band that ticket's resolution step lands in, measured live 2026-11-06
+ENVELOPE_BAND = "auto"
+#: /api/support/envelope calls the bottom band "human" where /api/handoff says "handoff"
+_ENVELOPE_NAME = {"auto": "auto", "assist": "assist", "handoff": "human"}
+
+
+def check_envelope(body: dict) -> str:
+    """The envelope page's one band: `gate`, decided by the resolution step's $p.
+
+    Only that step is banded. priority, kb, risk, recovery and upsell come back
+    with a $p but nothing is gated on them — risk and recovery are read against
+    a base rate rather than decided — so the distance from a gate is reported
+    for the $p that actually decides what the page does.
+    """
+    got = (body.get("ticket") or {}).get("ticket_id")
+    assert got == ENVELOPE_TICKET, (
+        f"the queue now opens on {got}, not {ENVELOPE_TICKET}: the incoming fixture was "
+        "reordered, so this is no longer the ticket a visitor sees first")
+    assert body.get("degraded") == [], f"Aito failed behind: {body.get('degraded')}"
+    steps = {s.get("key"): s for s in body.get("steps") or []}
+    assert steps, "the envelope has no steps"
+    res = steps.get("resolution") or {}
+    p = res.get("p")
+    assert p is not None, "the resolution step came back with no $p, so nothing decides the band"
+    served = body.get("gate")
+    assert served == ENVELOPE_BAND, (
+        f"the envelope serves band {served!r} at $p {p}, expected {ENVELOPE_BAND!r}: history "
+        "decides this ticket differently than when the page was reviewed")
+    assert served == _ENVELOPE_NAME[band_of(p)], (
+        f"the envelope says {served!r} but $p {p} is {band_of(p)!r} by the app's own gates")
+    gate, delta = margin_to_gate(p)
+    answered = [s for s in steps.values() if s.get("p") is not None]
+    return (f"{got}: {len(steps)} steps, {len(answered)} with a $p, band {served} "
+            f"({res.get('value')} at {p}, {delta:+.4f} from the {gate} gate)")
+
+
 def check_tools(body: dict) -> str:
     tools = body.get("tools") or []
     assert tools, "the agent has no tools"
     return f"{len(tools)} tools"
 
 
+def _resolve_check(expected: str) -> Callable[[Any], str]:
+    def check(body: dict) -> str:
+        return check_resolve(body, expected)
+    return check
+
+
 STEPS = [
     Step("health", "/api/health", check_health),
-    Step("resolve", "/api/resolve", check_resolve,
+    # free text with no sender: what a visitor who types their own message sends
+    Step("resolve (typed, no sender)", "/api/resolve", check_resolve,
          {"text": "My internet has been down since morning in Helsinki", "sender": ""}),
+    # and every sample the page offers, with the sender the page sends with it
+    *[Step(f"resolve · {label}", "/api/resolve", _resolve_check(sample_band(label)),
+           {"text": text, "sender": sender})
+      for label, text, sender in page_samples()],
     Step("handoff", "/api/handoff", check_handoff),
+    Step("support/envelope", "/api/support/envelope", check_envelope,
+         {"ticket_id": ENVELOPE_TICKET}),
     Step("opportunity", "/api/opportunity", check_opportunity),
     Step("company-360 (SMB/Free)", "/api/company-360", check_company_360, {"size": "SMB", "plan": "Free"}),
     Step("company-360 (all)", "/api/company-360", check_company_360),
@@ -219,12 +307,12 @@ def main() -> int:
         try:
             summary = step.check(fetch(args.base, step, args.timeout))
             elapsed = time.monotonic() - started
-            print(f"  {'SLOW' if elapsed > SLOW_SECONDS else 'ok  '}  {step.name:<24} {summary}  ({elapsed:.1f}s)")
+            print(f"  {'SLOW' if elapsed > SLOW_SECONDS else 'ok  '}  {step.name:<34} {summary}  ({elapsed:.1f}s)")
         except Exception as exc:   # noqa: BLE001 -- a smoke records every failure and walks on
             # (RemoteDisconnected, ConnectionResetError and ssl.SSLError are OSErrors, not URLErrors)
             reason = f"{type(exc).__name__}: {exc}"
             failures.append((step.name, reason))
-            print(f"  FAIL  {step.name:<24} {reason}  ({time.monotonic() - started:.1f}s)")
+            print(f"  FAIL  {step.name:<34} {reason}  ({time.monotonic() - started:.1f}s)")
 
     print()
     if failures:
