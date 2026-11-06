@@ -70,10 +70,14 @@ _SAMPLE_RE = re.compile(r'\{\s*label:\s*"([^"]+)",\s*text:\s*"([^"]*)",\s*sender
 
 
 def page_samples() -> list[tuple[str, str, str]]:
-    src = (Path(__file__).resolve().parents[1] / "frontend" / "components" / "AppShell.tsx").read_text()
-    block = src[src.index("const SAMPLES"):]
-    found = _SAMPLE_RE.findall(block[:block.index("];")])
-    assert found, "cannot read SAMPLES out of AppShell.tsx: the gate would be checking nothing"
+    page = Path(__file__).resolve().parents[1] / "frontend" / "components" / "AppShell.tsx"
+    src = page.read_text()
+    start = src.find("const SAMPLES")
+    end = src.find("];", start)
+    assert start != -1 and end != -1, f"no SAMPLES array in {page.name}: has it been moved or renamed?"
+    found = _SAMPLE_RE.findall(src[start:end])
+    assert found, (f"found SAMPLES in {page.name} but could not read a single "
+                   "{label, text, sender} out of it: the gate would be checking nothing")
     return found
 
 
