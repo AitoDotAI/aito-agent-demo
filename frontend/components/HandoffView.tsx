@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ConfidenceBar from "@/components/prediction/ConfidenceBar";
+import { pctP } from "@/lib/gates";
 import PredictionBadge from "@/components/prediction/PredictionBadge";
 import type { Alternative } from "@/lib/types";
 
@@ -31,7 +32,7 @@ export function HandoffView({ data, loading }: { data: HandoffData | null; loadi
       <div className="rc-caveat" role="note">
         <b>Known limit, being fixed:</b>{" "}a vague or off-topic ticket that shares a few words with past ones can still get a
         confident answer{data?.caveat_example
-          ? <> (&ldquo;{data.caveat_example.text}&rdquo; reads as {data.caveat_example.intent.replace(/_/g, " ")} at {Math.round(data.caveat_example.p * 100)}%, live)</>
+          ? <> (&ldquo;{data.caveat_example.text}&rdquo; reads as {data.caveat_example.intent.replace(/_/g, " ")} at {pctP(data.caveat_example.p)}, live)</>
           : null}, so some
         tickets below are resolved that should come to you. Aito is adding a measure of how much of a ticket&apos;s wording it
         has seen, which this queue will route on.

@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { pctP } from "@/lib/gates";
 import { urlParam, writeUrlState } from "@/lib/route";
 import { BenchPanel, ReplyPanel, SUPPORT_REPLY_CSS } from "@/components/SupportReply";
 
@@ -33,7 +34,8 @@ const UNFAMILIAR = [
 ];
 type Incoming = { ticket_id: string; created_at: string; text: string; channel: string };
 
-const pct = (p: number | null) => (p == null ? "" : `${Math.round(p * 100)}%`);
+// a $p as printed: whole percent, or two decimals where rounding would cross the gate the band beside it is decided on (lib/gates.ts)
+const pct = (p: number | null) => (p == null ? "" : pctP(p));
 const label = (v: string | null) => (v == null ? "none" : v.replace(/^PRD-/, "").replace(/_/g, " "));
 const GATE = {
   auto: "confident: answer from history",
@@ -158,7 +160,7 @@ export function EnvelopeView() {
                     ) : (
                       <>
                         <div className="ev-val"><b>{label(s.value)}</b> <span className="ev-p">{pct(s.p)}</span></div>
-                        {s.p != null && <div className="ev-bar"><i style={{ width: pct(s.p) }} /></div>}
+                        {s.p != null && <div className="ev-bar"><i style={{ width: `${s.p * 100}%` }} /></div>}
                         {s.alternatives.length > 0 && (
                           <div className="ev-alt">then {s.alternatives.map((a) => `${label(a.value)} ${pct(a.p)}`).join(" · ")}</div>
                         )}
