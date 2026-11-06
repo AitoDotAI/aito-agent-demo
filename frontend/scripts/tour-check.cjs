@@ -150,6 +150,46 @@ async function behaviours(browser) {
   const items = await page.evaluate(() => document.querySelectorAll(".rc-side .rc-item").length);
   check("view count follows the menu when the support view arrives late", /one of 11 views/.test(before) && after.includes(`one of ${items} views`) && items === 12, `${before} -> ${after} (menu ${items})`);
   await c.close();
+  // a short phone (375x667): the menu step leaves most of the menu in view (td-20261105154549274224)
+  c = await ctx(browser, { width: 375, height: 667 }, true); page = await c.newPage();
+  await page.goto(BASE + "/sales/"); await card(page); await page.click(".tour-next"); await page.waitForTimeout(500);
+  const shown = await page.evaluate(() => {
+    const side = document.querySelector(".rc-side").getBoundingClientRect();
+    const items = [...document.querySelectorAll(".rc-side .rc-item")];
+    return { vis: items.filter((i) => { const r = i.getBoundingClientRect(); return r.top >= side.top && r.bottom <= side.bottom; }).length, of: items.length };
+  });
+  await page.screenshot({ path: `${OUT}/phone-375x667-step2.png` });
+  check("short phone: the menu step shows at least 9 menu items", shown.vis >= 9, `${shown.vis} of ${shown.of}`);
+  check("short phone: the card is clear of the drawer", !overlap(await rect(page, ".tour-card"), await rect(page, ".rc-side")));
+  check("short phone: the count stays in the title", /All \d+ views/.test(await page.textContent(".tour-title")));
+  await c.close();
+  // "Take the tour" from the phone's drawer: when it ends, focus is on the menu button, not in the closed drawer
+  c = await ctx(browser, phone, true); page = await c.newPage();
+  await page.goto(BASE + "/sales/"); await card(page); await page.click(".tour-skip"); await page.waitForTimeout(200);
+  await page.click(".rc-burger"); await page.waitForTimeout(400); await page.click(".tour-link"); await card(page);
+  await page.click(".tour-skip"); await page.waitForTimeout(200);
+  check("phone: focus returns to the menu button after Take the tour", await page.evaluate(() => document.activeElement?.classList.contains("rc-burger")),
+    await page.evaluate(() => document.activeElement?.className || document.activeElement?.tagName));
+  await c.close();
+  // restarting mid-tour closes the first run as skipped (reason restarted) before the second starts
+  c = await ctx(browser, phone, true); page = await c.newPage();
+  await page.goto(BASE + "/sales/"); await card(page);
+  await page.click(".rc-burger"); await page.waitForTimeout(400); await page.click(".tour-link"); await page.waitForTimeout(300);
+  ev = (await events(page)).filter((e) => e[0].startsWith("tour_")).map((e) => e[0] + (e[1].reason ? ":" + e[1].reason : ""));
+  check("restart mid-tour emits tour_skipped:restarted between the two starts", JSON.stringify(ev) === JSON.stringify(["tour_started", "tour_skipped:restarted", "tour_started"]), JSON.stringify(ev));
+  await c.close();
+  // resizing across 1180 px during the Aito step moves the step to the button and back, and puts the panel back as the visitor had it
+  c = await ctx(browser, { width: 1440, height: 900 }, false, { rcPanelCollapsed: "1" }); page = await c.newPage();
+  await page.goto(BASE + "/company/"); await card(page);
+  await page.click(".tour-next"); await page.waitForTimeout(300); await page.click(".tour-next"); await page.waitForTimeout(400);
+  const spot = (sel) => page.evaluate((s) => document.querySelector(s)?.classList.contains("tour-spot"), sel);
+  await page.setViewportSize({ width: 1000, height: 900 }); await page.waitForTimeout(400);
+  check("resize to 1000: the step points at the Aito button", (await page.textContent(".tour-text")).includes("Aito button") && await spot(".rc-panel-fab"));
+  await page.setViewportSize({ width: 1440, height: 900 }); await page.waitForTimeout(400);
+  check("resize back to 1440: the step points at the panel, shown", (await page.textContent(".tour-text")).includes("panel on the right") && await spot(".rc-panel") && !(await collapsed()));
+  await page.click(".tour-next"); await page.waitForTimeout(300);
+  check("after the resizes: panel collapsed again, preference untouched", await collapsed() && (await page.evaluate(() => localStorage.getItem("rcPanelCollapsed"))) === "1");
+  await c.close();
   // no storage at all: no auto start, and the page still works
   c = await browser.newContext({ viewport: phone, isMobile: true, hasTouch: true });
   await c.addInitScript(() => { Object.defineProperty(window, "localStorage", { get() { throw new Error("blocked"); } }); });

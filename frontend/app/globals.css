@@ -580,6 +580,13 @@ body:has(.rc-app),body:has(.app){height:100vh;overflow:hidden}
   /* above the drawer's backdrop (55), or the backdrop would dim the card and swallow its taps */
   .tour-menu .tour-card{z-index:70}
 }
+/* A short phone (375x667) upright: on the menu step the card drops its text (the title keeps the count) and goes to the bottom edge, over the
+   dimmed Aito button, so the drawer keeps most of the menu in view. */
+@media(max-width:760px) and (min-height:521px) and (max-height:740px){
+  .tour-menu .tour-card{bottom:16px}
+  .tour-menu .tour-text{display:none}
+  .tour-menu .rc-app .rc-side{bottom:calc(var(--tour-card-h, 110px) + 32px)}
+}
 /* A phone turned sideways with the menu as a drawer has no height to spare: the card goes beside the drawer instead of under it. */
 @media(max-width:760px) and (max-height:520px){
   .tour-card{left:calc(min(272px, 84vw) + 16px);right:84px;bottom:16px}
